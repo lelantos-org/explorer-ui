@@ -26,6 +26,14 @@ export function fmtTs(ts: number, spanSec: number): string {
   return d.toISOString().slice(5, 10);
 }
 
+export function fmtAge(ts: number, now = Math.floor(Date.now() / 1000)): string {
+  const d = Math.max(0, now - ts);
+  if (d < 60) return `${d}s`;
+  if (d < 3600) return `${Math.floor(d / 60)}m`;
+  if (d < 86400) return `${Math.floor(d / 3600)}h`;
+  return `${Math.floor(d / 86400)}d`;
+}
+
 export function fmtBucket(sec: number): string {
   if (sec >= 86400) return `${sec / 86400}d`;
   return `${sec / 3600}h`;

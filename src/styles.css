@@ -104,6 +104,15 @@ body::after {
   transition: all 120ms ease;
 }
 .lnk:hover { color: var(--accent); border-color: var(--accent-dim); }
+.lnk--inline {
+  padding: 0;
+  border: none;
+  text-transform: none;
+  letter-spacing: 0;
+  font-family: var(--mono);
+  border-bottom: 1px dotted var(--fg-mute);
+}
+.lnk--inline:hover { border-color: var(--accent); }
 
 .muted { color: var(--fg-mute); }
 .sep { margin: 0 6px; color: var(--fg-mute); }

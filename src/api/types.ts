@@ -46,4 +46,5 @@ export interface ExplorerApi {
   getAssetFlows(q: FlowQuery): Promise<FlowPoint[]>;
   getTxCounts(q: CountQuery): Promise<CountPoint[]>;
   getChainFlows24h(): Promise<ChainFlow[]>;
+  getRecentTreeAdvances(limit: number): Promise<TreeAdvanceOut[]>;
 }

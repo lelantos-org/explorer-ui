@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import Card from "../components/Card";
 import ChainFlowGrid from "../components/ChainFlowGrid";
+import LatestTxList from "../components/LatestTxList";
 import FlowChart from "../components/charts/FlowChart";
 import TxChart from "../components/charts/TxChart";
 import FilterBar from "../components/home/FilterBar";
@@ -10,12 +11,14 @@ import { useAssets } from "../hooks/useAssets";
 import { useChainFlows24h } from "../hooks/useChainFlows";
 import { useFilters } from "../hooks/useFilters";
 import { useFlowAndTx } from "../hooks/useFlowAndTx";
+import { useRecentTx } from "../hooks/useRecentTx";
 import { fmtBucket, fmtNum } from "../lib/format";
 
 export default function Home() {
   const filters = useFilters();
   const assets = useAssets();
   const chainFlows = useChainFlows24h();
+  const recentTx = useRecentTx(20);
   const { flows, counts, domain, loading, error } = useFlowAndTx({
     chainId: filters.chainId,
     assetIdU64: filters.assetIdU64,
@@ -131,6 +134,13 @@ export default function Home() {
 
       <Card title="transactions over time" meta={`bucket ${fmtBucket(filters.range.bucket)}`} variant="chart">
         <TxChart data={counts ?? []} domain={domain} />
+      </Card>
+
+      <Card
+        title="latest transactions"
+        meta={recentTx.data ? `${recentTx.data.length} entries · last 24h` : "loading…"}
+      >
+        <LatestTxList data={recentTx.data} loading={recentTx.loading} />
       </Card>
     </section>
   );

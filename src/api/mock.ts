@@ -275,6 +275,15 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
         .map(([ts, v]) => ({ ts, in: v.in, out: v.out }));
     },
 
+    async getRecentTreeAdvances(limit: number) {
+      await wait();
+      maybeFail();
+      return [...advances]
+        .sort((a, b) => b.block_ts - a.block_ts)
+        .slice(0, limit)
+        .map((r) => ({ ...r }));
+    },
+
     async getChainFlows24h(): Promise<ChainFlow[]> {
       await wait();
       maybeFail();
