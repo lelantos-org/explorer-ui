@@ -3,6 +3,18 @@ import { createMockApi } from "./index";
 
 const api = (over = {}) => createMockApi({ latencyMs: 0, seed: 1234, ...over });
 
+// createMockApi() eagerly builds the whole dataset in its constructor —
+// buildAssets, then buildHourlyFlows over HOURS_OF_HISTORY (90 days of hourly
+// buckets), then buildTreeAdvances — which costs ~110ms a time. Calling the
+// factory per assertion made this file spend seconds re-generating identical
+// data.
+//
+// The mock is immutable once built, so every test that does not specifically
+// need a *fresh* instance shares this one. The two determinism tests below
+// still construct their own, because comparing two independently-seeded
+// instances is the whole point of them.
+const shared = api();
+
 describe("mock determinism", () => {
   it("reproduces the same dataset from the same seed", async () => {
     const [a, b] = await Promise.all([api().listAssets(), api().listAssets()]);
@@ -31,16 +43,27 @@ describe("mock determinism", () => {
   });
 
   it("never fails when no failure rate is configured", async () => {
-    for (let i = 0; i < 20; i++) await expect(api().health()).resolves.toBe(true);
+    // Asserting on health() alone would prove nothing: it awaits wait() and
+    // returns, without going through respond() -> maybeFail(), so it resolves
+    // even at failureRate: 1. listAssets() is what actually draws from the
+    // chaos stream.
+    //
+    // Sharing one instance also matters. Constructing a fresh api() per
+    // iteration reset the chaos RNG every time, so the old loop checked the
+    // same first draw twenty times instead of twenty consecutive draws.
+    for (let i = 0; i < 20; i++) {
+      await expect(shared.listAssets()).resolves.toBeDefined();
+      await expect(shared.health()).resolves.toBe(true);
+    }
   });
 });
 
 describe("mock flow contract", () => {
   it("emits token amounts only when a single asset is in scope", async () => {
-    const assets = await api().listAssets();
+    const assets = await shared.listAssets();
     const one = assets[0];
 
-    const pinned = await api().getAssetFlows({
+    const pinned = await shared.getAssetFlows({
       chainId: one.chainId,
       assetIdU64: one.assetIdU64,
       bucketSec: 86400,
@@ -49,18 +72,18 @@ describe("mock flow contract", () => {
     expect(pinned.every((p) => p.in !== null && p.out !== null)).toBe(true);
 
     // Several assets have no addable token total, in any unit.
-    const all = await api().getAssetFlows({ bucketSec: 86400 });
+    const all = await shared.getAssetFlows({ bucketSec: 86400 });
     expect(all.every((p) => p.in === null && p.out === null)).toBe(true);
   });
 
   it("returns buckets in ascending time order", async () => {
-    const rows = await api().getAssetFlows({ bucketSec: 86400 });
+    const rows = await shared.getAssetFlows({ bucketSec: 86400 });
     const sorted = [...rows].sort((a, b) => a.ts - b.ts);
     expect(rows.map((r) => r.ts)).toEqual(sorted.map((r) => r.ts));
   });
 
   it("counts an unpriced asset instead of dropping it from the total", async () => {
-    const rows = await api().getAssetFlows({ bucketSec: 86400 });
+    const rows = await shared.getAssetFlows({ bucketSec: 86400 });
     // One profile is deliberately unpriced, to exercise the partial-coverage UI.
     expect(rows.some((p) => p.unpricedAssets > 0)).toBe(true);
     expect(rows.every((p) => p.inUsd !== null)).toBe(true);
@@ -69,7 +92,7 @@ describe("mock flow contract", () => {
 
 describe("mock transaction feed", () => {
   it("returns newest first, within the requested limit", async () => {
-    const rows = await api().getRecentTransactions({ limit: 15 });
+    const rows = await shared.getRecentTransactions({ limit: 15 });
     expect(rows).toHaveLength(15);
     for (let i = 1; i < rows.length; i++) {
       expect(rows[i - 1].blockTs).toBeGreaterThanOrEqual(rows[i].blockTs);
@@ -77,7 +100,7 @@ describe("mock transaction feed", () => {
   });
 
   it("speaks exactly the TxOut shape, with no extra wire fields", async () => {
-    const [row] = await api().getRecentTransactions({ limit: 1 });
+    const [row] = await shared.getRecentTransactions({ limit: 1 });
     expect(Object.keys(row).sort()).toEqual([
       "amount",
       "assetIdU64",
@@ -90,14 +113,14 @@ describe("mock transaction feed", () => {
   });
 
   it("names no asset and no amount for a transfer, which moves no public value", async () => {
-    const rows = await api().getRecentTransactions({ limit: 200 });
+    const rows = await shared.getRecentTransactions({ limit: 200 });
     const transfers = rows.filter((r) => r.kind === "transfer");
     expect(transfers.length).toBeGreaterThan(0);
     expect(transfers.every((r) => r.assetIdU64 === null && r.amount === null)).toBe(true);
   });
 
   it("bins kinds into the same buckets the feed reports", async () => {
-    const kinds = await api().getTxKinds({ bucketSec: 3600 });
+    const kinds = await shared.getTxKinds({ bucketSec: 3600 });
     expect(kinds.length).toBeGreaterThan(0);
     expect(kinds.every((k) => k.deposit + k.pending + k.transfer + k.withdraw > 0)).toBe(true);
   });
@@ -105,13 +128,13 @@ describe("mock transaction feed", () => {
 
 describe("mock chain flows", () => {
   it("returns 24 hourly slots per chain", async () => {
-    const rows = await api().getChainFlows24h();
+    const rows = await shared.getChainFlows24h();
     expect(rows.length).toBeGreaterThan(0);
     expect(rows.every((r) => r.hourlyIn.length === 24 && r.hourlyOut.length === 24)).toBe(true);
   });
 
   it("totals each chain's hourly series", async () => {
-    const [row] = await api().getChainFlows24h();
+    const [row] = await shared.getChainFlows24h();
     const sum = (a: number[]) => a.reduce((s, v) => s + v, 0);
     expect(row.inflow).toBe(sum(row.hourlyIn));
     expect(row.outflow).toBe(sum(row.hourlyOut));

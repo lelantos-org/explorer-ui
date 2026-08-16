@@ -25,5 +25,10 @@ export default defineConfig({
     // None of them need a DOM, so there is no jsdom in the toolchain.
     include: ["src/**/*.test.{ts,tsx}"],
     environment: "node",
+    // The mock suite generates 90 days of hourly data per API instance, which
+    // is fast locally but has real headroom cost on a shared CI runner. This is
+    // margin against a slow runner, not cover for a slow test: the mock tests
+    // share one instance precisely so none of them approach this.
+    testTimeout: 20_000,
   },
 });
