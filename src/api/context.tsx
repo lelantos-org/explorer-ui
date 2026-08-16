@@ -1,7 +1,7 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
-import type { ExplorerApi } from "./types";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
 import { createHttpApi } from "./http";
 import { createMockApi } from "./mock";
+import type { ExplorerApi } from "./types";
 
 const ApiContext = createContext<ExplorerApi | null>(null);
 

@@ -1,4 +1,5 @@
-import type { ChainFlow } from "../api/types";
+import type { ChainFlow } from "../../api";
+import { chainShares } from "../../lib/aggregate";
 import ChainFlowCard from "./ChainFlowCard";
 
 interface Props {
@@ -22,18 +23,18 @@ export default function ChainFlowGrid({ data, selected, onSelect }: Props) {
     return <div className="empty">no chain activity in last 24h</div>;
   }
 
-  const totalIO = data.reduce((s, c) => s + c.inflow + c.outflow, 0);
+  const { hasValues, shareOf } = chainShares(data);
 
   return (
     <div className="chain-grid">
       {data.map((c) => {
         const isOn = selected === c.chainId;
-        const share = totalIO > 0 ? ((c.inflow + c.outflow) / totalIO) * 100 : 0;
         return (
           <ChainFlowCard
             key={c.chainId}
             flow={c}
-            share={share}
+            share={shareOf(c)}
+            hasValues={hasValues}
             selected={isOn}
             onClick={() => onSelect?.(isOn ? null : c.chainId)}
           />

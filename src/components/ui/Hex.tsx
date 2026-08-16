@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { shortHex, withHexPrefix } from "../../lib/hex";
 
 interface Props {
   value: string;
@@ -8,9 +9,8 @@ interface Props {
 
 export default function Hex({ value, truncate = 10, className }: Props) {
   const [copied, setCopied] = useState(false);
-  const v = value.startsWith("0x") ? value : `0x${value}`;
-  const short =
-    v.length > truncate * 2 + 2 ? `${v.slice(0, truncate + 2)}…${v.slice(-truncate)}` : v;
+  const v = withHexPrefix(value);
+  const short = shortHex(value, truncate);
 
   const onCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -23,15 +23,11 @@ export default function Hex({ value, truncate = 10, className }: Props) {
     }
   };
 
+  // A real button rather than a span with role="button" — it gets keyboard
+  // activation and focus handling for free.
   return (
-    <span
-      className={`hex ${className ?? ""}`}
-      title={v}
-      onClick={onCopy}
-      role="button"
-      tabIndex={0}
-    >
+    <button type="button" className={`hex ${className ?? ""}`} title={v} onClick={onCopy}>
       {copied ? "copied" : short}
-    </span>
+    </button>
   );
 }

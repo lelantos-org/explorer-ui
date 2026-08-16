@@ -1,16 +1,14 @@
 import type { ReactNode } from "react";
 import { fmtNum, fmtTs } from "../../lib/format";
-import {
-  type ChartGeometry,
-  type TimeDomain,
-  ticks as makeTicks,
-  timeTicks,
-} from "./chartLib";
+import { domainSpan, type TimeDomain } from "../../lib/time";
+import { type ChartGeometry, ticks as makeTicks, timeTicks, xScale, yScale } from "./chartLib";
 
 interface Props {
   geom: ChartGeometry;
   domain: TimeDomain;
   max: number;
+  /** Accessible name for the plot. */
+  title: string;
   yTickCount?: number;
   xTickCount?: number;
   roundY?: boolean;
@@ -21,10 +19,17 @@ interface Props {
   onMouseLeave?: () => void;
 }
 
+/**
+ * Axes, gridlines and legend around a plot. The series themselves come in as
+ * children, already positioned — the frame and its children scale through the
+ * same `xScale`/`yScale`, so an axis label can never describe a different
+ * mapping than the line drawn under it.
+ */
 export default function ChartFrame({
   geom,
   domain,
   max,
+  title,
   yTickCount = 4,
   xTickCount = 6,
   roundY = false,
@@ -34,13 +39,10 @@ export default function ChartFrame({
   onMouseMove,
   onMouseLeave,
 }: Props) {
-  const { W, H, pad, iw, ih } = geom;
-  const span = Math.max(1, domain.end - domain.start);
-  const yOf = (v: number) => pad.t + ih - (v / Math.max(1, max)) * ih;
-  const xOf = (ts: number) => pad.l + ((ts - domain.start) / span) * iw;
-
-  const yTicks = makeTicks(yTickCount, max, roundY);
-  const xTicks = timeTicks(domain, xTickCount);
+  const { W, H, pad } = geom;
+  const span = domainSpan(domain);
+  const x = xScale(geom, domain);
+  const y = yScale(geom, max);
 
   return (
     <div className="chart">
@@ -51,13 +53,15 @@ export default function ChartFrame({
         className="chart__svg"
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
+        role="img"
       >
+        <title>{title}</title>
         {defs && <defs>{defs}</defs>}
 
-        {yTicks.map((v, i) => (
-          <g key={`y-${i}`}>
-            <line x1={pad.l} x2={W - pad.r} y1={yOf(v)} y2={yOf(v)} className="grid" />
-            <text x={pad.l - 8} y={yOf(v) + 3} textAnchor="end" className="axis">
+        {makeTicks(yTickCount, max, roundY).map((v) => (
+          <g key={`y-${v}`}>
+            <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} className="grid" />
+            <text x={pad.l - 8} y={y(v) + 3} textAnchor="end" className="axis">
               {fmtNum(v)}
             </text>
           </g>
@@ -65,8 +69,8 @@ export default function ChartFrame({
 
         {children}
 
-        {xTicks.map((ts, i) => (
-          <text key={`x-${i}`} x={xOf(ts)} y={H - 8} textAnchor="middle" className="axis">
+        {timeTicks(domain, xTickCount).map((ts) => (
+          <text key={`x-${ts}`} x={x(ts)} y={H - 8} textAnchor="middle" className="axis">
             {fmtTs(ts, span)}
           </text>
         ))}

@@ -1,3 +1,5 @@
+import { domainSpan, type TimeDomain } from "../../lib/time";
+
 export interface ChartPad {
   l: number;
   r: number;
@@ -5,30 +7,28 @@ export interface ChartPad {
   b: number;
 }
 
-export const DEFAULT_PAD: ChartPad = { l: 56, r: 16, t: 18, b: 28 };
-export const CHART_W = 1000;
+// Left gutter fits the widest y-axis label (exponent form, e.g. "1.80e19").
+const DEFAULT_PAD: ChartPad = { l: 72, r: 16, t: 18, b: 28 };
+// Charts are drawn in fixed viewBox units and stretched to their container, so
+// this is a coordinate space rather than a pixel width.
+const CHART_W = 1000;
 
 export interface ChartGeometry {
   W: number;
   H: number;
   pad: ChartPad;
+  /** Inner plot width and height, i.e. the box inside the padding. */
   iw: number;
   ih: number;
 }
 
-export function geometry(H: number, pad: ChartPad = DEFAULT_PAD): ChartGeometry {
-  return {
-    W: CHART_W,
-    H,
-    pad,
-    iw: CHART_W - pad.l - pad.r,
-    ih: H - pad.t - pad.b,
-  };
+export function geometry(H: number, pad: ChartPad = DEFAULT_PAD, W = CHART_W): ChartGeometry {
+  return { W, H, pad, iw: W - pad.l - pad.r, ih: H - pad.t - pad.b };
 }
 
-export interface TimeDomain {
-  start: number;
-  end: number;
+/** The y coordinate a series rests on. */
+export function baselineY(g: ChartGeometry): number {
+  return g.pad.t + g.ih;
 }
 
 export function resolveDomain<T>(
@@ -43,7 +43,7 @@ export function resolveDomain<T>(
 }
 
 export function xScale(g: ChartGeometry, domain: TimeDomain) {
-  const span = Math.max(1, domain.end - domain.start);
+  const span = domainSpan(domain);
   return (ts: number) => g.pad.l + ((ts - domain.start) / span) * g.iw;
 }
 
@@ -52,11 +52,23 @@ export function yScale(g: ChartGeometry, max: number) {
   return (v: number) => g.pad.t + g.ih - (v / safeMax) * g.ih;
 }
 
+/** Positional x scale for series with no time axis, e.g. a sparkline. */
+export function indexScale(g: ChartGeometry, count: number) {
+  const step = count > 1 ? g.iw / (count - 1) : 0;
+  return (i: number) => g.pad.l + i * step;
+}
+
+/**
+ * Evenly spaced tick values from 0 to `max`. Rounding can collapse neighbours
+ * onto the same value (max=1, count=4 → 0,0,1,1,1); dedupe so each gridline is
+ * drawn and labelled once, and so the value identifies the tick.
+ */
 export function ticks(count: number, max: number, round = false): number[] {
-  return Array.from({ length: count + 1 }, (_, i) => {
+  const values = Array.from({ length: count + 1 }, (_, i) => {
     const v = (max * i) / count;
     return round ? Math.round(v) : v;
   });
+  return round ? [...new Set(values)] : values;
 }
 
 export function timeTicks(domain: TimeDomain, count = 6): number[] {
@@ -64,7 +76,10 @@ export function timeTicks(domain: TimeDomain, count = 6): number[] {
   return Array.from({ length: count + 1 }, (_, i) => domain.start + (span * i) / count);
 }
 
-export function nearestPointIndex<T extends { x: number }>(points: T[], xPx: number): number | null {
+export function nearestPointIndex<T extends { x: number }>(
+  points: T[],
+  xPx: number,
+): number | null {
   if (points.length === 0) return null;
   let best = 0;
   let bestDist = Infinity;
@@ -78,14 +93,23 @@ export function nearestPointIndex<T extends { x: number }>(points: T[], xPx: num
   return best;
 }
 
-export function pathLine(points: { x: number; y: number }[]): string {
-  return points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`).join(" ");
+export interface Point {
+  x: number;
+  y: number;
 }
 
-export function pathArea(points: { x: number; y: number }[], baselineY: number): string {
+export function pathLine(points: Point[]): string {
+  return points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .join(" ");
+}
+
+/** `pathLine` closed down to a baseline, for the fill under a series. An empty
+ *  series has no baseline to close against — emit nothing rather than a path
+ *  that opens with a stray L. */
+export function pathArea(points: Point[], baseline: number): string {
   if (points.length === 0) return "";
-  const line = pathLine(points);
   const last = points[points.length - 1];
   const first = points[0];
-  return `${line} L ${last.x.toFixed(2)} ${baselineY} L ${first.x.toFixed(2)} ${baselineY} Z`;
+  return `${pathLine(points)} L ${last.x.toFixed(2)} ${baseline} L ${first.x.toFixed(2)} ${baseline} Z`;
 }

@@ -11,4 +11,11 @@ export const RANGES: Range[] = [
   { label: "90d", sec: 90 * 86400, bucket: 86400 },
 ];
 
-export const DEFAULT_RANGE_IDX = 2;
+const DEFAULT_RANGE_IDX = 2;
+
+/** Index for a label, falling back to the default so a hand-edited URL cannot
+ *  leave the page without a range. */
+export function rangeIndexOf(label: string | null): number {
+  const i = RANGES.findIndex((r) => r.label === label);
+  return i === -1 ? DEFAULT_RANGE_IDX : i;
+}

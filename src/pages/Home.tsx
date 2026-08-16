@@ -1,114 +1,80 @@
-import { useMemo } from "react";
-import Card from "../components/Card";
-import ChainFlowGrid from "../components/ChainFlowGrid";
-import LatestTxList from "../components/LatestTxList";
-import FlowChart from "../components/charts/FlowChart";
+import type { FlowPoint } from "../api";
 import TxChart from "../components/charts/TxChart";
+import TxKindsChart from "../components/charts/TxKindsChart";
+import ChainFlowGrid from "../components/home/ChainFlowGrid";
 import FilterBar from "../components/home/FilterBar";
+import FlowSection from "../components/home/FlowSection";
 import Hero from "../components/home/Hero";
 import KpiBar from "../components/home/KpiBar";
-import { useAssets } from "../hooks/useAssets";
-import { useChainFlows24h } from "../hooks/useChainFlows";
-import { useFilters } from "../hooks/useFilters";
-import { useFlowAndTx } from "../hooks/useFlowAndTx";
-import { useRecentTx } from "../hooks/useRecentTx";
+import LatestTxList from "../components/home/LatestTxList";
+import Card from "../components/ui/Card";
+import {
+  useAssets,
+  useChainFlows24h,
+  useFlowAndTx,
+  useRecentTx,
+  useTxKinds,
+} from "../hooks/queries";
+import { type Filters, useFilters } from "../hooks/useFilters";
+import {
+  type ChainsSummary,
+  peakCount,
+  sumCounts,
+  sumFlows,
+  summarizeChains,
+} from "../lib/aggregate";
+import { type Denom, denomLabel, pickDenom } from "../lib/denom";
 import { fmtBucket, fmtNum } from "../lib/format";
+import { groupAssetsByChain } from "../lib/scope";
 
 export default function Home() {
   const filters = useFilters();
   const assets = useAssets();
   const chainFlows = useChainFlows24h();
   const recentTx = useRecentTx(20);
-  const { flows, counts, domain, loading, error } = useFlowAndTx({
+  const txKinds = useTxKinds(filters.chainId, filters.range);
+  const flowAndTx = useFlowAndTx({
     chainId: filters.chainId,
     assetIdU64: filters.assetIdU64,
     range: filters.range,
   });
 
-  const chains = useMemo(
-    () => (assets ? [...new Set(assets.map((a) => a.chain_id))].sort((a, b) => a - b) : []),
-    [assets],
-  );
+  const flows = flowAndTx.data?.flows ?? null;
+  const counts = flowAndTx.data?.counts ?? null;
+  const domain = flowAndTx.data?.domain ?? null;
 
-  const assetOptions = useMemo(() => {
-    if (!assets) return [];
-    return filters.chainId
-      ? assets.filter((a) => a.chain_id === Number(filters.chainId))
-      : assets;
-  }, [assets, filters.chainId]);
-
-  const totals = useMemo(() => {
-    if (!flows) return null;
-    const inflow = flows.reduce((s, p) => s + p.in, 0);
-    const outflow = flows.reduce((s, p) => s + p.out, 0);
-    return { inflow, outflow, net: inflow - outflow };
-  }, [flows]);
-
-  const txTotal = useMemo(
-    () => (counts ? counts.reduce((s, p) => s + p.count, 0) : null),
-    [counts],
-  );
-
-  const peakBucket = useMemo(() => {
-    if (!counts || counts.length === 0) return null;
-    return counts.reduce((m, p) => (p.count > m ? p.count : m), 0);
-  }, [counts]);
-
-  const chains24hSummary = useMemo(() => {
-    if (!chainFlows) return null;
-    return chainFlows.reduce(
-      (acc, c) => ({
-        in: acc.in + c.inflow,
-        out: acc.out + c.outflow,
-        tx: acc.tx + c.txCount,
-        chains: acc.chains + 1,
-      }),
-      { in: 0, out: 0, tx: 0, chains: 0 },
-    );
-  }, [chainFlows]);
-
-  const flowMeta = `${filters.assetIdU64 ? `asset #${filters.assetIdU64}` : "all assets"}${
-    filters.chainId ? ` · chain ${filters.chainId}` : ""
-  } · bucket ${fmtBucket(filters.range.bucket)}`;
+  // One denomination for the whole range, so the chart, the KPI tiles and the
+  // hero can never disagree about what their numbers mean.
+  const denom = pickDenom(flows);
+  const totals = sumFlows(flows, denom);
+  const bucket = fmtBucket(filters.range.bucket);
 
   return (
     <section className="home">
       <Hero
         rangeLabel={filters.range.label}
-        assetCount={assets?.length ?? null}
+        assetCount={assets.data?.length ?? null}
         chainId={filters.chainId}
         netFlow={totals?.net ?? null}
+        denom={denom}
       />
 
       <FilterBar
-        chainId={filters.chainId}
-        assetIdU64={filters.assetIdU64}
+        scope={filters.scope}
         rangeIdx={filters.rangeIdx}
         hasFilter={filters.hasFilter}
-        loading={loading}
-        chains={chains}
-        assetOptions={assetOptions}
-        onChainChange={(v) => {
-          filters.setChainId(v);
-          filters.setAssetIdU64("");
-        }}
-        onAssetChange={filters.setAssetIdU64}
+        loading={flowAndTx.loading}
+        groups={groupAssetsByChain(assets.data, chainFlows.data)}
+        onScopeChange={filters.setScope}
         onRangeChange={filters.setRangeIdx}
         onClear={filters.clear}
       />
 
-      {error && <div className="err">! {error}</div>}
+      {flowAndTx.error && <div className="err">! {flowAndTx.error}</div>}
 
-      <Card
-        title="chain flows · last 24h"
-        meta={
-          chains24hSummary
-            ? `${chains24hSummary.chains} chains · in ${fmtNum(chains24hSummary.in)} · out ${fmtNum(chains24hSummary.out)} · ${fmtNum(chains24hSummary.tx)} tx`
-            : "loading…"
-        }
-      >
+      <Card title="chain flows · last 24h" meta={chainsMeta(summarizeChains(chainFlows.data))}>
         <ChainFlowGrid
-          data={chainFlows}
+          data={chainFlows.data}
           selected={filters.chainId ? Number(filters.chainId) : null}
           onSelect={filters.selectChain}
         />
@@ -117,31 +83,64 @@ export default function Home() {
       <KpiBar
         inflow={totals?.inflow ?? null}
         outflow={totals?.outflow ?? null}
-        txTotal={txTotal}
-        peakBucket={peakBucket}
+        txTotal={sumCounts(counts)}
+        peak={peakCount(counts)}
+        bucketSec={filters.range.bucket}
+        denom={denom}
       />
 
-      <Card title="inflow / outflow" meta={flowMeta} variant="chart">
-        {flows && flows.length === 0 && !loading ? (
-          <div className="empty">
-            no flow data
-            {!filters.assetIdU64 && " · backend lacks per-asset flow endpoint — set VITE_USE_MOCK=1 to preview"}
-          </div>
-        ) : (
-          <FlowChart data={flows ?? []} domain={domain} />
-        )}
+      <Card title="inflow / outflow" meta={flowMeta(filters, denom, flows)} variant="chart">
+        <FlowSection flows={flows} denom={denom} domain={domain} loading={flowAndTx.loading} />
       </Card>
 
-      <Card title="transactions over time" meta={`bucket ${fmtBucket(filters.range.bucket)}`} variant="chart">
+      <Card title="transactions over time" meta={`bucket ${bucket}`} variant="chart">
         <TxChart data={counts ?? []} domain={domain} />
       </Card>
 
       <Card
-        title="latest transactions"
-        meta={recentTx.data ? `${recentTx.data.length} entries · last 24h` : "loading…"}
+        title="transactions by kind"
+        meta={
+          // Grouped, not stacked: bars are compared against each other, so the
+          // axis is per-kind and not a bucket total. `pending` is named as
+          // excluded rather than silently dropped — the plot is not every
+          // transaction, and a reader totalling the bars should know that.
+          txKinds.data ? `grouped by kind · pending excluded · bucket ${bucket}` : "loading…"
+        }
+        variant="chart"
       >
-        <LatestTxList data={recentTx.data} loading={recentTx.loading} />
+        <TxKindsChart data={txKinds.data ?? []} bucketSec={filters.range.bucket} domain={domain} />
+      </Card>
+
+      <Card
+        title="latest transactions"
+        meta={recentTx.data ? `${recentTx.data.length} most recent` : "loading…"}
+      >
+        <LatestTxList data={recentTx.data} assets={assets.data} loading={recentTx.loading} />
       </Card>
     </section>
   );
+}
+
+function chainsMeta(s: ChainsSummary | null): string {
+  if (!s) return "loading…";
+  // inflow/outflow are reserved backend fields, still zero today — omit them
+  // rather than render 0 as a measurement.
+  const value = s.hasValues ? ` · in ${fmtNum(s.inflow)} · out ${fmtNum(s.outflow)}` : "";
+  return `${s.chains} chains${value} · ${fmtNum(s.tx)} tx`;
+}
+
+/**
+ * Name the unit rather than leaving the reader to guess. Token amounts are
+ * per-asset, dollars are the only cross-asset value, and a partial dollar total
+ * says how much it is leaving out.
+ */
+function flowMeta(filters: Filters, denom: Denom, flows: FlowPoint[] | null): string {
+  return [
+    filters.assetIdU64 ? `asset #${filters.assetIdU64}` : "all assets",
+    denomLabel(denom, flows),
+    filters.chainId ? `chain ${filters.chainId}` : null,
+    `bucket ${fmtBucket(filters.range.bucket)}`,
+  ]
+    .filter((part) => part !== null)
+    .join(" · ");
 }

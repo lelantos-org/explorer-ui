@@ -1,62 +1,58 @@
-import type { AssetOut } from "../../types";
+import { getChainMeta } from "../../lib/chains";
+import { shortHex } from "../../lib/hex";
 import { RANGES } from "../../lib/ranges";
+import { encodeScope, type ScopeGroup } from "../../lib/scope";
 
 interface Props {
-  chainId: string;
-  assetIdU64: string;
+  scope: string;
   rangeIdx: number;
   hasFilter: boolean;
   loading: boolean;
-  chains: number[];
-  assetOptions: AssetOut[];
-  onChainChange: (v: string) => void;
-  onAssetChange: (v: string) => void;
+  groups: ScopeGroup[];
+  onScopeChange: (v: string) => void;
   onRangeChange: (i: number) => void;
   onClear: () => void;
 }
 
 export default function FilterBar({
-  chainId,
-  assetIdU64,
+  scope,
   rangeIdx,
   hasFilter,
   loading,
-  chains,
-  assetOptions,
-  onChainChange,
-  onAssetChange,
+  groups,
+  onScopeChange,
   onRangeChange,
   onClear,
 }: Props) {
   return (
     <div className="filters filters--sticky">
-      <label className="fld">
-        <span className="fld__lbl">chain</span>
+      <label className="fld fld--grow">
+        <span className="fld__lbl">scope</span>
+        {/* Chain and asset are one control: an assetIdU64 is only meaningful
+            alongside its chain, so they cannot be selected independently. */}
         <select
-          className="fld__inp"
-          value={chainId}
-          onChange={(e) => onChainChange(e.target.value)}
+          className="fld__inp fld__inp--scope"
+          value={scope}
+          onChange={(e) => onScopeChange(e.target.value)}
         >
-          <option value="">all</option>
-          {chains.map((c) => (
-            <option key={c} value={c}>chain {c}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className="fld">
-        <span className="fld__lbl">asset</span>
-        <select
-          className="fld__inp"
-          value={assetIdU64}
-          onChange={(e) => onAssetChange(e.target.value)}
-        >
-          <option value="">all</option>
-          {assetOptions.map((a) => (
-            <option key={`${a.chain_id}-${a.asset_id_u64}`} value={a.asset_id_u64}>
-              #{a.asset_id_u64} · chain {a.chain_id}
-            </option>
-          ))}
+          <option value="">all chains</option>
+          {groups.map((g) => {
+            const chainId = String(g.chainId);
+            const meta = getChainMeta(g.chainId);
+            return (
+              <optgroup key={g.chainId} label={`${meta.name} · id ${g.chainId}`}>
+                <option value={encodeScope({ chainId, assetIdU64: "" })}>all assets</option>
+                {g.assets.map((a) => (
+                  <option
+                    key={a.assetIdU64}
+                    value={encodeScope({ chainId, assetIdU64: String(a.assetIdU64) })}
+                  >
+                    asset #{a.assetIdU64} · {shortHex(a.tokenHex, 4)}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
         </select>
       </label>
 
@@ -66,6 +62,7 @@ export default function FilterBar({
           {RANGES.map((r, i) => (
             <button
               key={r.label}
+              type="button"
               className={`seg__b ${i === rangeIdx ? "seg__b--on" : ""}`}
               onClick={() => onRangeChange(i)}
               disabled={loading}
@@ -77,7 +74,7 @@ export default function FilterBar({
       </div>
 
       {hasFilter && (
-        <button className="btn btn--ghost" onClick={onClear}>
+        <button type="button" className="btn btn--ghost" onClick={onClear}>
           ✕ clear
         </button>
       )}
