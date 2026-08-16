@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Only two VITE_* vars are inlined at build time (src/api/context.tsx):
+# VITE_API_BASE and VITE_USE_MOCK. VITE_API_TARGET is read by vite.config.ts
+# for the dev-server proxy only and has no effect on a production build.
+#
+# Empty VITE_API_BASE means same-origin requests to /v1, which is what the
+# nginx image proxies. The CI build only needs to compile, so the defaults are
+# fine here.
+env:
+  VITE_API_BASE: ""
+  VITE_USE_MOCK: "0"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+      # No registry-url/scope: unlike webapp-ui, this package depends on
+      # nothing under @lelantos-org, so it needs no GitHub Packages auth.
+      - run: npm ci
+      - run: npm run check:ci
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build

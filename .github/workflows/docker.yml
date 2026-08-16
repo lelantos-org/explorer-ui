@@ -1,0 +1,86 @@
+name: Docker
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-[a-z]+"
+
+concurrency:
+  group: ${{ github.ref }}-docker
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  packages: write
+  contents: read
+  pull-requests: read
+
+env:
+  REGISTRY_URL: ghcr.io
+  REPOSITORY: ${{ github.repository }}
+
+  # Vite inlines these at build time, so they are baked into the image.
+  #
+  # Empty VITE_API_BASE keeps the SPA on same-origin /v1 requests, which
+  # nginx.conf proxies to the explorer webserver. That avoids CORS entirely and
+  # mirrors the dev-server proxy in vite.config.ts.
+  #
+  # Set it to an absolute origin (e.g. https://api.example.com) only for a
+  # deployment where the API is genuinely cross-origin — the backend sets no
+  # CORS headers of its own, so the fronting proxy would have to add them.
+  VITE_API_BASE: ""
+  VITE_USE_MOCK: "0"
+
+jobs:
+  docker:
+    name: Docker (explorer-ui)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_URL }}/${{ env.REPOSITORY }}
+          flavor: |
+            latest=auto
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=ref,event=tag
+            type=sha
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          # Build on PRs to catch a broken Dockerfile, but only publish from
+          # main and tags.
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VITE_API_BASE=${{ env.VITE_API_BASE }}
+            VITE_USE_MOCK=${{ env.VITE_USE_MOCK }}
+          # No `secrets: npm_token` here, unlike webapp-ui: this package pulls
+          # nothing from GitHub Packages, so the build needs no registry auth.
+          cache-from: type=gha,scope=explorer-ui
+          cache-to: type=gha,scope=explorer-ui,mode=max
