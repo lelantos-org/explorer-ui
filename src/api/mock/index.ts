@@ -25,6 +25,15 @@ export interface MockApiOpts {
   failureRate?: number;
   seed?: number;
   healthy?: boolean;
+  /**
+   * Unix seconds to generate the dataset around. Defaults to the wall clock.
+   *
+   * `seed` alone does NOT make the dataset reproducible: timestamps derive from
+   * this instead, so two instances built with the same seed a second apart
+   * disagree on every generated `priceAt` and bucket boundary. Pin it whenever
+   * two instances are compared.
+   */
+  nowSec?: number;
 }
 
 /** Floor a timestamp onto its bucket's start. */
@@ -77,7 +86,7 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
   // dataset depend on how many requests happened to fail, which defeats the seed.
   const chaos = mulberry32(seed ^ 0x9e3779b9);
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = opts.nowSec ?? Math.floor(Date.now() / 1000);
   const assets = buildAssets(rng, now);
   const flows = buildHourlyFlows(rng, assets, HOURS_OF_HISTORY, now);
   const advances = buildTreeAdvances(rng, flows);
@@ -218,7 +227,10 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
 
     async getChainFlows24h(): Promise<ChainFlow[]> {
       await respond();
-      const hourStart = bucketOf(Math.floor(Date.now() / 1000) - 86400, 3600);
+      // The instance's anchor, not a fresh clock read: reading here made the
+      // window advance between calls on one mock, so `nowSec` did not actually
+      // pin the dataset and successive requests could disagree.
+      const hourStart = bucketOf(now - 86400, 3600);
       const chainIds = [...new Set(assets.map((a) => a.chainId))];
 
       return chainIds

@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { createMockApi } from "./index";
 
-const api = (over = {}) => createMockApi({ latencyMs: 0, seed: 1234, ...over });
+// nowSec is pinned, not just the seed. createMockApi captures the wall clock
+// for every generated timestamp (priceAt, bucket boundaries), so two instances
+// built with the same seed a fraction of a second apart still disagree if they
+// land either side of a second boundary — which the determinism tests below do
+// roughly one run in ten. Pinning it is what actually makes the seed mean
+// "reproducible".
+const api = (over = {}) =>
+  createMockApi({ latencyMs: 0, seed: 1234, nowSec: 1_700_000_000, ...over });
 
 // createMockApi() eagerly builds the whole dataset in its constructor —
 // buildAssets, then buildHourlyFlows over HOURS_OF_HISTORY (90 days of hourly
