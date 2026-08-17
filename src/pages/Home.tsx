@@ -1,4 +1,4 @@
-import type { FlowPoint } from "../api";
+import type { AssetOut, FlowPoint } from "../api";
 import TxChart from "../components/charts/TxChart";
 import TxKindsChart from "../components/charts/TxKindsChart";
 import ChainFlowGrid from "../components/home/ChainFlowGrid";
@@ -23,6 +23,7 @@ import {
   sumFlows,
   summarizeChains,
 } from "../lib/aggregate";
+import { assetLabel } from "../lib/assets";
 import { type Denom, denomLabel, pickDenom } from "../lib/denom";
 import { fmtBucket, fmtNum } from "../lib/format";
 import { groupAssetsByChain } from "../lib/scope";
@@ -89,7 +90,11 @@ export default function Home() {
         denom={denom}
       />
 
-      <Card title="inflow / outflow" meta={flowMeta(filters, denom, flows)} variant="chart">
+      <Card
+        title="inflow / outflow"
+        meta={flowMeta(filters, denom, flows, assets.data)}
+        variant="chart"
+      >
         <FlowSection flows={flows} denom={denom} domain={domain} loading={flowAndTx.loading} />
       </Card>
 
@@ -134,9 +139,19 @@ function chainsMeta(s: ChainsSummary | null): string {
  * per-asset, dollars are the only cross-asset value, and a partial dollar total
  * says how much it is leaving out.
  */
-function flowMeta(filters: Filters, denom: Denom, flows: FlowPoint[] | null): string {
+function flowMeta(
+  filters: Filters,
+  denom: Denom,
+  flows: FlowPoint[] | null,
+  assets: AssetOut[] | null,
+): string {
+  // The scoped asset is named by symbol or address; "unknown token" covers the
+  // registry not being loaded yet, which the id would only paper over.
+  const scoped = (assets ?? []).find(
+    (a) => String(a.chainId) === filters.chainId && String(a.assetIdU64) === filters.assetIdU64,
+  );
   return [
-    filters.assetIdU64 ? `asset #${filters.assetIdU64}` : "all assets",
+    filters.assetIdU64 ? `asset ${assetLabel(scoped) ?? "unknown token"}` : "all assets",
     denomLabel(denom, flows),
     filters.chainId ? `chain ${filters.chainId}` : null,
     `bucket ${fmtBucket(filters.range.bucket)}`,

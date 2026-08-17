@@ -41,6 +41,9 @@ export const HOURS_OF_HISTORY = 90 * 24;
 
 interface AssetProfile {
   name: string;
+  /** ERC20 symbol as the indexer would have read it. `null` models a token
+   *  whose `symbol()` has not resolved, which exercises the address fallback. */
+  symbol: string | null;
   scale: string;
   /** Whole-token USD price. `null` models a long-tail token the provider
    *  cannot price, which is what exercises the partial-coverage UI. */
@@ -62,6 +65,7 @@ interface AssetProfile {
 const PROFILES: AssetProfile[] = [
   {
     name: "USDC",
+    symbol: "USDC",
     scale: "1000000",
     decimals: 6,
     priceUsd: 1.0,
@@ -74,6 +78,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "WETH",
+    symbol: "WETH",
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: 1882.37,
@@ -86,6 +91,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "DAI",
+    symbol: "DAI",
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: 0.9998,
@@ -98,6 +104,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "WBTC",
+    symbol: "WBTC",
     scale: "100000000",
     decimals: 8,
     priceUsd: 61240.5,
@@ -110,6 +117,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "USDT",
+    symbol: "USDT",
     scale: "1000000",
     decimals: 6,
     priceUsd: 1.0002,
@@ -122,6 +130,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "LINK",
+    symbol: "LINK",
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: 11.42,
@@ -134,6 +143,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "UNI",
+    symbol: "UNI",
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: 6.13,
@@ -146,6 +156,7 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "ARB",
+    symbol: null,
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: null,
@@ -172,6 +183,7 @@ export function buildAssets(rng: Rng, now: number): AssetOut[] {
     tokenHex: hex(rng, 20),
     scale: p.scale,
     decimals: p.decimals,
+    symbol: p.symbol,
     priceUsd: p.priceUsd,
     priceAt: p.priceUsd === null ? null : now,
   }));

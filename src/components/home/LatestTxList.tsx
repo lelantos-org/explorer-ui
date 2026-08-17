@@ -6,8 +6,8 @@ import Hex from "../ui/Hex";
 
 interface Props {
   data: TxOut[] | null;
-  /** Registry, used to name the asset a row moved. The explorer stores no
-   *  token symbols, so the address is the only identifier available. */
+  /** Registry, used to name the asset a row moved: its symbol when the indexer
+   *  has one, its address otherwise. */
   assets: AssetOut[] | null;
   loading: boolean;
 }
@@ -34,18 +34,20 @@ const assetKey = (chainId: number, assetIdU64: number) => `${chainId}:${assetIdU
 function AssetCell({ assetIdU64, asset }: { assetIdU64: number | null; asset?: AssetOut }) {
   // Transfers move no public value, so they name no asset.
   if (assetIdU64 === null) return <span className="muted">—</span>;
+  // Registered after this page loaded, or on a chain we have no registry for:
+  // nothing to name it by, and the registry id names only the row.
+  if (!asset)
+    return (
+      <span className="muted" title="token not in the loaded registry">
+        unknown token
+      </span>
+    );
   return (
     <span className="asset">
-      <span className="asset__id mono">#{assetIdU64}</span>
-      {asset ? (
-        <Hex value={asset.tokenHex} truncate={4} className="asset__tok" />
-      ) : (
-        // Registered after this page loaded, or on a chain we have no
-        // registry for: the id is still meaningful on its own.
-        <span className="muted asset__tok" title="token address not in the loaded registry">
-          unknown token
-        </span>
-      )}
+      {/* The symbol leads when the indexer has read one; the address always
+          trails as the thing that actually identifies the token. */}
+      {asset.symbol && <span className="asset__sym">{asset.symbol}</span>}
+      <Hex value={asset.tokenHex} truncate={4} className="asset__tok" />
     </span>
   );
 }

@@ -8,6 +8,7 @@ const asset = (chainId: number, assetIdU64: number): AssetOut => ({
   tokenHex: "00",
   scale: "1",
   decimals: 18,
+  symbol: null,
   priceUsd: null,
   priceAt: null,
 });

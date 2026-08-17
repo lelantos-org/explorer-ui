@@ -14,6 +14,9 @@ export interface AssetOut {
   scale: string;
   /** ERC20 decimals. null = not yet resolved by the indexer; unknown, not 18. */
   decimals: number | null;
+  /** ERC20 symbol. null = not yet read by the indexer, or the token has no
+   *  `symbol()`. Never invent a label for it — fall back to the address. */
+  symbol: string | null;
   /** Spot USD price of one whole token. null = unknown, never 0. */
   priceUsd: number | null;
   /** Provider timestamp for priceUsd. null whenever priceUsd is. */

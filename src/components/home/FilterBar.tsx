@@ -47,7 +47,11 @@ export default function FilterBar({
                     key={a.assetIdU64}
                     value={encodeScope({ chainId, assetIdU64: String(a.assetIdU64) })}
                   >
-                    asset #{a.assetIdU64} · {shortHex(a.tokenHex, 4)}
+                    {/* Symbol when the indexer has one; the address is the
+                        fallback label, never the registry id. */}
+                    {a.symbol
+                      ? `${a.symbol} · ${shortHex(a.tokenHex, 4)}`
+                      : shortHex(a.tokenHex, 4)}
                   </option>
                 ))}
               </optgroup>

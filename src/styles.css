@@ -557,10 +557,10 @@ select.fld__inp {
 .kind--transfer { color: #0891b2; border-color: #a5f3fc; background: rgba(8, 145, 178, 0.08); }
 .kind--withdraw { color: var(--warn); border-color: var(--warn-dim); background: rgba(var(--warn-rgb), 0.08); }
 
-/* Asset cell: the registry id leads, the token address trails as the thing
-   that actually identifies the token — the explorer stores no symbols. */
+/* Asset cell: the symbol leads when the indexer has read one, the token address
+   trails as the thing that actually identifies the token. */
 .asset { display: inline-flex; align-items: baseline; gap: 7px; white-space: nowrap; }
-.asset__id { color: var(--fg-dim); }
+.asset__sym { color: var(--fg-dim); }
 .asset__tok { font-size: 11px; }
 
 .grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 1 4; }
