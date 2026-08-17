@@ -1,5 +1,12 @@
 import type { AssetOut } from "../api";
+import { joinMeta } from "./format";
 import { shortHex } from "./hex";
+import type { Scope } from "./scope";
+
+/** Leading/trailing hex characters kept when an address stands in for a name. */
+const ADDRESS_CHARS = 4;
+
+const address = (asset: AssetOut) => shortHex(asset.tokenHex, ADDRESS_CHARS);
 
 /** Assets are keyed by chain: `assetIdU64` is only unique within one. */
 export const assetKey = (chainId: number, assetIdU64: number) => `${chainId}:${assetIdU64}`;
@@ -7,6 +14,27 @@ export const assetKey = (chainId: number, assetIdU64: number) => `${chainId}:${a
 /** The registry as a lookup, for the pages that resolve an asset per row. */
 export function indexAssets(assets: AssetOut[] | null): Map<string, AssetOut> {
   return new Map((assets ?? []).map((a) => [assetKey(a.chainId, a.assetIdU64), a]));
+}
+
+/**
+ * The registry narrowed to what the filter bar has selected. `null` while it is
+ * still loading, so a caller can tell "none in scope" from "not known yet".
+ *
+ * Counts have to be taken from this rather than the whole registry: a headline
+ * naming a chain beside a registry-wide count reads as that many assets on the
+ * chain.
+ */
+export function assetsInScope(assets: AssetOut[] | null, scope: Scope): AssetOut[] | null {
+  if (!assets) return null;
+  // The scope arrives as URL text; parse it once and compare numbers, so a
+  // hand-edited "07" still selects chain 7.
+  const chainId = scope.chainId ? Number(scope.chainId) : null;
+  const assetIdU64 = scope.assetIdU64 ? Number(scope.assetIdU64) : null;
+  return assets.filter(
+    (a) =>
+      (chainId === null || a.chainId === chainId) &&
+      (assetIdU64 === null || a.assetIdU64 === assetIdU64),
+  );
 }
 
 /**
@@ -18,7 +46,7 @@ export function indexAssets(assets: AssetOut[] | null): Map<string, AssetOut> {
  * only identifies the row.
  */
 export function assetLabel(asset: AssetOut): string {
-  return asset.symbol ?? shortHex(asset.tokenHex, 4);
+  return asset.symbol ?? address(asset);
 }
 
 /**
@@ -27,6 +55,5 @@ export function assetLabel(asset: AssetOut): string {
  * options have to stay tellable apart.
  */
 export function assetOptionLabel(asset: AssetOut): string {
-  const address = shortHex(asset.tokenHex, 4);
-  return asset.symbol ? `${asset.symbol} · ${address}` : address;
+  return joinMeta([asset.symbol, address(asset)]);
 }

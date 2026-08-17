@@ -1,0 +1,67 @@
+/* Design tokens. The only file that holds raw colours, durations and sizes —
+   everything else refers to them by name. */
+
+:root {
+  /* Palette shared with webapp-ui: soft-neutral light, biased a few degrees
+     cool so the indigo accent and the ambient wash read as one set. */
+  --bg: #f2f3f7;
+  --bg-1: #ffffff;
+  --bg-2: #f9fafc;
+  --bg-3: #edeef4;
+  /* Translucent white for surfaces that blur what scrolls under them. */
+  --bg-glass: rgba(255, 255, 255, 0.62);
+  --fg: #191922;
+  --fg-dim: #43434f;
+  --fg-mute: #76768a;
+  --line: #e5e6ee;
+  --line-strong: #d2d4e0;
+  --accent: #4f46e5;
+  --accent-rgb: 79, 70, 229;
+  --accent-2: #6366f1;
+  --accent-dim: #c7d2fe;
+  --warn: #d97706;
+  --warn-rgb: 217, 119, 6;
+  --warn-dim: #fde68a;
+  --err: #dc2626;
+  --err-rgb: 220, 38, 38;
+
+  --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+  --shadow-glow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
+  --radius: 8px;
+  --radius-sm: 6px;
+
+  /* --ease decelerates into rest (entrances); --ease-soft is symmetric for
+     hover and state swaps. */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-soft: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Duration and curve together, so a transition reads `color var(--t-fast)`
+     and every hover in the app moves at the same speed. --t-fast for what the
+     pointer touches, --t-med for what moves or resizes with it. */
+  --t-fast: 120ms var(--ease-soft);
+  --t-med: 150ms var(--ease-soft);
+
+  /* Height of the sticky header, which the sticky filter bar parks below. */
+  --hdr-h: 53px;
+
+  /* Transaction kinds. One hue per kind, reused by the bars, the legend and the
+     row badges so a colour means the same thing everywhere.
+     Pending gets its own hue rather than a tint of the accent: as `accent-dim`
+     it sat at 1.5:1 against the card — under the 3:1 floor for graphical
+     objects — and only 15deg of hue from deposit. Fuchsia is 6.3:1 and 51deg
+     clear of every other kind. "Unsettled" is carried by the dashed badge
+     border instead, which does not cost contrast. */
+  --kind-deposit: var(--accent);
+  --kind-deposit-dim: var(--accent-dim);
+  --kind-deposit-rgb: var(--accent-rgb);
+  --kind-pending: #a21caf;
+  --kind-pending-dim: #f5d0fe;
+  --kind-pending-rgb: 162, 28, 175;
+  --kind-transfer: #0891b2;
+  --kind-transfer-dim: #a5f3fc;
+  --kind-transfer-rgb: 8, 145, 178;
+  --kind-withdraw: var(--warn);
+  --kind-withdraw-dim: var(--warn-dim);
+  --kind-withdraw-rgb: var(--warn-rgb);
+}

@@ -69,10 +69,13 @@ export function createHttpApi(opts: HttpApiOpts = {}): ExplorerApi {
         bucketSec: q.bucketSec,
         sinceTs: q.sinceTs,
       });
+      // `== null`, not `=== null`: a backend that omits the field entirely would
+      // otherwise parse to NaN, which passes every null check downstream and
+      // prints "NaN" in the tiles instead of falling back to dollars.
       return rows.map((r) => ({
         ...r,
-        in: r.in === null ? null : Number(r.in),
-        out: r.out === null ? null : Number(r.out),
+        in: r.in == null ? null : Number(r.in),
+        out: r.out == null ? null : Number(r.out),
       }));
     },
 

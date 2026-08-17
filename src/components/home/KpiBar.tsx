@@ -1,5 +1,5 @@
 import { amountFmt, type Denom, unitShort } from "../../lib/denom";
-import { fmtBucket, fmtNum } from "../../lib/format";
+import { fmtBucket, fmtNum, joinMeta } from "../../lib/format";
 
 interface Props {
   inflow: number | null;
@@ -12,6 +12,10 @@ interface Props {
   bucketSec: number;
   /** Unit of the amount tiles; the two count tiles are always plain numbers. */
   denom: Denom;
+  /** Scope the counts actually cover, when it is wider than the amounts'. The
+   *  count endpoints take no asset, so a pinned asset narrows the flow tiles and
+   *  not these two — unsaid, the row reads as one asset's transactions. */
+  countScope?: string;
 }
 
 function Tile({
@@ -38,9 +42,18 @@ function Tile({
 
 const dash = "···";
 
-export default function KpiBar({ inflow, outflow, txTotal, peak, bucketSec, denom }: Props) {
+export default function KpiBar({
+  inflow,
+  outflow,
+  txTotal,
+  peak,
+  bucketSec,
+  denom,
+  countScope,
+}: Props) {
   const fmtAmount = amountFmt(denom);
   const amountUnit = unitShort(denom);
+  const peakUnit = joinMeta([fmtBucket(bucketSec), countScope]);
   return (
     <div className="kpis">
       <Tile
@@ -55,12 +68,16 @@ export default function KpiBar({ inflow, outflow, txTotal, peak, bucketSec, deno
         value={outflow !== null ? fmtAmount(outflow) : dash}
         cls="warn"
       />
-      <Tile label="∑ transactions" value={txTotal !== null ? fmtNum(txTotal) : dash} />
+      <Tile
+        label="∑ transactions"
+        unit={countScope}
+        value={txTotal !== null ? fmtNum(txTotal) : dash}
+      />
       <Tile
         // No arrow glyph: ▲/▼ mean direction on the flow tiles above, and a
         // peak is a magnitude.
         label="peak"
-        unit={fmtBucket(bucketSec)}
+        unit={peakUnit}
         value={peak !== null ? fmtNum(peak) : dash}
       />
     </div>

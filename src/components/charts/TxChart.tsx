@@ -2,8 +2,11 @@ import { useMemo } from "react";
 import type { CountPoint } from "../../api";
 import { fmtNum, fmtTs } from "../../lib/format";
 import { domainSpan, type TimeDomain } from "../../lib/time";
+import ChartCursor from "./ChartCursor";
+import ChartDot from "./ChartDot";
 import ChartFrame from "./ChartFrame";
-import { baselineY, geometry, pathArea, pathLine, resolveDomain, xScale, yScale } from "./chartLib";
+import { baselineY, pathArea, pathLine, resolveDomain, xScale, yScale } from "./chartLib";
+import { useChartGeometry } from "./useChartGeometry";
 import { useChartHover } from "./useChartHover";
 
 interface Props {
@@ -20,16 +23,16 @@ const Defs = (
 );
 
 export default function TxChart({ data, domain, height = 240 }: Props) {
+  const { ref, geom } = useChartGeometry(height);
   const view = useMemo(() => {
-    const geom = geometry(height);
     const dom = resolveDomain(data, (d) => d.ts, domain);
     const max = Math.max(1, ...data.map((d) => d.count));
     const x = xScale(geom, dom);
     const y = yScale(geom, max);
-    return { geom, dom, max, points: data.map((p) => ({ x: x(p.ts), y: y(p.count), p })) };
-  }, [data, height, domain]);
+    return { dom, max, points: data.map((p) => ({ x: x(p.ts), y: y(p.count), p })) };
+  }, [data, geom, domain]);
 
-  const { geom, dom, max, points } = view;
+  const { dom, max, points } = view;
   const { point: hoverPt, handlers } = useChartHover(geom, points);
 
   if (data.length === 0) return <div className="empty">no data</div>;
@@ -54,6 +57,7 @@ export default function TxChart({ data, domain, height = 240 }: Props) {
       geom={geom}
       domain={dom}
       max={max}
+      containerRef={ref}
       title="Transaction count over time"
       roundY
       defs={Defs}
@@ -64,21 +68,12 @@ export default function TxChart({ data, domain, height = 240 }: Props) {
       <path d={pathLine(points)} className="line line--tx" />
 
       {/* A single bucket draws a zero-length path, so mark the point itself. */}
-      {points.length === 1 && (
-        <circle cx={points[0].x} cy={points[0].y} r="3.5" className="chart__pt--in" />
-      )}
+      {points.length === 1 && <ChartDot x={points[0].x} y={points[0].y} series="in" />}
 
       {hoverPt && (
-        <g>
-          <line
-            x1={hoverPt.x}
-            x2={hoverPt.x}
-            y1={geom.pad.t}
-            y2={geom.H - geom.pad.b}
-            className="cursor"
-          />
-          <circle cx={hoverPt.x} cy={hoverPt.y} r="4" className="chart__pt--in" />
-        </g>
+        <ChartCursor geom={geom} x={hoverPt.x}>
+          <ChartDot x={hoverPt.x} y={hoverPt.y} series="in" />
+        </ChartCursor>
       )}
     </ChartFrame>
   );

@@ -1,0 +1,26 @@
+/* Titled panel around a chart or a table. */
+
+.card {
+  padding: 16px;
+  margin-bottom: 14px;
+  position: relative;
+}
+/* A chart brings its own bottom gutter for the x-axis labels. */
+.card--chart { padding: 16px 18px 8px; }
+
+.card__hdr {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+.card__t {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+.card__t::before { content: "▸ "; color: var(--accent); }

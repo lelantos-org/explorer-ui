@@ -1,7 +1,8 @@
-// Token amounts arrive as circuit units: the backend divides each asset's base
-// units by its `scale`, so a WETH-scale figure no longer lands at 1e19 and the
-// k/M/B/T ladder covers the ordinary range. The exponent branch stays as a
-// guard — nothing bounds a single whale bucket, and past 1e12 the ladder stops
+// Token amounts arrive as whole tokens: the backend divides each asset's base
+// units by `10^decimals` — never by `scale`, which sizes a value for the circuit
+// rather than normalising decimals — so a WETH figure lands at 14 and not 1.4e19,
+// and the k/M/B/T ladder covers the ordinary range. The exponent branch stays as
+// a guard — nothing bounds a single whale bucket, and past 1e12 the ladder stops
 // being readable rather than growing the mantissa without bound.
 function scaled(n: number, digits: number): string {
   const sign = n < 0 ? "-" : "";
@@ -70,4 +71,13 @@ export function fmtAge(ts: number, now = Math.floor(Date.now() / 1000)): string 
 export function fmtBucket(sec: number): string {
   if (sec >= 86400) return `${sec / 86400}d`;
   return `${sec / 3600}h`;
+}
+
+/**
+ * The one separator for card metadata, tile units and any other line that names
+ * several facts about a figure. Absent parts drop out rather than leaving a
+ * dangling separator, so callers can pass a conditional straight in.
+ */
+export function joinMeta(parts: (string | null | undefined | false)[]): string {
+  return parts.filter(Boolean).join(" · ");
 }

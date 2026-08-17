@@ -1,12 +1,22 @@
 import type { ReactNode } from "react";
 import { fmtNum, fmtTs } from "../../lib/format";
 import { domainSpan, type TimeDomain } from "../../lib/time";
-import { type ChartGeometry, ticks as makeTicks, timeTicks, xScale, yScale } from "./chartLib";
+import {
+  type ChartGeometry,
+  crisp,
+  ticks as makeTicks,
+  timeTicks,
+  xScale,
+  yScale,
+} from "./chartLib";
+import type { ChartBox } from "./useChartGeometry";
 
 interface Props {
   geom: ChartGeometry;
   domain: TimeDomain;
   max: number;
+  /** From `useChartGeometry`: the box whose width `geom` was measured from. */
+  containerRef?: ChartBox["ref"];
   /** Accessible name for the plot. */
   title: string;
   yTickCount?: number;
@@ -29,6 +39,7 @@ export default function ChartFrame({
   geom,
   domain,
   max,
+  containerRef,
   title,
   yTickCount = 4,
   xTickCount = 6,
@@ -45,11 +56,14 @@ export default function ChartFrame({
   const y = yScale(geom, max);
 
   return (
-    <div className="chart">
+    <div className="chart" ref={containerRef}>
       {legend && <div className="chart__legend">{legend}</div>}
+      {/* The viewBox matches the rendered size, so nothing is scaled: strokes
+          and labels keep the widths they are declared with. */}
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
+        width={W}
+        height={H}
         className="chart__svg"
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
@@ -60,8 +74,8 @@ export default function ChartFrame({
 
         {makeTicks(yTickCount, max, roundY).map((v) => (
           <g key={`y-${v}`}>
-            <line x1={pad.l} x2={W - pad.r} y1={y(v)} y2={y(v)} className="grid" />
-            <text x={pad.l - 8} y={y(v) + 3} textAnchor="end" className="axis">
+            <line x1={pad.l} x2={W - pad.r} y1={crisp(y(v))} y2={crisp(y(v))} className="grid" />
+            <text x={pad.l - 8} y={Math.round(y(v)) + 3} textAnchor="end" className="axis">
               {fmtNum(v)}
             </text>
           </g>
@@ -70,7 +84,13 @@ export default function ChartFrame({
         {children}
 
         {timeTicks(domain, xTickCount).map((ts) => (
-          <text key={`x-${ts}`} x={x(ts)} y={H - 8} textAnchor="middle" className="axis">
+          <text
+            key={`x-${ts}`}
+            x={Math.round(x(ts))}
+            y={H - 8}
+            textAnchor="middle"
+            className="axis"
+          >
             {fmtTs(ts, span)}
           </text>
         ))}

@@ -1,0 +1,81 @@
+/* The query bar — labelled fields and the buttons that act on them. */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+}
+/* Follows the page down, parked directly under the sticky header. */
+.filters--sticky {
+  position: sticky;
+  top: var(--hdr-h);
+  z-index: 5;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.fld { display: flex; flex-direction: column; gap: 5px; }
+/* The scope picker holds the longest labels in the bar — let it take the slack. */
+.fld--grow { flex: 1 1 260px; min-width: 0; }
+.fld__inp--scope { width: 100%; }
+.fld__lbl {
+  font-size: 10px;
+  color: var(--fg-mute);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.fld__inp {
+  background: var(--bg-1);
+  color: var(--fg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+  font-family: var(--sans);
+  font-size: 13px;
+  min-width: 160px;
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.fld__inp:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+}
+
+/* Chevron drawn from two gradients, so the select needs no image asset and
+   follows the accent colour. */
+select.fld__inp {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%),
+    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 26px;
+  min-width: 200px;
+  cursor: pointer;
+}
+
+.btn {
+  background: var(--bg-1);
+  color: var(--fg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-3);
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn--ghost { background: transparent; }

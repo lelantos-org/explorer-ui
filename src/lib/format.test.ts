@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { fmtAge, fmtBucket, fmtNum, fmtTokens, fmtTs, fmtUsd, fmtUsdSigned } from "./format";
+import {
+  fmtAge,
+  fmtBucket,
+  fmtNum,
+  fmtTokens,
+  fmtTs,
+  fmtUsd,
+  fmtUsdSigned,
+  joinMeta,
+} from "./format";
 
 describe("fmtNum", () => {
   it("climbs the k/M/B/T ladder", () => {
@@ -73,5 +82,19 @@ describe("time formatting", () => {
     expect(fmtBucket(3600)).toBe("1h");
     expect(fmtBucket(6 * 3600)).toBe("6h");
     expect(fmtBucket(86400)).toBe("1d");
+  });
+});
+
+describe("joinMeta", () => {
+  it("joins the parts a caller kept", () => {
+    expect(joinMeta(["bucket 1h", "all assets"])).toBe("bucket 1h · all assets");
+  });
+
+  it("drops absent parts instead of leaving a dangling separator", () => {
+    expect(joinMeta(["USD · at spot", undefined, null, false, ""])).toBe("USD · at spot");
+  });
+
+  it("has nothing to say about nothing", () => {
+    expect(joinMeta([])).toBe("");
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AssetOut } from "../api";
-import { assetKey, assetLabel, assetOptionLabel, indexAssets } from "./assets";
+import { assetKey, assetLabel, assetOptionLabel, assetsInScope, indexAssets } from "./assets";
 
 const asset = (symbol: string | null, chainId = 1, assetIdU64 = 1000): AssetOut => ({
   chainId,
@@ -30,6 +30,33 @@ describe("assetOptionLabel", () => {
 
   it("shows the address alone, not twice, when there is no symbol", () => {
     expect(assetOptionLabel(asset(null))).toBe("0xa0b8…eb48");
+  });
+});
+
+describe("assetsInScope", () => {
+  const registry = [asset("USDC", 1, 1000), asset("WETH", 1, 1001), asset("ARB", 42161, 1002)];
+
+  it("counts the whole registry when nothing is pinned", () => {
+    expect(assetsInScope(registry, { chainId: "", assetIdU64: "" })).toHaveLength(3);
+  });
+
+  it("narrows to a chain, so a count beside a chain name means that chain", () => {
+    const scoped = assetsInScope(registry, { chainId: "1", assetIdU64: "" });
+    expect(scoped?.map((a) => a.symbol)).toEqual(["USDC", "WETH"]);
+  });
+
+  it("narrows to the one pinned asset", () => {
+    const scoped = assetsInScope(registry, { chainId: "1", assetIdU64: "1001" });
+    expect(scoped?.map((a) => a.symbol)).toEqual(["WETH"]);
+  });
+
+  it("stays null while the registry is unloaded, which is not the same as empty", () => {
+    expect(assetsInScope(null, { chainId: "1", assetIdU64: "" })).toBeNull();
+  });
+
+  it("reads the scope as numbers, not as the URL text it arrived as", () => {
+    const scoped = assetsInScope(registry, { chainId: "01", assetIdU64: "01001" });
+    expect(scoped?.map((a) => a.symbol)).toEqual(["WETH"]);
   });
 });
 

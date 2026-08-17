@@ -3,8 +3,11 @@ import type { FlowPoint } from "../../api";
 import { amountFmt, amounts, type Denom, isUsd } from "../../lib/denom";
 import { fmtTs } from "../../lib/format";
 import { domainSpan, type TimeDomain } from "../../lib/time";
+import ChartCursor from "./ChartCursor";
+import ChartDot from "./ChartDot";
 import ChartFrame from "./ChartFrame";
-import { baselineY, geometry, pathArea, pathLine, resolveDomain, xScale, yScale } from "./chartLib";
+import { baselineY, pathArea, pathLine, resolveDomain, xScale, yScale } from "./chartLib";
+import { useChartGeometry } from "./useChartGeometry";
 import { useChartHover } from "./useChartHover";
 
 interface Props {
@@ -29,18 +32,18 @@ const Defs = (
 );
 
 export default function FlowChart({ data, denom, domain, height = 280 }: Props) {
+  const { ref, geom } = useChartGeometry(height);
   const view = useMemo(() => {
-    const geom = geometry(height);
     const dom = resolveDomain(data, (d) => d.ts, domain);
     const series = data.map((p) => ({ p, v: amounts(p, denom) }));
     const max = Math.max(1, ...series.map((s) => Math.max(s.v.in, s.v.out)));
     const x = xScale(geom, dom);
     const y = yScale(geom, max);
     const points = series.map(({ p, v }) => ({ x: x(p.ts), yIn: y(v.in), yOut: y(v.out), v, p }));
-    return { geom, dom, max, points };
-  }, [data, denom, height, domain]);
+    return { dom, max, points };
+  }, [data, denom, geom, domain]);
 
-  const { geom, dom, max, points } = view;
+  const { dom, max, points } = view;
   const { point: hoverPt, handlers } = useChartHover(geom, points);
 
   if (data.length === 0) return <div className="empty">no data</div>;
@@ -76,6 +79,7 @@ export default function FlowChart({ data, denom, domain, height = 280 }: Props) 
       geom={geom}
       domain={dom}
       max={max}
+      containerRef={ref}
       title="Inflow and outflow over time"
       defs={Defs}
       legend={legend}
@@ -89,23 +93,16 @@ export default function FlowChart({ data, denom, domain, height = 280 }: Props) 
       {/* A single bucket draws a zero-length path, so mark the point itself. */}
       {points.length === 1 && (
         <g>
-          <circle cx={points[0].x} cy={points[0].yOut} r="3.5" className="chart__pt--out" />
-          <circle cx={points[0].x} cy={points[0].yIn} r="3.5" className="chart__pt--in" />
+          <ChartDot x={points[0].x} y={points[0].yOut} series="out" />
+          <ChartDot x={points[0].x} y={points[0].yIn} series="in" />
         </g>
       )}
 
       {hoverPt && (
-        <g>
-          <line
-            x1={hoverPt.x}
-            x2={hoverPt.x}
-            y1={geom.pad.t}
-            y2={geom.H - geom.pad.b}
-            className="cursor"
-          />
-          <circle cx={hoverPt.x} cy={hoverPt.yIn} r="4" className="chart__pt--in" />
-          <circle cx={hoverPt.x} cy={hoverPt.yOut} r="4" className="chart__pt--out" />
-        </g>
+        <ChartCursor geom={geom} x={hoverPt.x}>
+          <ChartDot x={hoverPt.x} y={hoverPt.yIn} series="in" />
+          <ChartDot x={hoverPt.x} y={hoverPt.yOut} series="out" />
+        </ChartCursor>
       )}
     </ChartFrame>
   );

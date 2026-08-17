@@ -1,0 +1,97 @@
+/* The page frame: header, content column, footer. */
+
+.app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* HEADER */
+.hdr {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.hdr__left { display: flex; align-items: baseline; gap: 10px; }
+.hdr__right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+
+.brand {
+  color: var(--accent);
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+.brand__sub {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.lnk {
+  color: var(--fg-dim);
+  text-decoration: none;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.lnk:hover { color: var(--accent); background: var(--bg-3); }
+/* Inside prose rather than in the header bar: no chrome, just the accent. */
+.lnk--inline {
+  padding: 0;
+  border: none;
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--accent);
+  background: none;
+}
+.lnk--inline:hover { color: var(--accent-2); background: none; text-decoration: underline; }
+
+/* CONTENT */
+.main {
+  flex: 1;
+  padding: 28px 24px 56px;
+  max-width: 1480px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.home > * { animation: fadein 240ms var(--ease); }
+
+/* FOOTER */
+.ftr {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+  font-size: 13px;
+}
+.ftr__brand { color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
+.ftr__sep {
+  width: 1px;
+  height: 12px;
+  background: var(--line-strong);
+}
+.ftr__link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-mute);
+  text-decoration: none;
+  transition: color var(--t-fast);
+}
+.ftr__link:hover { color: var(--accent); }

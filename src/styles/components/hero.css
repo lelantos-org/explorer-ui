@@ -1,0 +1,39 @@
+/* Page masthead: title on the left, the headline KPI on the right. */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: stretch;
+  padding: 22px 24px;
+  margin-bottom: 18px;
+  background:
+    linear-gradient(135deg, rgba(var(--accent-rgb), 0.05), transparent 50%),
+    var(--bg-1);
+  position: relative;
+  overflow: hidden;
+}
+/* Hairline of accent along the top edge, fading out at both ends. */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.5;
+}
+.hero__eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.hero__t {
+  margin: 0 0 8px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.hero__sub { font-size: 13px; }
+.hero__r { display: flex; align-items: center; }

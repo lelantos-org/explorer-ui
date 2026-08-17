@@ -140,10 +140,41 @@ describe("mock chain flows", () => {
     expect(rows.every((r) => r.hourlyIn.length === 24 && r.hourlyOut.length === 24)).toBe(true);
   });
 
-  it("totals each chain's hourly series", async () => {
+  it("carries transaction counts, and totals them", async () => {
     const [row] = await shared.getChainFlows24h();
     const sum = (a: number[]) => a.reduce((s, v) => s + v, 0);
-    expect(row.inflow).toBe(sum(row.hourlyIn));
-    expect(row.outflow).toBe(sum(row.hourlyOut));
+    expect(row.txCount).toBe(sum(row.hourlyIn));
+    expect(row.txCount).toBeGreaterThan(0);
+  });
+
+  it("reports no value, because a chain's assets have no addable token total", async () => {
+    // The backend documents inflow/outflow/hourlyOut as reserved and always 0.
+    // Summing each chain's token amounts here is the cross-asset total the flow
+    // endpoint refuses to produce, and the grid rendered it as "vol".
+    const rows = await shared.getChainFlows24h();
+    expect(rows.every((r) => r.inflow === 0 && r.outflow === 0)).toBe(true);
+    expect(rows.every((r) => r.hourlyOut.every((v) => v === 0))).toBe(true);
+  });
+
+  it("hottest chain first, by the only figure it reports", async () => {
+    const rows = await shared.getChainFlows24h();
+    const counts = rows.map((r) => r.txCount);
+    expect(counts).toEqual([...counts].sort((a, b) => b - a));
+  });
+
+  it("spans 24 whole hours anchored on now, dropping what falls outside", async () => {
+    // The hour containing `now` is slot 23. Anchoring on `now - 86400` instead
+    // spans 25 distinct hours, and clamping the extra one into slot 23 reads as
+    // real activity in an hour that had none.
+    const nowSec = 1_700_000_000;
+    const hourStart = Math.floor(nowSec / 3600) * 3600 - 23 * 3600;
+    const [row] = await shared.getChainFlows24h();
+    const counts = await shared.getTxCounts({
+      chainId: row.chainId,
+      bucketSec: 3600,
+      sinceTs: hourStart,
+    });
+    expect(counts.length).toBeLessThanOrEqual(24);
+    expect(row.txCount).toBe(counts.reduce((s, p) => s + p.count, 0));
   });
 });

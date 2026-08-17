@@ -3,7 +3,8 @@ import { type KindCounts, TX_KINDS, type TxKind } from "../../api";
 import { fmtNum, fmtTs } from "../../lib/format";
 import { domainSpan, type TimeDomain } from "../../lib/time";
 import ChartFrame from "./ChartFrame";
-import { baselineY, geometry, resolveDomain, xScale, yScale } from "./chartLib";
+import { baselineY, resolveDomain, xScale, yScale } from "./chartLib";
+import { useChartGeometry } from "./useChartGeometry";
 import { useChartHover } from "./useChartHover";
 
 interface Props {
@@ -47,8 +48,8 @@ const MAX_BAR_W = 14;
 const MIN_BAR_H = 1.5;
 
 export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: Props) {
+  const { ref, geom } = useChartGeometry(height);
   const view = useMemo(() => {
-    const geom = geometry(height);
     const dom = resolveDomain(data, (d) => d.ts, domain);
     const span = domainSpan(dom);
     // Grouped, not stacked: the axis fits the tallest single kind, so a short
@@ -60,7 +61,9 @@ export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: 
 
     // One slot per bucket *duration*, split into a lane per kind.
     const laneRaw = ((bucketSec / span) * geom.iw * GROUP_FILL) / PLOTTED_KINDS.length;
-    const barW = Math.min(Math.max(laneRaw * BAR_FILL, MIN_BAR_W), MAX_BAR_W);
+    // Whole pixels: a fractional width leaves both edges of every bar
+    // half-lit, which reads as a soft bar rather than a thin one.
+    const barW = Math.round(Math.min(Math.max(laneRaw * BAR_FILL, MIN_BAR_W), MAX_BAR_W));
     const lane = barW / BAR_FILL;
     const group = lane * PLOTTED_KINDS.length;
 
@@ -79,16 +82,16 @@ export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: 
         return {
           kind,
           value,
-          x: gx + i * lane + (lane - barW) / 2,
-          h: value > 0 ? Math.max(MIN_BAR_H, baseline - y(value)) : 0,
+          x: Math.round(gx + i * lane + (lane - barW) / 2),
+          h: value > 0 ? Math.max(MIN_BAR_H, Math.round(baseline - y(value))) : 0,
         };
       });
       return { x: gx + group / 2, bars, p };
     });
-    return { geom, dom, max, points, barW, baseline, group };
-  }, [data, bucketSec, height, domain]);
+    return { dom, max, points, barW, baseline, group };
+  }, [data, bucketSec, geom, domain]);
 
-  const { geom, dom, max, points, barW, baseline, group } = view;
+  const { dom, max, points, barW, baseline, group } = view;
   const { point: hoverPt, handlers } = useChartHover(geom, points);
 
   if (data.length === 0) return <div className="empty">no data</div>;
@@ -119,6 +122,7 @@ export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: 
       domain={dom}
       max={max}
       roundY
+      containerRef={ref}
       title="Transactions by kind over time"
       legend={legend}
       {...handlers}

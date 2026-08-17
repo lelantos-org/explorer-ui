@@ -1,5 +1,13 @@
 import type { FlowPoint } from "../api";
-import { fmtNum, fmtSigned, fmtTokens, fmtTokensSigned, fmtUsd, fmtUsdSigned } from "./format";
+import {
+  fmtNum,
+  fmtSigned,
+  fmtTokens,
+  fmtTokensSigned,
+  fmtUsd,
+  fmtUsdSigned,
+  joinMeta,
+} from "./format";
 
 /**
  * Which unit the flow widgets can honestly speak.
@@ -61,9 +69,26 @@ export function signedFmt(d: Denom): (n: number) => string {
   return d === "tokens" ? fmtTokensSigned : fmtSigned;
 }
 
-/** Unit name for a tile label, where there is no room for the full caveat. */
+/**
+ * The dollar unit, never bare "USD".
+ *
+ * The backend prices every bucket at the *current* price, so a 90-day dollar
+ * figure is what that volume would be worth today rather than what it was worth
+ * when it moved. Both the tile unit and the card label are built from this, so
+ * the caveat cannot go missing from one of them.
+ */
+const USD_AT_SPOT = "USD · at spot";
+
+/**
+ * Unit name for a tile label, where there is no room for the full caveat.
+ *
+ * `usd-partial` still says "partial": a tile is often the only thing a reader
+ * looks at, and a net figure that silently drops an unpriced asset can be wrong
+ * in either direction — it is not a floor the way a total is.
+ */
 export function unitShort(d: Denom): string {
-  if (isUsd(d)) return "USD";
+  if (d === "usd") return USD_AT_SPOT;
+  if (d === "usd-partial") return joinMeta([USD_AT_SPOT, "partial"]);
   return d === "tokens" ? "tokens" : "—";
 }
 
@@ -79,10 +104,12 @@ export function amounts(p: FlowPoint, d: Denom): { in: number; out: number } {
 /** Short label naming the unit, for card metadata. */
 export function denomLabel(d: Denom, flows: FlowPoint[] | null): string {
   if (d === "tokens") return "whole tokens";
-  if (d === "usd") return "USD";
+  if (d === "usd") return USD_AT_SPOT;
   if (d === "usd-partial") {
+    // The worst bucket, because that is how many assets the range as a whole
+    // cannot account for.
     const worst = Math.max(0, ...(flows ?? []).map((p) => p.unpricedAssets));
-    return `USD · ${worst} unpriced asset${worst === 1 ? "" : "s"} excluded`;
+    return joinMeta([USD_AT_SPOT, `${worst} unpriced asset${worst === 1 ? "" : "s"} excluded`]);
   }
   return "no common unit — pick one asset";
 }

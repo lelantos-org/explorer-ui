@@ -1,0 +1,13 @@
+/* Narrow-screen overrides. Last in the cascade, so a component file never has
+   to know it is being overridden. */
+
+@media (max-width: 720px) {
+  .hdr { padding: 10px 14px; gap: 10px; }
+  .main { padding: 20px 14px 40px; }
+  .hero { grid-template-columns: 1fr; padding: 18px; }
+  .hero__t { font-size: 24px; }
+  .kpi--xl .kpi__val { font-size: 28px; }
+  /* Two sticky bars would eat half a phone screen; the header keeps the slot. */
+  .filters--sticky { position: static; }
+  .ftr { padding: 12px 14px; font-size: 12px; }
+}

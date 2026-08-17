@@ -23,9 +23,9 @@ import {
   sumFlows,
   summarizeChains,
 } from "../lib/aggregate";
-import { assetKey, assetLabel, indexAssets } from "../lib/assets";
+import { assetLabel, assetsInScope } from "../lib/assets";
 import { type Denom, denomLabel, pickDenom } from "../lib/denom";
-import { fmtBucket, fmtNum } from "../lib/format";
+import { fmtBucket, fmtNum, joinMeta } from "../lib/format";
 import { groupAssetsByChain } from "../lib/scope";
 
 export default function Home() {
@@ -50,11 +50,20 @@ export default function Home() {
   const totals = sumFlows(flows, denom);
   const bucket = fmtBucket(filters.range.bucket);
 
+  // `/v1/tx-counts` and `/v1/tx-kinds` take a chain and no asset, so pinning one
+  // narrows the flows and leaves every count chain-wide. Say it on the tiles and
+  // cards that keep the wider scope rather than letting the row read as one
+  // asset's transactions.
+  const countScope = filters.assetIdU64 ? "all assets" : undefined;
+  const countMeta = joinMeta([`bucket ${bucket}`, countScope]);
+
+  const scopedAssets = assetsInScope(assets.data, filters);
+
   return (
     <section className="home">
       <Hero
         rangeLabel={filters.range.label}
-        assetCount={assets.data?.length ?? null}
+        assetCount={scopedAssets?.length ?? null}
         chainId={filters.chainId}
         netFlow={totals?.net ?? null}
         denom={denom}
@@ -88,17 +97,18 @@ export default function Home() {
         peak={peakCount(counts)}
         bucketSec={filters.range.bucket}
         denom={denom}
+        countScope={countScope}
       />
 
       <Card
         title="inflow / outflow"
-        meta={flowMeta(filters, denom, flows, assets.data)}
+        meta={flowMeta(filters, denom, flows, scopedAssets)}
         variant="chart"
       >
         <FlowSection flows={flows} denom={denom} domain={domain} loading={flowAndTx.loading} />
       </Card>
 
-      <Card title="transactions over time" meta={`bucket ${bucket}`} variant="chart">
+      <Card title="transactions over time" meta={countMeta} variant="chart">
         <TxChart data={counts ?? []} domain={domain} />
       </Card>
 
@@ -109,7 +119,7 @@ export default function Home() {
           // axis is per-kind and not a bucket total. `pending` is named as
           // excluded rather than silently dropped — the plot is not every
           // transaction, and a reader totalling the bars should know that.
-          txKinds.data ? `grouped by kind · pending excluded · bucket ${bucket}` : "loading…"
+          txKinds.data ? `grouped by kind · pending excluded · ${countMeta}` : "loading…"
         }
         variant="chart"
       >
@@ -130,8 +140,12 @@ function chainsMeta(s: ChainsSummary | null): string {
   if (!s) return "loading…";
   // inflow/outflow are reserved backend fields, still zero today — omit them
   // rather than render 0 as a measurement.
-  const value = s.hasValues ? ` · in ${fmtNum(s.inflow)} · out ${fmtNum(s.outflow)}` : "";
-  return `${s.chains} chains${value} · ${fmtNum(s.tx)} tx`;
+  return joinMeta([
+    `${s.chains} chains`,
+    s.hasValues && `in ${fmtNum(s.inflow)}`,
+    s.hasValues && `out ${fmtNum(s.outflow)}`,
+    `${fmtNum(s.tx)} tx`,
+  ]);
 }
 
 /**
@@ -143,19 +157,16 @@ function flowMeta(
   filters: Filters,
   denom: Denom,
   flows: FlowPoint[] | null,
-  assets: AssetOut[] | null,
+  scopedAssets: AssetOut[] | null,
 ): string {
-  // The scoped asset is named by symbol or address; "unknown token" covers the
-  // registry not being loaded yet, which the id would only paper over.
-  const scoped = indexAssets(assets).get(
-    assetKey(Number(filters.chainId), Number(filters.assetIdU64)),
-  );
-  return [
+  // A pinned asset is the only member of the scope. It is named by symbol or
+  // address; "unknown token" covers the registry not being loaded yet, which the
+  // registry id would only paper over.
+  const scoped = filters.assetIdU64 ? scopedAssets?.[0] : undefined;
+  return joinMeta([
     filters.assetIdU64 ? `asset ${scoped ? assetLabel(scoped) : "unknown token"}` : "all assets",
     denomLabel(denom, flows),
-    filters.chainId ? `chain ${filters.chainId}` : null,
+    filters.chainId && `chain ${filters.chainId}`,
     `bucket ${fmtBucket(filters.range.bucket)}`,
-  ]
-    .filter((part) => part !== null)
-    .join(" · ");
+  ]);
 }

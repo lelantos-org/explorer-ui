@@ -1,0 +1,42 @@
+/* Headline numbers. `--xl` is the one in the hero; the rest sit in a row under
+   it. */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.kpi {
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--t-med);
+}
+.kpi:hover { border-color: var(--accent-dim); }
+/* Accent rule down the leading edge. */
+.kpi::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 2px;
+  background: var(--accent-dim);
+}
+.kpi--xl { padding: 18px 24px; min-width: 240px; border-color: var(--accent-dim); }
+.kpi--xl::before { background: var(--accent); width: 3px; }
+
+.kpi__lbl {
+  font-size: 10px;
+  color: var(--fg-mute);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.kpi__val {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.kpi--xl .kpi__val { font-size: 36px; }

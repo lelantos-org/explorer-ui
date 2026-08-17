@@ -58,10 +58,21 @@ describe("denom helpers", () => {
 
   it("names how many assets a partial dollar total leaves out", () => {
     const flows = [flow({ ts: 0, unpricedAssets: 1 }), flow({ ts: 3600, unpricedAssets: 3 })];
-    expect(denomLabel("usd-partial", flows)).toBe("USD · 3 unpriced assets excluded");
+    expect(denomLabel("usd-partial", flows)).toBe("USD · at spot · 3 unpriced assets excluded");
     expect(denomLabel("usd-partial", [flow({ ts: 0, unpricedAssets: 1 })])).toBe(
-      "USD · 1 unpriced asset excluded",
+      "USD · at spot · 1 unpriced asset excluded",
     );
+  });
+
+  it("says dollars are spot-priced, since old volume is valued at today's price", () => {
+    expect(denomLabel("usd", null)).toBe("USD · at spot");
+    expect(unitShort("usd")).toBe("USD · at spot");
+  });
+
+  it("never prints a partial dollar figure as plain USD", () => {
+    // A tile is often all a reader looks at, and a net that drops an unpriced
+    // asset can be wrong in either direction.
+    expect(unitShort("usd-partial")).toBe("USD · at spot · partial");
   });
 
   it("says so when there is no unit at all", () => {

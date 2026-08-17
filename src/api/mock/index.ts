@@ -39,6 +39,19 @@ export interface MockApiOpts {
 /** Floor a timestamp onto its bucket's start. */
 const bucketOf = (ts: number, bucket: number) => Math.floor(ts / bucket) * bucket;
 
+/** Slots in the `/v1/chain-flows-24h` window, oldest first. */
+const WINDOW_HOURS = 24;
+
+const zeroHours = () => new Array<number>(WINDOW_HOURS).fill(0);
+
+/**
+ * Oldest hour of the 24-hour window, anchored so the hour containing `ts` lands
+ * in the last slot — as the backend anchors it. Anchoring on `ts - 86400`
+ * instead spans 25 distinct hours, and the newest has nowhere to go but the last
+ * slot alongside the hour before it.
+ */
+const windowStart = (ts: number) => bucketOf(ts, 3600) - (WINDOW_HOURS - 1) * 3600;
+
 /**
  * A flow bucket under construction. Token amounts accumulate unconditionally
  * and are dropped at the end when more than one asset is in scope, which is
@@ -227,35 +240,34 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
 
     async getChainFlows24h(): Promise<ChainFlow[]> {
       await respond();
-      // The instance's anchor, not a fresh clock read: reading here made the
-      // window advance between calls on one mock, so `nowSec` did not actually
-      // pin the dataset and successive requests could disagree.
-      const hourStart = bucketOf(now - 86400, 3600);
+      // Mirror the backend contract, which carries counts and no value:
+      // `hourlyIn` is transactions per hour, `inflow`/`outflow`/`hourlyOut` are
+      // reserved and 0. Summing each chain's token amounts here — the previous
+      // shape — was the cross-asset total `getAssetFlows` refuses to produce, and
+      // the grid drew its "vol" shares off it.
+      //
+      // The window is anchored on the instance's `now` rather than a fresh clock
+      // read: reading here made it advance between calls, so `nowSec` did not
+      // actually pin the dataset.
+      const hourStart = windowStart(now);
       const chainIds = [...new Set(assets.map((a) => a.chainId))];
 
       return chainIds
         .map((chainId): ChainFlow => {
-          const hourlyIn = new Array<number>(24).fill(0);
-          const hourlyOut = new Array<number>(24).fill(0);
+          const hourlyIn = zeroHours();
           let txCount = 0;
           for (const f of flows) {
-            if (f.chainId !== chainId || f.ts < hourStart) continue;
-            const slot = Math.max(0, Math.min(23, Math.floor((f.ts - hourStart) / 3600)));
-            hourlyIn[slot] += f.inAmt;
-            hourlyOut[slot] += f.outAmt;
+            const slot = Math.floor((f.ts - hourStart) / 3600);
+            // Out-of-window rows are dropped, not clamped: a clamped slot adds a
+            // foreign hour's count to an edge bucket, which reads as real
+            // activity in that hour.
+            if (f.chainId !== chainId || slot < 0 || slot >= WINDOW_HOURS) continue;
+            hourlyIn[slot] += f.txCount;
             txCount += f.txCount;
           }
-          const sum = (a: number[]) => a.reduce((s, v) => s + v, 0);
-          return {
-            chainId,
-            inflow: sum(hourlyIn),
-            outflow: sum(hourlyOut),
-            hourlyIn,
-            hourlyOut,
-            txCount,
-          };
+          return { chainId, inflow: 0, outflow: 0, hourlyIn, hourlyOut: zeroHours(), txCount };
         })
-        .sort((a, b) => b.inflow + b.outflow - (a.inflow + a.outflow));
+        .sort((a, b) => b.txCount - a.txCount);
     },
   };
 }

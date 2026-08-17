@@ -8,10 +8,7 @@ export interface ChartPad {
 }
 
 // Left gutter fits the widest y-axis label (exponent form, e.g. "1.80e19").
-const DEFAULT_PAD: ChartPad = { l: 72, r: 16, t: 18, b: 28 };
-// Charts are drawn in fixed viewBox units and stretched to their container, so
-// this is a coordinate space rather than a pixel width.
-const CHART_W = 1000;
+export const DEFAULT_PAD: ChartPad = { l: 72, r: 16, t: 18, b: 28 };
 
 export interface ChartGeometry {
   W: number;
@@ -22,7 +19,9 @@ export interface ChartGeometry {
   ih: number;
 }
 
-export function geometry(H: number, pad: ChartPad = DEFAULT_PAD, W = CHART_W): ChartGeometry {
+/** `W` is the container's measured pixel width, so that one user unit is one
+ *  CSS pixel — see `useChartGeometry`. */
+export function geometry(H: number, W: number, pad: ChartPad = DEFAULT_PAD): ChartGeometry {
   return { W, H, pad, iw: W - pad.l - pad.r, ih: H - pad.t - pad.b };
 }
 
@@ -69,6 +68,18 @@ export function ticks(count: number, max: number, round = false): number[] {
     return round ? Math.round(v) : v;
   });
   return round ? [...new Set(values)] : values;
+}
+
+/**
+ * Snap an axis-aligned coordinate onto a pixel centre.
+ *
+ * A 1px stroke at a whole coordinate straddles the boundary between two pixels
+ * and is drawn as two half-lit rows; half a pixel over, it covers one row
+ * exactly. Only worth doing for horizontal and vertical hairlines — on a
+ * diagonal it would move the line without sharpening it.
+ */
+export function crisp(v: number): number {
+  return Math.round(v) + 0.5;
 }
 
 export function timeTicks(domain: TimeDomain, count = 6): number[] {

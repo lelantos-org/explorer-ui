@@ -1,0 +1,15 @@
+/* The raised panel every block of content sits on: one border, one radius, one
+   shadow, in one place. Each component file below adds its own padding, layout
+   and background — they load after this one, so a component that wants a
+   gradient of its own simply restates `background`. */
+
+.hero,
+.kpi,
+.card,
+.filters,
+.chain-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-1);
+  box-shadow: var(--shadow-glow);
+}

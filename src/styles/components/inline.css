@@ -1,0 +1,59 @@
+/* Inline value formats: a copyable hex, a kind badge, an asset pair. Mostly
+   seen in table cells, but nothing here assumes a table. */
+
+/* HEX — a real <button>, so reset the UA chrome and keep it inline. */
+.hex {
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-family: var(--mono);
+  color: var(--fg-dim);
+  cursor: pointer;
+  user-select: all;
+  border-bottom: 1px dotted var(--line-strong);
+  transition: color var(--t-fast);
+}
+.hex:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hex:hover { color: var(--accent); border-color: var(--accent); }
+
+/* KIND badge. Hues come from the `--kind-*` tokens, so a colour means the same
+   thing here as it does in the chart legend and bars. */
+.kind {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  cursor: help;
+}
+.kind--deposit {
+  color: var(--kind-deposit);
+  border-color: var(--kind-deposit-dim);
+  background: rgba(var(--kind-deposit-rgb), 0.08);
+}
+/* Dashed: pending is the one kind that can still change. */
+.kind--pending {
+  color: var(--kind-pending);
+  border-color: var(--kind-pending-dim);
+  border-style: dashed;
+  background: rgba(var(--kind-pending-rgb), 0.08);
+}
+.kind--transfer {
+  color: var(--kind-transfer);
+  border-color: var(--kind-transfer-dim);
+  background: rgba(var(--kind-transfer-rgb), 0.08);
+}
+.kind--withdraw {
+  color: var(--kind-withdraw);
+  border-color: var(--kind-withdraw-dim);
+  background: rgba(var(--kind-withdraw-rgb), 0.08);
+}
+
+/* Asset cell: the symbol leads when the indexer has read one, the token address
+   trails as the thing that actually identifies the token. */
+.asset { display: inline-flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.asset__sym { color: var(--fg-dim); }
+.asset__tok { font-size: 11px; }

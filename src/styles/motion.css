@@ -1,0 +1,32 @@
+/* Every keyframe animation in the app, next to the one rule that turns them all
+   off — a new animation is only reachable from here, so it cannot be added
+   without the reduced-motion opt-out being updated with it. */
+
+/* Live status dot: breathing, not blinking. */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+/* "LIVE" label, faster and deeper than the dot so the two read as one signal
+   rather than a beat. */
+@keyframes blink {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* Placeholder cards while chain flows load. */
+@keyframes shimmer {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+}
+
+/* Sections entering on the home page. */
+@keyframes fadein {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home > *, .dot--ok, .live, .chain-card--ghost { animation: none; }
+}

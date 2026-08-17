@@ -1,0 +1,120 @@
+/* One card per chain: identity, its share of the total, its numbers, and a
+   24h sparkline. The whole card is a button that scopes the page to that chain. */
+
+.chain-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.chain-card {
+  text-align: left;
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
+  padding: 14px 16px;
+  font-family: var(--sans);
+  color: var(--fg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--t-med), transform var(--t-med), box-shadow var(--t-med);
+}
+/* Accent wash on hover, faded in rather than swapped so the card does not
+   flicker as the pointer crosses it. */
+.chain-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0) 0%, rgba(var(--accent-rgb), 0.06) 100%);
+  opacity: 0;
+  transition: opacity var(--t-med);
+}
+.chain-card:hover { border-color: var(--accent-dim); transform: translateY(-1px); }
+.chain-card:hover::after { opacity: 1; }
+
+.chain-card--on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-glow);
+}
+.chain-card--on::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--accent);
+}
+/* Placeholder while the flows load: card-shaped, inert. */
+.chain-card--ghost {
+  min-height: 180px;
+  background: var(--bg-1);
+  animation: shimmer 1.4s infinite;
+  cursor: default;
+}
+
+.chain-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.chain-card__short {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.chain-card__name {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+
+.chain-card__share {
+  text-align: right;
+  min-width: 70px;
+}
+.chain-card__share__bar {
+  width: 70px;
+  height: 4px;
+  background: var(--bg-3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.chain-card__share__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+}
+.chain-card__share__lbl {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  margin-top: 4px;
+}
+
+.chain-card__nums {
+  display: grid;
+  /* 4 stats when the backend reports value, 2 when only tx counts exist. */
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap: 6px;
+}
+.cn { display: flex; flex-direction: column; gap: 2px; }
+.cn__lbl {
+  font-size: 9px;
+  color: var(--fg-mute);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.cn__v {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.chain-card__spark {
+  border-top: 1px dashed var(--line);
+  padding-top: 8px;
+  margin-top: auto;
+}

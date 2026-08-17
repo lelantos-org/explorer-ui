@@ -1,0 +1,31 @@
+/* Exclusive choice in a row of joined buttons — range and denomination pickers. */
+
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-1);
+}
+.seg__b {
+  background: transparent;
+  color: var(--fg-dim);
+  border: none;
+  padding: 7px 14px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-right: 1px solid var(--line-strong);
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.seg__b:last-child { border-right: none; }
+.seg__b:hover:not(:disabled) { color: var(--fg); background: var(--bg-3); }
+.seg__b--on {
+  color: #ffffff;
+  background: var(--accent);
+  font-weight: 600;
+}
+.seg__b:disabled { opacity: 0.4; cursor: not-allowed; }
