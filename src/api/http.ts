@@ -83,6 +83,7 @@ export function createHttpApi(opts: HttpApiOpts = {}): ExplorerApi {
       get<TxOut[]>("/v1/transactions", {
         chainId: q.chainId,
         sinceTs: q.sinceTs,
+        kind: q.kind,
         limit: q.limit,
       }),
 

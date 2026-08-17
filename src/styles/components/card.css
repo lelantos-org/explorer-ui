@@ -15,6 +15,15 @@
   margin-bottom: 12px;
   gap: 12px;
 }
+/* Meta, and any control that scopes this card. `baseline` on the header aligns
+   text with text; a control is a box, so this group re-centres it against the
+   meta beside it. */
+.card__aside {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  align-self: center;
+}
 .card__t {
   margin: 0;
   font-size: 11px;

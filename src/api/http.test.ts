@@ -20,6 +20,32 @@ const flowRow = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+/** A fetch that answers with `[]` and records the URL it was called with. */
+const recording = () => {
+  const urls: string[] = [];
+  const fetchFn = (async (url: string) => {
+    urls.push(url);
+    return { ok: true, status: 200, statusText: "OK", json: async () => [] };
+  }) as unknown as typeof fetch;
+  return { urls, fetchFn };
+};
+
+describe("getRecentTransactions query", () => {
+  it("sends the pinned kind to the backend, which filters before its limit", async () => {
+    const { urls, fetchFn } = recording();
+    await createHttpApi({ fetchFn }).getRecentTransactions({ limit: 20, kind: "withdraw" });
+    expect(urls[0]).toBe("/v1/transactions?kind=withdraw&limit=20");
+  });
+
+  it("omits the kind entirely when none is pinned", async () => {
+    // The backend rejects a kind it does not know, so "every kind" has to be an
+    // absent param and never an empty one.
+    const { urls, fetchFn } = recording();
+    await createHttpApi({ fetchFn }).getRecentTransactions({ limit: 20 });
+    expect(urls[0]).toBe("/v1/transactions?limit=20");
+  });
+});
+
 describe("getAssetFlows wire mapping", () => {
   it("parses whole-token decimal strings into numbers", async () => {
     const api = createHttpApi({ fetchFn: serving([flowRow()]) });

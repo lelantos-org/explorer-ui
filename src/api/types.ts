@@ -97,6 +97,9 @@ export interface ChainFlow {
 export interface RecentTxQuery {
   chainId?: number;
   sinceTs?: number;
+  /** One kind only; absent = every kind. Filtered before `limit` applies, so
+   *  a pinned kind still comes back a full page at a time. */
+  kind?: TxKind;
   limit?: number;
 }
 

@@ -126,6 +126,21 @@ describe("mock transaction feed", () => {
     expect(transfers.every((r) => r.assetIdU64 === null && r.amount === null)).toBe(true);
   });
 
+  it("returns only the pinned kind", async () => {
+    const rows = await shared.getRecentTransactions({ limit: 20, kind: "withdraw" });
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((r) => r.kind === "withdraw")).toBe(true);
+  });
+
+  it("fills the page with the pinned kind rather than filtering it down", async () => {
+    // The kind is applied before the limit, as it is in the SQL: a filtered
+    // feed is a full page of one kind, not the survivors of a mixed one.
+    const mixed = await shared.getRecentTransactions({ limit: 20 });
+    const pinned = await shared.getRecentTransactions({ limit: 20, kind: "withdraw" });
+    expect(pinned).toHaveLength(20);
+    expect(pinned.length).toBeGreaterThan(mixed.filter((r) => r.kind === "withdraw").length);
+  });
+
   it("bins kinds into the same buckets the feed reports", async () => {
     const kinds = await shared.getTxKinds({ bucketSec: 3600 });
     expect(kinds.length).toBeGreaterThan(0);

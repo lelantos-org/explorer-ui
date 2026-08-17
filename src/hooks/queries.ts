@@ -1,4 +1,4 @@
-import type { AssetOut, ChainFlow, CountPoint, FlowPoint, KindCounts, TxOut } from "../api";
+import type { AssetOut, ChainFlow, CountPoint, FlowPoint, KindCounts, TxKind, TxOut } from "../api";
 import { useApi } from "../api";
 import type { Range } from "../lib/ranges";
 import { rangeDomain, type TimeDomain } from "../lib/time";
@@ -23,9 +23,14 @@ export function useChainFlows24h(): Async<ChainFlow[]> {
   return useAsync(() => api.getChainFlows24h(), [api], live);
 }
 
-export function useRecentTx(limit = 20): Async<TxOut[]> {
+/** `kind` empty means every kind — the param is dropped rather than sent. */
+export function useRecentTx(limit = 20, kind: TxKind | "" = ""): Async<TxOut[]> {
   const api = useApi();
-  return useAsync(() => api.getRecentTransactions({ limit }), [api, limit], live);
+  return useAsync(
+    () => api.getRecentTransactions({ limit, ...(kind ? { kind } : {}) }),
+    [api, limit, kind],
+    live,
+  );
 }
 
 export function useTxKinds(chainId: string, range: Range): Async<KindCounts[]> {

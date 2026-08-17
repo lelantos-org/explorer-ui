@@ -7,6 +7,7 @@ import FlowSection from "../components/home/FlowSection";
 import Hero from "../components/home/Hero";
 import KpiBar from "../components/home/KpiBar";
 import LatestTxList from "../components/home/LatestTxList";
+import TxKindFilter from "../components/home/TxKindFilter";
 import Card from "../components/ui/Card";
 import {
   useAssets,
@@ -32,7 +33,7 @@ export default function Home() {
   const filters = useFilters();
   const assets = useAssets();
   const chainFlows = useChainFlows24h();
-  const recentTx = useRecentTx(20);
+  const recentTx = useRecentTx(20, filters.txKind);
   const txKinds = useTxKinds(filters.chainId, filters.range);
   const flowAndTx = useFlowAndTx({
     chainId: filters.chainId,
@@ -128,9 +129,24 @@ export default function Home() {
 
       <Card
         title="latest transactions"
+        // The kind sits on the card, not in the filter bar: this feed is
+        // global — the bar's chain and range do not reach it — so a control up
+        // there would read as narrowing a page it does not narrow.
+        actions={
+          <TxKindFilter
+            value={filters.txKind}
+            loading={recentTx.loading}
+            onChange={filters.setTxKind}
+          />
+        }
         meta={recentTx.data ? `${recentTx.data.length} most recent` : "loading…"}
       >
-        <LatestTxList data={recentTx.data} assets={assets.data} loading={recentTx.loading} />
+        <LatestTxList
+          data={recentTx.data}
+          assets={assets.data}
+          loading={recentTx.loading}
+          kind={filters.txKind}
+        />
       </Card>
     </section>
   );

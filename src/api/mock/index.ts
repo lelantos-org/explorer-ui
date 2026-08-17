@@ -144,7 +144,10 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
       .filter(
         (t) =>
           (q.chainId === undefined || t.chainId === q.chainId) &&
-          (q.sinceTs === undefined || t.blockTs >= q.sinceTs),
+          (q.sinceTs === undefined || t.blockTs >= q.sinceTs) &&
+          // Before the slice, as the backend filters before its LIMIT: a
+          // pinned kind returns a full page, not the survivors of a mixed one.
+          (q.kind === undefined || t.kind === q.kind),
       )
       .sort((a, b) => b.blockTs - a.blockTs)
       .slice(0, q.limit ?? 100);

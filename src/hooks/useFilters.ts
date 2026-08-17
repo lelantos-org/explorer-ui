@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { TX_KINDS, type TxKind } from "../api";
 import { RANGES, type Range, rangeIndexOf } from "../lib/ranges";
 import { decodeScope, EMPTY_SCOPE, encodeScope, type Scope } from "../lib/scope";
 import { setOrDelete, useSetUrlParams, useUrlParams } from "./useUrlState";
@@ -10,12 +11,16 @@ export interface Filters {
   scope: string;
   rangeIdx: number;
   range: Range;
+  /** Kind pinned on the latest-transactions feed; "" = every kind. Scopes
+   *  that one card, not the page, so it is deliberately outside `hasFilter`. */
+  txKind: TxKind | "";
   hasFilter: boolean;
 }
 
 export interface FilterActions {
   setScope: (v: string) => void;
   setRangeIdx: (i: number) => void;
+  setTxKind: (k: TxKind | "") => void;
   selectChain: (id: number | null) => void;
   selectAsset: (chainId: number, assetIdU64: number) => void;
   clear: () => void;
@@ -24,11 +29,18 @@ export interface FilterActions {
 const PARAM_CHAIN = "chain";
 const PARAM_ASSET = "asset";
 const PARAM_RANGE = "range";
+const PARAM_KIND = "kind";
 
 /** Ids are digits on the wire, so a hand-edited `?chain=abc` is dropped rather
  *  than sent on to the API as `NaN`. */
 function idParam(v: string | null): string {
   return v && /^\d+$/.test(v) ? v : "";
+}
+
+/** An unknown `?kind=` reads as no filter — the backend rejects one it does not
+ *  know, and a hand-edited URL should show the feed, not an error. */
+function kindParam(v: string | null): TxKind | "" {
+  return v && (TX_KINDS as string[]).includes(v) ? (v as TxKind) : "";
 }
 
 /**
@@ -46,6 +58,7 @@ export function useFilters(): Filters & FilterActions {
   }, [params]);
 
   const rangeIdx = rangeIndexOf(params.get(PARAM_RANGE));
+  const txKind = kindParam(params.get(PARAM_KIND));
 
   const writeScope = (next: Scope) =>
     setParams((p) => {
@@ -59,6 +72,7 @@ export function useFilters(): Filters & FilterActions {
     scope: encodeScope(scope),
     rangeIdx,
     range: RANGES[rangeIdx],
+    txKind,
     hasFilter: !!scope.chainId,
 
     setScope: (v) => writeScope(decodeScope(v)),
@@ -68,5 +82,6 @@ export function useFilters(): Filters & FilterActions {
       writeScope({ chainId: String(chainId), assetIdU64: String(assetIdU64) }),
     clear: () => writeScope(EMPTY_SCOPE),
     setRangeIdx: (i) => setParams((p) => p.set(PARAM_RANGE, RANGES[i].label)),
+    setTxKind: (k) => setParams((p) => setOrDelete(p, PARAM_KIND, k)),
   };
 }
