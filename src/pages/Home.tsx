@@ -23,7 +23,7 @@ import {
   sumFlows,
   summarizeChains,
 } from "../lib/aggregate";
-import { assetLabel } from "../lib/assets";
+import { assetKey, assetLabel, indexAssets } from "../lib/assets";
 import { type Denom, denomLabel, pickDenom } from "../lib/denom";
 import { fmtBucket, fmtNum } from "../lib/format";
 import { groupAssetsByChain } from "../lib/scope";
@@ -147,11 +147,11 @@ function flowMeta(
 ): string {
   // The scoped asset is named by symbol or address; "unknown token" covers the
   // registry not being loaded yet, which the id would only paper over.
-  const scoped = (assets ?? []).find(
-    (a) => String(a.chainId) === filters.chainId && String(a.assetIdU64) === filters.assetIdU64,
+  const scoped = indexAssets(assets).get(
+    assetKey(Number(filters.chainId), Number(filters.assetIdU64)),
   );
   return [
-    filters.assetIdU64 ? `asset ${assetLabel(scoped) ?? "unknown token"}` : "all assets",
+    filters.assetIdU64 ? `asset ${scoped ? assetLabel(scoped) : "unknown token"}` : "all assets",
     denomLabel(denom, flows),
     filters.chainId ? `chain ${filters.chainId}` : null,
     `bucket ${fmtBucket(filters.range.bucket)}`,

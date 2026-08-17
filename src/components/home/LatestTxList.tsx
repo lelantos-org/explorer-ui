@@ -1,4 +1,5 @@
 import type { AssetOut, TxKind, TxOut } from "../../api";
+import { assetKey, indexAssets } from "../../lib/assets";
 import { getChainMeta, getTxUrl } from "../../lib/chains";
 import { fmtAge } from "../../lib/format";
 import { shortHex, withHexPrefix } from "../../lib/hex";
@@ -29,11 +30,10 @@ function KindBadge({ kind }: { kind: TxKind }) {
   );
 }
 
-const assetKey = (chainId: number, assetIdU64: number) => `${chainId}:${assetIdU64}`;
-
-function AssetCell({ assetIdU64, asset }: { assetIdU64: number | null; asset?: AssetOut }) {
+function AssetCell({ tx, byAsset }: { tx: TxOut; byAsset: Map<string, AssetOut> }) {
   // Transfers move no public value, so they name no asset.
-  if (assetIdU64 === null) return <span className="muted">—</span>;
+  if (tx.assetIdU64 === null) return <span className="muted">—</span>;
+  const asset = byAsset.get(assetKey(tx.chainId, tx.assetIdU64));
   // Registered after this page loaded, or on a chain we have no registry for:
   // nothing to name it by, and the registry id names only the row.
   if (!asset)
@@ -56,7 +56,7 @@ export default function LatestTxList({ data, assets, loading }: Props) {
   if (loading && !data) return <div className="empty">loading…</div>;
   if (!data || data.length === 0) return <div className="empty">no recent activity</div>;
 
-  const byAsset = new Map((assets ?? []).map((a) => [assetKey(a.chainId, a.assetIdU64), a]));
+  const byAsset = indexAssets(assets);
 
   return (
     <div className="tbl-wrap">
@@ -76,8 +76,6 @@ export default function LatestTxList({ data, assets, loading }: Props) {
           {data.map((r) => {
             const url = getTxUrl(r.chainId, r.txHashHex);
             const full = withHexPrefix(r.txHashHex);
-            const asset =
-              r.assetIdU64 === null ? undefined : byAsset.get(assetKey(r.chainId, r.assetIdU64));
             return (
               <tr key={`${r.chainId}-${r.txHashHex}-${r.kind}`}>
                 <td className="muted">{fmtAge(r.blockTs)}</td>
@@ -86,7 +84,7 @@ export default function LatestTxList({ data, assets, loading }: Props) {
                 </td>
                 <td>{getChainMeta(r.chainId).short}</td>
                 <td>
-                  <AssetCell assetIdU64={r.assetIdU64} asset={asset} />
+                  <AssetCell tx={r} byAsset={byAsset} />
                 </td>
                 <td className="mono">{r.blockNumber.toLocaleString()}</td>
                 <td className="mono">

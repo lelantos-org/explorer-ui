@@ -1,5 +1,5 @@
+import { assetOptionLabel } from "../../lib/assets";
 import { getChainMeta } from "../../lib/chains";
-import { shortHex } from "../../lib/hex";
 import { RANGES } from "../../lib/ranges";
 import { encodeScope, type ScopeGroup } from "../../lib/scope";
 
@@ -47,11 +47,7 @@ export default function FilterBar({
                     key={a.assetIdU64}
                     value={encodeScope({ chainId, assetIdU64: String(a.assetIdU64) })}
                   >
-                    {/* Symbol when the indexer has one; the address is the
-                        fallback label, never the registry id. */}
-                    {a.symbol
-                      ? `${a.symbol} · ${shortHex(a.tokenHex, 4)}`
-                      : shortHex(a.tokenHex, 4)}
+                    {assetOptionLabel(a)}
                   </option>
                 ))}
               </optgroup>
