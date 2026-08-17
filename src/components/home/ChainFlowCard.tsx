@@ -15,11 +15,16 @@ interface Props {
 export default function ChainFlowCard({ flow, share, hasValues, selected, onClick }: Props) {
   const meta = getChainMeta(flow.chainId);
   const net = flow.inflow - flow.outflow;
+  // The backend lists every chain it indexes, so 0 is a measurement: this chain
+  // was scanned and saw nothing. Dimmed and named, rather than dropped from the
+  // grid, where it would read as a chain nobody watches.
+  const idle = flow.txCount === 0;
 
   return (
     <button
       type="button"
-      className={`chain-card ${selected ? "chain-card--on" : ""}`}
+      className={`chain-card ${selected ? "chain-card--on" : ""} ${idle ? "chain-card--idle" : ""}`}
+      title={idle ? "indexed, no transactions in the last 24h" : undefined}
       onClick={onClick}
     >
       <div className="chain-card__top">
@@ -34,7 +39,7 @@ export default function ChainFlowCard({ flow, share, hasValues, selected, onClic
             <div className="chain-card__share__fill" style={{ width: `${share.toFixed(1)}%` }} />
           </div>
           <div className="chain-card__share__lbl muted">
-            {share.toFixed(1)}% {hasValues ? "vol" : "tx"}
+            {idle ? "idle · 24h" : `${share.toFixed(1)}% ${hasValues ? "vol" : "tx"}`}
           </div>
         </div>
       </div>

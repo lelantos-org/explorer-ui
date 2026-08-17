@@ -1,0 +1,69 @@
+/* Escrowed balance per chain: one row per chain, the dollar total as the
+   headline, and a chip per asset carrying the exact token amount. The row is a
+   button that scopes the page to that chain, like a chain card. */
+
+.locked {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.locked__row {
+  display: grid;
+  /* Chain and total stay put; the chips take what is left and wrap. */
+  grid-template-columns: minmax(88px, auto) minmax(96px, auto) 1fr;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  color: var(--fg);
+  font-family: var(--sans);
+  transition: border-color var(--t-med), background var(--t-med);
+}
+.locked__row:hover { border-color: var(--accent-dim); background: var(--bg-2); }
+.locked__row--on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+.locked__chain { display: flex; flex-direction: column; gap: 1px; }
+.locked__short {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.locked__name {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.locked__total {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.locked__partial { font-size: 10px; }
+
+.locked__assets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.locked__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  white-space: nowrap;
+}
+.locked__chip__sym { font-size: 10px; letter-spacing: 0.08em; color: var(--fg-dim); }
+.locked__chip__amt { font-size: 11px; font-variant-numeric: tabular-nums; }
+/* A negative balance is evidence of missed deposits, not a rounding artefact. */
+.locked__chip--owed { border-color: var(--err); }
+.locked__chip--owed .locked__chip__amt { color: var(--err); }

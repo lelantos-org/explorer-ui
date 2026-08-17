@@ -7,32 +7,38 @@ import FlowSection from "../components/home/FlowSection";
 import Hero from "../components/home/Hero";
 import KpiBar from "../components/home/KpiBar";
 import LatestTxList from "../components/home/LatestTxList";
-import TxKindFilter from "../components/home/TxKindFilter";
+import LockedByChain from "../components/home/LockedByChain";
 import Card from "../components/ui/Card";
+import Segmented from "../components/ui/Segmented";
 import {
   useAssets,
   useChainFlows24h,
   useFlowAndTx,
+  useLocked,
   useRecentTx,
   useTxKinds,
 } from "../hooks/queries";
 import { type Filters, useFilters } from "../hooks/useFilters";
 import {
   type ChainsSummary,
+  type LockedSummary,
   peakCount,
   sumCounts,
   sumFlows,
   summarizeChains,
+  summarizeLocked,
 } from "../lib/aggregate";
 import { assetLabel, assetsInScope } from "../lib/assets";
-import { type Denom, denomLabel, pickDenom } from "../lib/denom";
-import { fmtBucket, fmtNum, joinMeta } from "../lib/format";
+import { type Denom, denomLabel, pickDenom, USD_AT_SPOT } from "../lib/denom";
+import { fmtBucket, fmtNum, fmtUsd, joinMeta } from "../lib/format";
+import { KIND_FILTER_OPTIONS } from "../lib/kinds";
 import { groupAssetsByChain } from "../lib/scope";
 
 export default function Home() {
   const filters = useFilters();
   const assets = useAssets();
   const chainFlows = useChainFlows24h();
+  const locked = useLocked();
   const recentTx = useRecentTx(20, filters.txKind);
   const txKinds = useTxKinds(filters.chainId, filters.range);
   const flowAndTx = useFlowAndTx({
@@ -91,6 +97,15 @@ export default function Home() {
         />
       </Card>
 
+      <Card title="escrowed by chain" meta={lockedMeta(summarizeLocked(locked.data))}>
+        <LockedByChain
+          data={locked.data}
+          loading={locked.loading}
+          selected={filters.chainId ? Number(filters.chainId) : null}
+          onSelect={filters.selectChain}
+        />
+      </Card>
+
       <KpiBar
         inflow={totals?.inflow ?? null}
         outflow={totals?.outflow ?? null}
@@ -133,9 +148,10 @@ export default function Home() {
         // global — the bar's chain and range do not reach it — so a control up
         // there would read as narrowing a page it does not narrow.
         actions={
-          <TxKindFilter
+          <Segmented
+            options={KIND_FILTER_OPTIONS}
             value={filters.txKind}
-            loading={recentTx.loading}
+            disabled={recentTx.loading}
             onChange={filters.setTxKind}
           />
         }
@@ -184,5 +200,24 @@ function flowMeta(
     denomLabel(denom, flows),
     filters.chainId && `chain ${filters.chainId}`,
     `bucket ${fmtBucket(filters.range.bucket)}`,
+  ]);
+}
+
+/**
+ * The card's own caveat line: what the network holds, and what that figure is
+ * leaving out. A chain whose assets are all unpriced contributes nothing to the
+ * total, so the count of excluded assets travels with it.
+ */
+function lockedMeta(summary: LockedSummary | null): string {
+  if (!summary) return "loading…";
+  if (summary.chains === 0) return "nothing escrowed";
+  const { chains, totalUsd, unpricedAssets } = summary;
+  return joinMeta([
+    totalUsd === null
+      ? `${chains} chains · no usable prices`
+      : `${fmtUsd(totalUsd)} across ${chains} chains`,
+    `deposits − withdrawals · ${USD_AT_SPOT}`,
+    unpricedAssets > 0 &&
+      `${unpricedAssets} unpriced asset${unpricedAssets === 1 ? "" : "s"} excluded`,
   ]);
 }

@@ -19,8 +19,10 @@ export default function ChainFlowGrid({ data, selected, onSelect }: Props) {
     );
   }
 
+  // Every indexed chain is listed, quiet ones at zero, so an empty grid is not
+  // a quiet day — it means nothing is being indexed at all.
   if (data.length === 0) {
-    return <div className="empty">no chain activity in last 24h</div>;
+    return <div className="empty">no chains indexed</div>;
   }
 
   const { hasValues, shareOf } = chainShares(data);

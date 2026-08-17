@@ -3,7 +3,7 @@ import { assetKey, indexAssets } from "../../lib/assets";
 import { getChainMeta, getTxUrl } from "../../lib/chains";
 import { fmtAge } from "../../lib/format";
 import { shortHex, withHexPrefix } from "../../lib/hex";
-import { KIND_TITLE } from "../../lib/kinds";
+import { KIND_TITLE, type KindFilter } from "../../lib/kinds";
 import Hex from "../ui/Hex";
 
 interface Props {
@@ -12,9 +12,9 @@ interface Props {
    *  has one, its address otherwise. */
   assets: AssetOut[] | null;
   loading: boolean;
-  /** The kind the feed is pinned to, "" for every kind. Named in the empty
-   *  state so a filter with no matches never reads as a dead chain. */
-  kind: TxKind | "";
+  /** The kind the feed is pinned to. Named in the empty state so a filter with
+   *  no matches never reads as a dead chain. */
+  kind: KindFilter;
 }
 
 function KindBadge({ kind }: { kind: TxKind }) {
@@ -50,9 +50,7 @@ function AssetCell({ tx, byAsset }: { tx: TxOut; byAsset: Map<string, AssetOut> 
 export default function LatestTxList({ data, assets, loading, kind }: Props) {
   if (loading && !data) return <div className="empty">loading…</div>;
   if (!data || data.length === 0)
-    return (
-      <div className="empty">{kind ? `no recent ${kind} activity` : "no recent activity"}</div>
-    );
+    return <div className="empty">no recent {kind && `${kind} `}activity</div>;
 
   const byAsset = indexAssets(assets);
 

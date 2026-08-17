@@ -45,6 +45,12 @@
   left: 0; top: 0; bottom: 0; width: 3px;
   background: var(--accent);
 }
+/* Indexed but quiet: dimmed so it reads as a measured zero beside the active
+   chains, still selectable — scoping the page to it is how you check why. */
+.chain-card--idle { opacity: 0.6; }
+.chain-card--idle:hover { opacity: 1; }
+.chain-card--idle .chain-card__short { color: var(--fg-dim); }
+
 /* Placeholder while the flows load: card-shaped, inert. */
 .chain-card--ghost {
   min-height: 180px;

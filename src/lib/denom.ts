@@ -72,12 +72,13 @@ export function signedFmt(d: Denom): (n: number) => string {
 /**
  * The dollar unit, never bare "USD".
  *
- * The backend prices every bucket at the *current* price, so a 90-day dollar
- * figure is what that volume would be worth today rather than what it was worth
- * when it moved. Both the tile unit and the card label are built from this, so
- * the caveat cannot go missing from one of them.
+ * The backend prices at the *current* price — every flow bucket, and every
+ * escrow balance — so a dollar figure is what that volume or balance would be
+ * worth today rather than what it was worth when it moved. Every label that
+ * names dollars is built from this, so the caveat cannot go missing from one of
+ * them.
  */
-const USD_AT_SPOT = "USD · at spot";
+export const USD_AT_SPOT = "USD · at spot";
 
 /**
  * Unit name for a tile label, where there is no room for the full caveat.

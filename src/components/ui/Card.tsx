@@ -15,10 +15,15 @@ export default function Card({ title, meta, actions, variant = "default", childr
     <div className={`card ${variant === "chart" ? "card--chart" : ""}`}>
       <div className="card__hdr">
         <h2 className="card__t">{title}</h2>
-        <div className="card__aside">
-          {actions}
-          {meta && <span className="muted">{meta}</span>}
-        </div>
+        {/* Omitted entirely when the card has neither, so the header keeps its
+            single-child layout instead of pushing the title against an empty
+            box. */}
+        {(actions || meta) && (
+          <div className="card__aside">
+            {actions}
+            {meta && <span className="muted">{meta}</span>}
+          </div>
+        )}
       </div>
       {children}
     </div>

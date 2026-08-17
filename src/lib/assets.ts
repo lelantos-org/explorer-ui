@@ -6,7 +6,15 @@ import type { Scope } from "./scope";
 /** Leading/trailing hex characters kept when an address stands in for a name. */
 const ADDRESS_CHARS = 4;
 
-const address = (asset: AssetOut) => shortHex(asset.tokenHex, ADDRESS_CHARS);
+/**
+ * All a label needs: what the token calls itself, and the address that
+ * identifies it either way. Kept narrower than `AssetOut` so every endpoint
+ * that names a token — the registry, escrow balances — labels it identically
+ * without carrying the registry's other fields.
+ */
+export type AssetIdentity = Pick<AssetOut, "symbol" | "tokenHex">;
+
+const address = (asset: AssetIdentity) => shortHex(asset.tokenHex, ADDRESS_CHARS);
 
 /** Assets are keyed by chain: `assetIdU64` is only unique within one. */
 export const assetKey = (chainId: number, assetIdU64: number) => `${chainId}:${assetIdU64}`;
@@ -45,7 +53,7 @@ export function assetsInScope(assets: AssetOut[] | null, scope: Scope): AssetOut
  * the address is the fallback: it identifies the token, where the registry id
  * only identifies the row.
  */
-export function assetLabel(asset: AssetOut): string {
+export function assetLabel(asset: AssetIdentity): string {
   return asset.symbol ?? address(asset);
 }
 
@@ -54,6 +62,6 @@ export function assetLabel(asset: AssetOut): string {
  * can register, so two tokens on one chain may claim the same symbol and the
  * options have to stay tellable apart.
  */
-export function assetOptionLabel(asset: AssetOut): string {
+export function assetOptionLabel(asset: AssetIdentity): string {
   return joinMeta([asset.symbol, address(asset)]);
 }

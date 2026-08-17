@@ -1,6 +1,7 @@
 import type {
   AssetOut,
   ChainFlow,
+  ChainLocked,
   CountPoint,
   CountQuery,
   ExplorerApi,
@@ -53,6 +54,14 @@ const zeroHours = () => new Array<number>(WINDOW_HOURS).fill(0);
 const windowStart = (ts: number) => bucketOf(ts, 3600) - (WINDOW_HOURS - 1) * 3600;
 
 /**
+ * Chains the backend scans that carry no assets and no flows, so the grid's
+ * "indexed but quiet" card has something to render. Without one, the mock only
+ * ever shows busy chains and the state goes unexercised until production hits
+ * it.
+ */
+const IDLE_CHAIN_IDS = [137];
+
+/**
  * A flow bucket under construction. Token amounts accumulate unconditionally
  * and are dropped at the end when more than one asset is in scope, which is
  * cheaper than branching per row — and `unpriced` collects assets rather than
@@ -65,6 +74,67 @@ interface FlowAcc {
   inUsd: number | null;
   outUsd: number | null;
   unpriced: Set<number>;
+}
+
+/**
+ * Biggest dollar balance first, with the unpriced trailing.
+ *
+ * An unpriced balance has no place on a dollar scale, so it sorts last rather
+ * than as a zero, which would rank it worthless instead of unknown.
+ */
+const richestFirst = (a: number | null, b: number | null) =>
+  (b ?? Number.NEGATIVE_INFINITY) - (a ?? Number.NEGATIVE_INFINITY);
+
+/**
+ * Escrowed balances per chain, mirroring `/v1/locked`: all-time deposits minus
+ * withdrawals per asset, summed across a chain's assets only in dollars — the
+ * one unit they share. An unpriced asset keeps its token amount and counts
+ * toward `unpricedAssets` rather than vanishing from the total.
+ *
+ * Assets that never moved are absent, as they are in the view the endpoint reads:
+ * it aggregates flows, so an asset with none has no row.
+ */
+function lockedByChain(assets: AssetOut[], flows: FlowRow[]): ChainLocked[] {
+  const totals = new Map<number, { net: number; lastTs: number }>();
+  for (const f of flows) {
+    const t = totals.get(f.assetIdU64) ?? { net: 0, lastTs: 0 };
+    t.net += f.inAmt - f.outAmt;
+    t.lastTs = Math.max(t.lastTs, f.ts);
+    totals.set(f.assetIdU64, t);
+  }
+
+  const byChain = new Map<number, ChainLocked>();
+  for (const asset of assets) {
+    const total = totals.get(asset.assetIdU64);
+    if (!total) continue;
+    const lockedUsd = asset.priceUsd === null ? null : total.net * asset.priceUsd;
+    const chain = byChain.get(asset.chainId) ?? {
+      chainId: asset.chainId,
+      lockedUsd: null,
+      unpricedAssets: 0,
+      assets: [],
+    };
+    if (lockedUsd === null) chain.unpricedAssets += 1;
+    else chain.lockedUsd = (chain.lockedUsd ?? 0) + lockedUsd;
+    chain.assets.push({
+      assetIdU64: asset.assetIdU64,
+      tokenHex: asset.tokenHex,
+      symbol: asset.symbol,
+      amount: total.net,
+      lockedUsd,
+      lastTs: total.lastTs,
+    });
+    byChain.set(asset.chainId, chain);
+  }
+
+  for (const chain of byChain.values()) {
+    chain.assets.sort(
+      (a, b) => richestFirst(a.lockedUsd, b.lockedUsd) || a.assetIdU64 - b.assetIdU64,
+    );
+  }
+  return [...byChain.values()].sort(
+    (a, b) => richestFirst(a.lockedUsd, b.lockedUsd) || a.chainId - b.chainId,
+  );
 }
 
 /** Fold rows into per-bucket accumulators, returned in ascending bucket order. */
@@ -208,6 +278,11 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
       }));
     },
 
+    async getLocked(chainId?: number): Promise<ChainLocked[]> {
+      await respond();
+      return lockedByChain(assets, selectFlows({ chainId }));
+    },
+
     async getTxCounts(q: CountQuery): Promise<CountPoint[]> {
       await respond();
       const rows = selectFlows({ chainId: q.chainId, sinceTs: q.sinceTs });
@@ -253,24 +328,30 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
       // read: reading here made it advance between calls, so `nowSec` did not
       // actually pin the dataset.
       const hourStart = windowStart(now);
-      const chainIds = [...new Set(assets.map((a) => a.chainId))];
+      // Every indexed chain, quiet ones at zero: absent means "nobody indexes
+      // this chain", which is not what an idle chain is.
+      const chainIds = [...new Set([...assets.map((a) => a.chainId), ...IDLE_CHAIN_IDS])];
 
-      return chainIds
-        .map((chainId): ChainFlow => {
-          const hourlyIn = zeroHours();
-          let txCount = 0;
-          for (const f of flows) {
-            const slot = Math.floor((f.ts - hourStart) / 3600);
-            // Out-of-window rows are dropped, not clamped: a clamped slot adds a
-            // foreign hour's count to an edge bucket, which reads as real
-            // activity in that hour.
-            if (f.chainId !== chainId || slot < 0 || slot >= WINDOW_HOURS) continue;
-            hourlyIn[slot] += f.txCount;
-            txCount += f.txCount;
-          }
-          return { chainId, inflow: 0, outflow: 0, hourlyIn, hourlyOut: zeroHours(), txCount };
-        })
-        .sort((a, b) => b.txCount - a.txCount);
+      return (
+        chainIds
+          .map((chainId): ChainFlow => {
+            const hourlyIn = zeroHours();
+            let txCount = 0;
+            for (const f of flows) {
+              const slot = Math.floor((f.ts - hourStart) / 3600);
+              // Out-of-window rows are dropped, not clamped: a clamped slot adds a
+              // foreign hour's count to an edge bucket, which reads as real
+              // activity in that hour.
+              if (f.chainId !== chainId || slot < 0 || slot >= WINDOW_HOURS) continue;
+              hourlyIn[slot] += f.txCount;
+              txCount += f.txCount;
+            }
+            return { chainId, inflow: 0, outflow: 0, hourlyIn, hourlyOut: zeroHours(), txCount };
+          })
+          // Chain id breaks ties so the quiet chains keep a stable order rather
+          // than shuffling between requests, as the backend orders them.
+          .sort((a, b) => b.txCount - a.txCount || a.chainId - b.chainId)
+      );
     },
   };
 }

@@ -1,5 +1,14 @@
-import type { AssetOut, ChainFlow, CountPoint, FlowPoint, KindCounts, TxKind, TxOut } from "../api";
+import type {
+  AssetOut,
+  ChainFlow,
+  ChainLocked,
+  CountPoint,
+  FlowPoint,
+  KindCounts,
+  TxOut,
+} from "../api";
 import { useApi } from "../api";
+import { ALL_KINDS, type KindFilter } from "../lib/kinds";
 import type { Range } from "../lib/ranges";
 import { rangeDomain, type TimeDomain } from "../lib/time";
 import { type Async, useAsync } from "./useAsync";
@@ -23,11 +32,21 @@ export function useChainFlows24h(): Async<ChainFlow[]> {
   return useAsync(() => api.getChainFlows24h(), [api], live);
 }
 
-/** `kind` empty means every kind — the param is dropped rather than sent. */
-export function useRecentTx(limit = 20, kind: TxKind | "" = ""): Async<TxOut[]> {
+/**
+ * Escrowed balances per chain. Unscoped on purpose: the card is the network-wide
+ * view, and the filter bar's chain only narrows the series above it.
+ */
+export function useLocked(): Async<ChainLocked[]> {
+  const api = useApi();
+  return useAsync(() => api.getLocked(), [api], live);
+}
+
+/** The classified feed, newest first. `ALL_KINDS` sends no `kind` param at all:
+ *  the backend rejects a kind it does not know, empty string included. */
+export function useRecentTx(limit = 20, kind: KindFilter = ALL_KINDS): Async<TxOut[]> {
   const api = useApi();
   return useAsync(
-    () => api.getRecentTransactions({ limit, ...(kind ? { kind } : {}) }),
+    () => api.getRecentTransactions({ limit, kind: kind || undefined }),
     [api, limit, kind],
     live,
   );

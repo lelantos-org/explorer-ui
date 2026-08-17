@@ -1,7 +1,8 @@
 import { assetOptionLabel } from "../../lib/assets";
 import { getChainMeta } from "../../lib/chains";
-import { RANGES } from "../../lib/ranges";
+import { RANGES, rangeIndexOf } from "../../lib/ranges";
 import { encodeScope, type ScopeGroup } from "../../lib/scope";
+import Segmented from "../ui/Segmented";
 
 interface Props {
   scope: string;
@@ -58,19 +59,14 @@ export default function FilterBar({
 
       <div className="fld">
         <span className="fld__lbl">range</span>
-        <div className="seg">
-          {RANGES.map((r, i) => (
-            <button
-              key={r.label}
-              type="button"
-              className={`seg__b ${i === rangeIdx ? "seg__b--on" : ""}`}
-              onClick={() => onRangeChange(i)}
-              disabled={loading}
-            >
-              {r.label}
-            </button>
-          ))}
-        </div>
+        {/* Labels are the range's identity in the URL too (`?range=7d`), so
+            `rangeIndexOf` is the one place a label becomes an index. */}
+        <Segmented
+          options={RANGES.map((r) => ({ value: r.label, label: r.label }))}
+          value={RANGES[rangeIdx].label}
+          disabled={loading}
+          onChange={(label) => onRangeChange(rangeIndexOf(label))}
+        />
       </div>
 
       {hasFilter && (

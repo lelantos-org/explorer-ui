@@ -148,6 +148,54 @@ describe("mock transaction feed", () => {
   });
 });
 
+describe("mock escrowed balances", () => {
+  it("reports a balance, not a volume: deposits minus withdrawals", async () => {
+    const [chain] = await shared.getLocked();
+    const asset = chain.assets[0];
+    const flows = await shared.getAssetFlows({
+      chainId: chain.chainId,
+      assetIdU64: asset.assetIdU64,
+      bucketSec: 86400,
+    });
+    const net = flows.reduce((s, p) => s + (p.in ?? 0) - (p.out ?? 0), 0);
+    expect(asset.amount).toBeCloseTo(net, 6);
+  });
+
+  it("adds a chain's assets in dollars only, since tokens do not add", async () => {
+    const [chain] = await shared.getLocked();
+    const priced = chain.assets.filter((a) => a.lockedUsd !== null);
+    const sum = priced.reduce((s, a) => s + (a.lockedUsd ?? 0), 0);
+    expect(chain.lockedUsd).toBeCloseTo(sum, 6);
+  });
+
+  it("counts an unpriced asset instead of dropping it, and keeps its amount", async () => {
+    const chains = await shared.getLocked();
+    const withUnpriced = chains.find((c) => c.unpricedAssets > 0);
+    expect(withUnpriced).toBeDefined();
+    const unpriced = withUnpriced?.assets.filter((a) => a.lockedUsd === null) ?? [];
+    expect(unpriced).toHaveLength(withUnpriced?.unpricedAssets ?? 0);
+    expect(unpriced.every((a) => a.amount !== null)).toBe(true);
+  });
+
+  it("orders chains by dollars, and trails the unpriced assets inside one", async () => {
+    const chains = await shared.getLocked();
+    const usd = chains.map((c) => c.lockedUsd ?? -Infinity);
+    expect(usd).toEqual([...usd].sort((a, b) => b - a));
+    for (const c of chains) {
+      const firstUnpriced = c.assets.findIndex((a) => a.lockedUsd === null);
+      if (firstUnpriced === -1) continue;
+      expect(c.assets.slice(firstUnpriced).every((a) => a.lockedUsd === null)).toBe(true);
+    }
+  });
+
+  it("narrows to one chain when asked", async () => {
+    const [chain] = await shared.getLocked();
+    const scoped = await shared.getLocked(chain.chainId);
+    expect(scoped).toHaveLength(1);
+    expect(scoped[0].chainId).toBe(chain.chainId);
+  });
+});
+
 describe("mock chain flows", () => {
   it("returns 24 hourly slots per chain", async () => {
     const rows = await shared.getChainFlows24h();
@@ -169,6 +217,15 @@ describe("mock chain flows", () => {
     const rows = await shared.getChainFlows24h();
     expect(rows.every((r) => r.inflow === 0 && r.outflow === 0)).toBe(true);
     expect(rows.every((r) => r.hourlyOut.every((v) => v === 0))).toBe(true);
+  });
+
+  it("lists an indexed chain that saw nothing, rather than dropping it", async () => {
+    // Absent reads as "nobody indexes this chain"; zero says it was scanned and
+    // quiet, which is what the grid's idle card is for.
+    const rows = await shared.getChainFlows24h();
+    const idle = rows.filter((r) => r.txCount === 0);
+    expect(idle.length).toBeGreaterThan(0);
+    expect(idle.every((r) => r.hourlyIn.every((v) => v === 0))).toBe(true);
   });
 
   it("hottest chain first, by the only figure it reports", async () => {

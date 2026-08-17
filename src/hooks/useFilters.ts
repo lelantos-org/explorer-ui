@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { TX_KINDS, type TxKind } from "../api";
+import { ALL_KINDS, isTxKind, type KindFilter } from "../lib/kinds";
 import { RANGES, type Range, rangeIndexOf } from "../lib/ranges";
 import { decodeScope, EMPTY_SCOPE, encodeScope, type Scope } from "../lib/scope";
 import { setOrDelete, useSetUrlParams, useUrlParams } from "./useUrlState";
@@ -11,16 +11,16 @@ export interface Filters {
   scope: string;
   rangeIdx: number;
   range: Range;
-  /** Kind pinned on the latest-transactions feed; "" = every kind. Scopes
-   *  that one card, not the page, so it is deliberately outside `hasFilter`. */
-  txKind: TxKind | "";
+  /** Kind pinned on the latest-transactions feed. Scopes that one card, not the
+   *  page, so it is deliberately outside `hasFilter`. */
+  txKind: KindFilter;
   hasFilter: boolean;
 }
 
 export interface FilterActions {
   setScope: (v: string) => void;
   setRangeIdx: (i: number) => void;
-  setTxKind: (k: TxKind | "") => void;
+  setTxKind: (k: KindFilter) => void;
   selectChain: (id: number | null) => void;
   selectAsset: (chainId: number, assetIdU64: number) => void;
   clear: () => void;
@@ -39,8 +39,8 @@ function idParam(v: string | null): string {
 
 /** An unknown `?kind=` reads as no filter — the backend rejects one it does not
  *  know, and a hand-edited URL should show the feed, not an error. */
-function kindParam(v: string | null): TxKind | "" {
-  return v && (TX_KINDS as string[]).includes(v) ? (v as TxKind) : "";
+function kindParam(v: string | null): KindFilter {
+  return isTxKind(v) ? v : ALL_KINDS;
 }
 
 /**

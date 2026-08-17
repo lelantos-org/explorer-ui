@@ -23,5 +23,6 @@
 @import "./components/inline.css";
 @import "./components/chart.css";
 @import "./components/chain-card.css";
+@import "./components/locked.css";
 
 @import "./responsive.css";

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { ChainFlow, CountPoint, FlowPoint } from "../api";
-import { chainShares, peakCount, sumCounts, sumFlows, summarizeChains } from "./aggregate";
+import type { ChainFlow, ChainLocked, CountPoint, FlowPoint } from "../api";
+import {
+  chainShares,
+  peakCount,
+  sumCounts,
+  sumFlows,
+  summarizeChains,
+  summarizeLocked,
+} from "./aggregate";
 
 const flow = (p: Partial<FlowPoint> & { ts: number }): FlowPoint => ({
   in: null,
@@ -101,5 +108,36 @@ describe("chainShares", () => {
   it("does not divide by zero on an all-zero grid", () => {
     const data = [chain({ chainId: 1 })];
     expect(chainShares(data).shareOf(data[0])).toBe(0);
+  });
+});
+
+const locked = (chainId: number, lockedUsd: number | null, unpricedAssets = 0): ChainLocked => ({
+  chainId,
+  lockedUsd,
+  unpricedAssets,
+  assets: [],
+});
+
+describe("summarizeLocked", () => {
+  it("totals the chains' dollars and carries what they exclude", () => {
+    const summary = summarizeLocked([locked(1, 1000), locked(10, 250, 2)]);
+    expect(summary).toEqual({ chains: 2, totalUsd: 1250, unpricedAssets: 2 });
+  });
+
+  it("skips a chain with no priced asset instead of counting it as zero", () => {
+    const summary = summarizeLocked([locked(1, 1000), locked(10, null, 3)]);
+    expect(summary?.totalUsd).toBe(1000);
+    expect(summary?.chains).toBe(2);
+    expect(summary?.unpricedAssets).toBe(3);
+  });
+
+  it("has no total at all when nothing anywhere could be priced", () => {
+    // Not 0: an unpriceable pool is unknown, not empty.
+    expect(summarizeLocked([locked(1, null, 1)])?.totalUsd).toBeNull();
+  });
+
+  it("stays null while unloaded, and reports an empty network as empty", () => {
+    expect(summarizeLocked(null)).toBeNull();
+    expect(summarizeLocked([])).toEqual({ chains: 0, totalUsd: null, unpricedAssets: 0 });
   });
 });

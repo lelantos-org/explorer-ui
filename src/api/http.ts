@@ -1,12 +1,14 @@
 import type {
   AssetOut,
   ChainFlow,
+  ChainLocked,
   CountPoint,
   CountQuery,
   ExplorerApi,
   FlowPoint,
   FlowQuery,
   KindCounts,
+  LockedAsset,
   RecentTxQuery,
   TxOut,
 } from "./types";
@@ -95,5 +97,21 @@ export function createHttpApi(opts: HttpApiOpts = {}): ExplorerApi {
       }),
 
     getChainFlows24h: () => get<ChainFlow[]>("/v1/chain-flows-24h"),
+
+    async getLocked(chainId?: number): Promise<ChainLocked[]> {
+      // `amount` is a whole-token decimal string for the same reason the flow
+      // amounts are: a balance can carry 18 decimals, which JSON numbers cannot
+      // hold exactly. Dollars stay plain numbers.
+      type LockedAssetWire = Omit<LockedAsset, "amount"> & { amount: string | null };
+      type ChainLockedWire = Omit<ChainLocked, "assets"> & { assets: LockedAssetWire[] };
+      const rows = await get<ChainLockedWire[]>("/v1/locked", { chainId });
+      return rows.map((c) => ({
+        ...c,
+        assets: c.assets.map((a) => ({
+          ...a,
+          amount: a.amount == null ? null : Number(a.amount),
+        })),
+      }));
+    },
   };
 }

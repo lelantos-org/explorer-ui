@@ -47,6 +47,37 @@ export interface CountPoint {
   count: number;
 }
 
+/** One asset's escrowed balance on one chain: all-time deposits minus withdrawals. */
+export interface LockedAsset {
+  assetIdU64: number;
+  tokenHex: string;
+  symbol: string | null;
+  /**
+   * Whole tokens. null when the token's decimals are unresolved — unknown, and
+   * base units would be wrong by orders of magnitude.
+   *
+   * Negative is possible and is not a display bug: the escrow cannot owe money,
+   * so it means the indexer missed deposits.
+   */
+  amount: number | null;
+  /** The balance at the current spot price. null = no usable price. */
+  lockedUsd: number | null;
+  /** Newest flow behind the balance, for ageing it. */
+  lastTs: number;
+}
+
+/**
+ * A chain's escrowed balance. `lockedUsd` is the only figure that adds up
+ * across assets, and it covers only the priced ones — `unpricedAssets` counts
+ * the rest, exactly as `FlowPoint` does.
+ */
+export interface ChainLocked {
+  chainId: number;
+  lockedUsd: number | null;
+  unpricedAssets: number;
+  assets: LockedAsset[];
+}
+
 export interface FlowQuery {
   chainId?: number;
   assetIdU64?: number;
@@ -117,6 +148,8 @@ export interface ExplorerApi {
   getAssetFlows(q: FlowQuery): Promise<FlowPoint[]>;
   getTxCounts(q: CountQuery): Promise<CountPoint[]>;
   getChainFlows24h(): Promise<ChainFlow[]>;
+  /** Escrowed balances per chain, richest first. All chains when unscoped. */
+  getLocked(chainId?: number): Promise<ChainLocked[]>;
   /** Newest-first classified feed. */
   getRecentTransactions(q: RecentTxQuery): Promise<TxOut[]>;
   getTxKinds(q: CountQuery): Promise<KindCounts[]>;
