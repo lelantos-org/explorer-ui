@@ -68,7 +68,7 @@ describe("resolveDomain", () => {
     expect(resolveDomain([{ ts: 100 }], (d) => d.ts, given)).toBe(given);
   });
 
-  it("gives a single point a non-empty span to sit in", () => {
+  it("falls back to the data's own extent, and to a placeholder when there is none", () => {
     expect(resolveDomain([{ ts: 7 }], (d) => d.ts)).toEqual({ start: 7, end: 7 });
     expect(resolveDomain([] as { ts: number }[], (d) => d.ts)).toEqual({ start: 0, end: 1 });
   });

@@ -7,24 +7,48 @@ import type { AssetOut, ChainFlow } from "../api";
  * without the chain that owns it — the two are always encoded and decoded
  * together, and the picker offers them as a single control.
  *
- * `""` → all chains · `"<chainId>:"` → whole chain · `"<chainId>:<assetIdU64>"` → one asset.
+ * Ids are numbers here, not the text they arrived as: the URL is the only place
+ * a scope is a string, and `decodeScope`/`parseId` are the only crossings. Below
+ * that line every comparison is numeric, so a hand-edited `?chain=07` selects
+ * chain 7 rather than missing every row.
  */
 export interface Scope {
-  chainId: string;
-  assetIdU64: string;
+  chainId: number | null;
+  assetIdU64: number | null;
 }
 
-export const EMPTY_SCOPE: Scope = { chainId: "", assetIdU64: "" };
+export const EMPTY_SCOPE: Scope = { chainId: null, assetIdU64: null };
 
+/** A whole chain, with no asset pinned inside it. */
+export const chainScope = (chainId: number): Scope => ({ chainId, assetIdU64: null });
+
+/** Whether anything at all is pinned. An asset cannot be pinned without its
+ *  chain, so the chain alone answers this. */
+export const isScoped = (s: Scope): boolean => s.chainId !== null;
+
+/**
+ * Read an id out of untrusted text — a URL param, or half a picker value.
+ *
+ * Digits only: `?chain=abc` is dropped rather than forwarded to the API as
+ * `NaN`, and anything negative or fractional is not an id in the first place.
+ */
+export function parseId(value: string | null | undefined): number | null {
+  return value && /^\d+$/.test(value) ? Number(value) : null;
+}
+
+/** `""` → all chains · `"<chainId>:"` → whole chain · `"<chainId>:<assetIdU64>"` → one asset. */
 export function encodeScope(s: Scope): string {
-  return s.chainId ? `${s.chainId}:${s.assetIdU64}` : "";
+  if (s.chainId === null) return "";
+  return `${s.chainId}:${s.assetIdU64 ?? ""}`;
 }
 
 export function decodeScope(value: string): Scope {
-  const [chainId = "", assetIdU64 = ""] = value.split(":");
+  const [chainPart, assetPart] = value.split(":");
+  const chainId = parseId(chainPart);
   // An asset without a chain is not addressable, so it is dropped rather than
   // carried as a half-selection.
-  return chainId ? { chainId, assetIdU64 } : EMPTY_SCOPE;
+  if (chainId === null) return EMPTY_SCOPE;
+  return { chainId, assetIdU64: parseId(assetPart) };
 }
 
 /** One chain and the assets it owns, in the order the picker lists them. */

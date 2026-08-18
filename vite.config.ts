@@ -1,9 +1,34 @@
 /// <reference types="vitest/config" />
+import { execFileSync } from "node:child_process";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
+/**
+ * The build the footer names.
+ *
+ * `.git` is dockerignored, so an image build cannot read the commit itself and
+ * CI passes `VITE_COMMIT` instead. Falling back to "dev" rather than failing:
+ * a working tree with no git history is a normal way to build this.
+ */
+function commitRef(): string {
+  const fromEnv = process.env.VITE_COMMIT?.trim();
+  if (fromEnv) return fromEnv;
+  try {
+    return execFileSync("git", ["rev-parse", "--short", "HEAD"], {
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .toString()
+      .trim();
+  } catch {
+    return "dev";
+  }
+}
+
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __COMMIT__: JSON.stringify(commitRef()),
+  },
   server: {
     // 5174 is webapp-ui's; running both would have Vite silently bump this one
     // to whatever is free, so the explorer's URL moved between runs.

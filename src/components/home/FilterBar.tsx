@@ -1,23 +1,29 @@
 import { assetOptionLabel } from "../../lib/assets";
 import { getChainMeta } from "../../lib/chains";
-import { RANGES, rangeIndexOf } from "../../lib/ranges";
-import { encodeScope, type ScopeGroup } from "../../lib/scope";
+import { RANGES, type RangeLabel } from "../../lib/ranges";
+import { decodeScope, encodeScope, type Scope, type ScopeGroup } from "../../lib/scope";
 import Segmented from "../ui/Segmented";
 
 interface Props {
-  scope: string;
-  rangeIdx: number;
+  scope: Scope;
+  range: RangeLabel;
   hasFilter: boolean;
   loading: boolean;
   groups: ScopeGroup[];
-  onScopeChange: (v: string) => void;
-  onRangeChange: (i: number) => void;
+  onScopeChange: (scope: Scope) => void;
+  onRangeChange: (label: RangeLabel) => void;
   onClear: () => void;
 }
 
+/**
+ * The page's scope and range controls.
+ *
+ * The `<select>` is the one place a scope has to be a string, so this component
+ * owns both crossings — callers hand it a `Scope` and get a `Scope` back.
+ */
 export default function FilterBar({
   scope,
-  rangeIdx,
+  range,
   hasFilter,
   loading,
   groups,
@@ -33,39 +39,37 @@ export default function FilterBar({
             alongside its chain, so they cannot be selected independently. */}
         <select
           className="fld__inp fld__inp--scope"
-          value={scope}
-          onChange={(e) => onScopeChange(e.target.value)}
+          value={encodeScope(scope)}
+          onChange={(e) => onScopeChange(decodeScope(e.target.value))}
         >
           <option value="">all chains</option>
-          {groups.map((g) => {
-            const chainId = String(g.chainId);
-            const meta = getChainMeta(g.chainId);
-            return (
-              <optgroup key={g.chainId} label={`${meta.name} · id ${g.chainId}`}>
-                <option value={encodeScope({ chainId, assetIdU64: "" })}>all assets</option>
-                {g.assets.map((a) => (
-                  <option
-                    key={a.assetIdU64}
-                    value={encodeScope({ chainId, assetIdU64: String(a.assetIdU64) })}
-                  >
-                    {assetOptionLabel(a)}
-                  </option>
-                ))}
-              </optgroup>
-            );
-          })}
+          {groups.map((g) => (
+            <optgroup key={g.chainId} label={`${getChainMeta(g.chainId).name} · id ${g.chainId}`}>
+              <option value={encodeScope({ chainId: g.chainId, assetIdU64: null })}>
+                all assets
+              </option>
+              {g.assets.map((a) => (
+                <option
+                  key={a.assetIdU64}
+                  value={encodeScope({ chainId: g.chainId, assetIdU64: a.assetIdU64 })}
+                >
+                  {assetOptionLabel(a)}
+                </option>
+              ))}
+            </optgroup>
+          ))}
         </select>
       </label>
 
       <div className="fld">
         <span className="fld__lbl">range</span>
-        {/* Labels are the range's identity in the URL too (`?range=7d`), so
-            `rangeIndexOf` is the one place a label becomes an index. */}
+        {/* Labels are the range's identity in the URL too (`?range=7d`), so the
+            picker's value is the same string that is stored and shared. */}
         <Segmented
           options={RANGES.map((r) => ({ value: r.label, label: r.label }))}
-          value={RANGES[rangeIdx].label}
+          value={range}
           disabled={loading}
-          onChange={(label) => onRangeChange(rangeIndexOf(label))}
+          onChange={onRangeChange}
         />
       </div>
 

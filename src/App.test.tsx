@@ -51,4 +51,18 @@ describe("App", () => {
   it("defaults to the 30d range with no query string", () => {
     expect(render()).toContain("30d window");
   });
+
+  it("names the build in the footer, so a bug report can identify it", () => {
+    // Injected by vite.config's `define`; "dev" when there is no git history
+    // and no VITE_COMMIT, which is what a bare working tree builds as.
+    expect(__COMMIT__).toBeTruthy();
+    expect(render()).toContain(__COMMIT__);
+  });
+
+  it("links out to the other half of the project and to the source", () => {
+    const html = render();
+    expect(html).toContain("https://app.lelantos.xyz");
+    expect(html).toContain("https://github.com/lelantos-org");
+    expect(html).toContain("no cookies");
+  });
 });

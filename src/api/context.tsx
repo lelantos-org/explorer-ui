@@ -1,4 +1,5 @@
 import { createContext, type ReactNode, useContext, useMemo } from "react";
+import { config } from "../config";
 import { createHttpApi } from "./http";
 import { createMockApi } from "./mock";
 import type { ExplorerApi } from "./types";
@@ -6,14 +7,14 @@ import type { ExplorerApi } from "./types";
 const ApiContext = createContext<ExplorerApi | null>(null);
 
 export interface ApiProviderProps {
+  /** An explicit client, for tests and stories. Omitted, the build's own
+   *  configuration decides; see `config`. */
   api?: ExplorerApi;
   children: ReactNode;
 }
 
 function resolveDefault(): ExplorerApi {
-  const useMock = import.meta.env.VITE_USE_MOCK === "1" || import.meta.env.VITE_USE_MOCK === "true";
-  if (useMock) return createMockApi();
-  return createHttpApi({ base: import.meta.env.VITE_API_BASE ?? "" });
+  return config.useMock ? createMockApi() : createHttpApi({ base: config.apiBase });
 }
 
 export function ApiProvider({ api, children }: ApiProviderProps) {

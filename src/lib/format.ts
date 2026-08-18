@@ -23,9 +23,20 @@ export function fmtCompact(n: number): string {
   return scaled(n, 1);
 }
 
-export function fmtSigned(n: number): string {
-  return (n >= 0 ? "+" : "−") + fmtNum(Math.abs(n));
-}
+/**
+ * Wrap a magnitude formatter so it always carries an explicit sign.
+ *
+ * The sign is prefixed here rather than left to the formatter: a net figure has
+ * to read as a direction, and "+0" says the range balanced where "0" reads as
+ * nothing having happened. U+2212 for the negative, so it aligns with the
+ * digits rather than sitting high like a hyphen.
+ */
+const signed =
+  (fmt: (n: number) => string) =>
+  (n: number): string =>
+    (n >= 0 ? "+" : "−") + fmt(Math.abs(n));
+
+export const fmtSigned = signed(fmtNum);
 
 // Dollars keep cents below 1k, where rounding to a whole dollar would hide the
 // difference between $4.99 and $5; above that the k/M/B ladder takes over.
@@ -33,10 +44,6 @@ export function fmtUsd(n: number): string {
   const sign = n < 0 ? "−" : "";
   const v = Math.abs(n);
   return v < 1000 ? `${sign}$${v.toFixed(2)}` : `${sign}$${scaled(v, 2)}`;
-}
-
-export function fmtUsdSigned(n: number): string {
-  return (n >= 0 ? "+" : "−") + fmtUsd(Math.abs(n));
 }
 
 // Token amounts are whole tokens, so they are usually small — 14 WETH, 1.5
@@ -50,9 +57,8 @@ export function fmtTokens(n: number): string {
   return sign + Number(v.toFixed(v >= 1 ? 4 : 8)).toString();
 }
 
-export function fmtTokensSigned(n: number): string {
-  return (n >= 0 ? "+" : "−") + fmtTokens(Math.abs(n));
-}
+export const fmtUsdSigned = signed(fmtUsd);
+export const fmtTokensSigned = signed(fmtTokens);
 
 export function fmtTs(ts: number, spanSec: number): string {
   const d = new Date(ts * 1000);

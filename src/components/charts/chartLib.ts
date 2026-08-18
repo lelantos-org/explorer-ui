@@ -30,15 +30,28 @@ export function baselineY(g: ChartGeometry): number {
   return g.pad.t + g.ih;
 }
 
+/**
+ * The window to plot: the caller's if it has one, otherwise the data's own
+ * extent.
+ *
+ * A caller that knows the range it requested should pass it — a series whose
+ * last bucket is empty would otherwise be cropped to the buckets that came
+ * back, so a quiet tail reads as a shorter range rather than a quiet one.
+ */
 export function resolveDomain<T>(
   data: T[],
   tsOf: (t: T) => number,
   domain?: TimeDomain | null,
 ): TimeDomain {
   if (domain) return domain;
-  const start = data[0] ? tsOf(data[0]) : 0;
-  const end = data[data.length - 1] ? tsOf(data[data.length - 1]) : start + 1;
-  return { start, end };
+  const first = data[0];
+  const last = data[data.length - 1];
+  // No data at all: a placeholder window, since there is nothing to take an
+  // extent from. A single point yields a zero-width one, which is deliberate —
+  // `domainSpan` floors the divisor, and widening it here would put the lone
+  // point somewhere other than the left edge.
+  if (first === undefined || last === undefined) return { start: 0, end: 1 };
+  return { start: tsOf(first), end: tsOf(last) };
 }
 
 export function xScale(g: ChartGeometry, domain: TimeDomain) {
@@ -87,15 +100,16 @@ export function timeTicks(domain: TimeDomain, count = 6): number[] {
   return Array.from({ length: count + 1 }, (_, i) => domain.start + (span * i) / count);
 }
 
+/** Index of the plotted point closest to a pixel x, or null when there are
+ *  none to snap to. */
 export function nearestPointIndex<T extends { x: number }>(
   points: T[],
   xPx: number,
 ): number | null {
-  if (points.length === 0) return null;
-  let best = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < points.length; i++) {
-    const d = Math.abs(points[i].x - xPx);
+  let best: number | null = null;
+  let bestDist = Number.POSITIVE_INFINITY;
+  for (const [i, point] of points.entries()) {
+    const d = Math.abs(point.x - xPx);
     if (d < bestDist) {
       bestDist = d;
       best = i;
@@ -119,8 +133,8 @@ export function pathLine(points: Point[]): string {
  *  series has no baseline to close against — emit nothing rather than a path
  *  that opens with a stray L. */
 export function pathArea(points: Point[], baseline: number): string {
-  if (points.length === 0) return "";
-  const last = points[points.length - 1];
   const first = points[0];
+  const last = points[points.length - 1];
+  if (first === undefined || last === undefined) return "";
   return `${pathLine(points)} L ${last.x.toFixed(2)} ${baseline} L ${first.x.toFixed(2)} ${baseline} Z`;
 }

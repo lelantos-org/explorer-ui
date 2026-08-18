@@ -2,8 +2,10 @@ import { type Denom, signedFmt, unitShort } from "../../lib/denom";
 
 interface Props {
   rangeLabel: string;
+  /** Assets in scope; `null` while the registry is still loading. */
   assetCount: number | null;
-  chainId: string;
+  /** Chain in scope, or `null` for the whole network. */
+  chainId: number | null;
   netFlow: number | null;
   /** Unit `netFlow` is expressed in. */
   denom: Denom;
@@ -20,7 +22,7 @@ export default function Hero({ rangeLabel, assetCount, chainId, netFlow, denom }
         <div className="hero__sub muted">
           zero-knowledge flow telemetry · {rangeLabel} window · {assetCount ?? "—"} asset
           {assetCount === 1 ? "" : "s"}
-          {chainId ? ` · chain ${chainId}` : ""}
+          {chainId !== null && ` · chain ${chainId}`}
         </div>
       </div>
       <div className="hero__r">

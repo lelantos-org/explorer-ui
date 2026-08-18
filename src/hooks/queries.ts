@@ -1,15 +1,16 @@
-import type {
-  AssetOut,
-  ChainFlow,
-  ChainLocked,
-  CountPoint,
-  FlowPoint,
-  KindCounts,
-  TxOut,
+import {
+  type AssetOut,
+  type ChainFlow,
+  type ChainLocked,
+  type CountPoint,
+  type FlowPoint,
+  type KindCounts,
+  type TxOut,
+  useApi,
 } from "../api";
-import { useApi } from "../api";
 import { ALL_KINDS, type KindFilter } from "../lib/kinds";
 import type { Range } from "../lib/ranges";
+import type { Scope } from "../lib/scope";
 import { rangeDomain, type TimeDomain } from "../lib/time";
 import { type Async, useAsync } from "./useAsync";
 
@@ -21,6 +22,10 @@ import { type Async, useAsync } from "./useAsync";
 const REFRESH_MS = 30_000;
 
 const live = { refetchMs: REFRESH_MS };
+
+/** `null` is "unscoped" throughout the app; the wire spells that as an absent
+ *  param, so every query converts at exactly this boundary. */
+const param = (id: number | null): number | undefined => id ?? undefined;
 
 export function useAssets(): Async<AssetOut[]> {
   const api = useApi();
@@ -52,16 +57,17 @@ export function useRecentTx(limit = 20, kind: KindFilter = ALL_KINDS): Async<TxO
   );
 }
 
-export function useTxKinds(chainId: string, range: Range): Async<KindCounts[]> {
+/** Kind counts over time. Chain-scoped only: `/v1/tx-kinds` takes no asset. */
+export function useTxKinds(chainId: number | null, range: Range): Async<KindCounts[]> {
   const api = useApi();
   return useAsync(
     () =>
       api.getTxKinds({
-        chainId: chainId ? Number(chainId) : undefined,
+        chainId: param(chainId),
         bucketSec: range.bucket,
         sinceTs: rangeDomain(range).start,
       }),
-    [api, chainId, range.sec, range.bucket],
+    [api, chainId, range.label],
     live,
   );
 }
@@ -75,33 +81,30 @@ export interface FlowAndTx {
   domain: TimeDomain;
 }
 
-export interface FlowAndTxQuery {
-  chainId: string;
-  assetIdU64: string;
-  range: Range;
-}
-
 /**
  * Flows and tx counts as one request pair: they share an axis, so a partial
  * result would draw two charts over different windows.
  */
-export function useFlowAndTx({ chainId, assetIdU64, range }: FlowAndTxQuery): Async<FlowAndTx> {
+export function useFlowAndTx(scope: Scope, range: Range): Async<FlowAndTx> {
   const api = useApi();
+  const { chainId, assetIdU64 } = scope;
   return useAsync(
     async () => {
       const domain = rangeDomain(range);
-      const query = {
-        chainId: chainId ? Number(chainId) : undefined,
+      const window = {
+        chainId: param(chainId),
         bucketSec: range.bucket,
         sinceTs: domain.start,
       };
       const [flows, counts] = await Promise.all([
-        api.getAssetFlows({ ...query, assetIdU64: assetIdU64 ? Number(assetIdU64) : undefined }),
-        api.getTxCounts(query),
+        // Only the flows take the asset: `/v1/tx-counts` is chain-scoped, so a
+        // pinned asset narrows one series of the pair and not the other.
+        api.getAssetFlows({ ...window, assetIdU64: param(assetIdU64) }),
+        api.getTxCounts(window),
       ]);
       return { flows, counts, domain };
     },
-    [api, chainId, assetIdU64, range.sec, range.bucket],
+    [api, chainId, assetIdU64, range.label],
     live,
   );
 }

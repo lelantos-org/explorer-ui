@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ChainFlow, ChainLocked, CountPoint, FlowPoint } from "../api";
+import { at } from "../test/at";
 import {
   chainShares,
   peakCount,
@@ -91,8 +92,8 @@ describe("chainShares", () => {
     const data = [chain({ chainId: 1, txCount: 30 }), chain({ chainId: 10, txCount: 10 })];
     const { hasValues, shareOf } = chainShares(data);
     expect(hasValues).toBe(false);
-    expect(shareOf(data[0])).toBe(75);
-    expect(shareOf(data[1])).toBe(25);
+    expect(shareOf(at(data, 0))).toBe(75);
+    expect(shareOf(at(data, 1))).toBe(25);
   });
 
   it("shares by volume once values arrive", () => {
@@ -102,12 +103,12 @@ describe("chainShares", () => {
     ];
     const { hasValues, shareOf } = chainShares(data);
     expect(hasValues).toBe(true);
-    expect(shareOf(data[0])).toBe(80);
+    expect(shareOf(at(data, 0))).toBe(80);
   });
 
   it("does not divide by zero on an all-zero grid", () => {
     const data = [chain({ chainId: 1 })];
-    expect(chainShares(data).shareOf(data[0])).toBe(0);
+    expect(chainShares(data).shareOf(at(data, 0))).toBe(0);
   });
 });
 

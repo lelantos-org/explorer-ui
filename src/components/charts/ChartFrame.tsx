@@ -1,44 +1,37 @@
 import type { ReactNode } from "react";
 import { fmtNum, fmtTs } from "../../lib/format";
-import { domainSpan, type TimeDomain } from "../../lib/time";
-import {
-  type ChartGeometry,
-  crisp,
-  ticks as makeTicks,
-  timeTicks,
-  xScale,
-  yScale,
-} from "./chartLib";
+import { crisp, ticks as makeTicks, timeTicks } from "./chartLib";
 import type { ChartBox } from "./useChartGeometry";
+import type { PlotFrame } from "./usePlotFrame";
 
 interface Props {
-  geom: ChartGeometry;
-  domain: TimeDomain;
-  max: number;
-  /** From `useChartGeometry`: the box whose width `geom` was measured from. */
+  /** The coordinate system the caller projected its series with. */
+  frame: PlotFrame;
+  /** From `usePlotFrame`: the box whose width the frame was measured from. */
   containerRef?: ChartBox["ref"];
   /** Accessible name for the plot. */
   title: string;
   yTickCount?: number;
   xTickCount?: number;
+  /** Round the y ticks — for counts, where "2.5 transactions" is not a value. */
   roundY?: boolean;
   defs?: ReactNode;
   legend?: ReactNode;
+  /** The series, already positioned through `frame`. */
   children: ReactNode;
   onMouseMove?: (e: React.MouseEvent<SVGSVGElement>) => void;
   onMouseLeave?: () => void;
 }
 
 /**
- * Axes, gridlines and legend around a plot. The series themselves come in as
- * children, already positioned — the frame and its children scale through the
- * same `xScale`/`yScale`, so an axis label can never describe a different
- * mapping than the line drawn under it.
+ * Axes, gridlines and legend around a plot.
+ *
+ * The series themselves come in as children, already positioned. Frame and
+ * children scale through the same `frame`, so an axis label can never describe
+ * a different mapping than the line drawn under it.
  */
 export default function ChartFrame({
-  geom,
-  domain,
-  max,
+  frame,
   containerRef,
   title,
   yTickCount = 4,
@@ -50,10 +43,8 @@ export default function ChartFrame({
   onMouseMove,
   onMouseLeave,
 }: Props) {
+  const { geom, domain, span, max, x, y } = frame;
   const { W, H, pad } = geom;
-  const span = domainSpan(domain);
-  const x = xScale(geom, domain);
-  const y = yScale(geom, max);
 
   return (
     <div className="chart" ref={containerRef}>

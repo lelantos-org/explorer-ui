@@ -9,5 +9,11 @@
   .kpi--xl .kpi__val { font-size: 28px; }
   /* Two sticky bars would eat half a phone screen; the header keeps the slot. */
   .filters--sticky { position: static; }
-  .ftr { padding: 12px 14px; font-size: 12px; }
+  /* Padding keeps the safe-area term from the footer's own breakpoint —
+     dropping it here would put the links under the iOS home indicator. */
+  .ftr {
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
+    font-size: 12px;
+  }
+  .ftr__note { font-size: 11px; }
 }

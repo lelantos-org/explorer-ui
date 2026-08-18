@@ -9,9 +9,10 @@ import type {
   FlowQuery,
   KindCounts,
   RecentTxQuery,
-  TxKind,
   TxOut,
 } from "../types";
+import { bucketize } from "./bucket";
+import { chainFlows24h } from "./chainFlows";
 import {
   buildAssets,
   buildHourlyFlows,
@@ -20,6 +21,8 @@ import {
   HOURS_OF_HISTORY,
   mulberry32,
 } from "./generate";
+import { lockedByChain } from "./locked";
+import { classifyTransactions, selectTransactions } from "./transactions";
 
 export interface MockApiOpts {
   latencyMs?: number;
@@ -37,29 +40,14 @@ export interface MockApiOpts {
   nowSec?: number;
 }
 
-/** Floor a timestamp onto its bucket's start. */
-const bucketOf = (ts: number, bucket: number) => Math.floor(ts / bucket) * bucket;
+const DEFAULT_LATENCY_MS = 200;
+const DEFAULT_SEED = 0xdeadbeef;
+const DAY = 86400;
+const HOUR = 3600;
 
-/** Slots in the `/v1/chain-flows-24h` window, oldest first. */
-const WINDOW_HOURS = 24;
-
-const zeroHours = () => new Array<number>(WINDOW_HOURS).fill(0);
-
-/**
- * Oldest hour of the 24-hour window, anchored so the hour containing `ts` lands
- * in the last slot — as the backend anchors it. Anchoring on `ts - 86400`
- * instead spans 25 distinct hours, and the newest has nowhere to go but the last
- * slot alongside the hour before it.
- */
-const windowStart = (ts: number) => bucketOf(ts, 3600) - (WINDOW_HOURS - 1) * 3600;
-
-/**
- * Chains the backend scans that carry no assets and no flows, so the grid's
- * "indexed but quiet" card has something to render. Without one, the mock only
- * ever shows busy chains and the state goes unexercised until production hits
- * it.
- */
-const IDLE_CHAIN_IDS = [137];
+/** Every transaction the kind chart can bucket. Well above what any range
+ *  holds, so the plot is never truncated by paging rather than by the range. */
+const KIND_SCAN_LIMIT = 1000;
 
 /**
  * A flow bucket under construction. Token amounts accumulate unconditionally
@@ -76,93 +64,13 @@ interface FlowAcc {
   unpriced: Set<number>;
 }
 
-/**
- * Biggest dollar balance first, with the unpriced trailing.
- *
- * An unpriced balance has no place on a dollar scale, so it sorts last rather
- * than as a zero, which would rank it worthless instead of unknown.
- */
-const richestFirst = (a: number | null, b: number | null) =>
-  (b ?? Number.NEGATIVE_INFINITY) - (a ?? Number.NEGATIVE_INFINITY);
-
-/**
- * Escrowed balances per chain, mirroring `/v1/locked`: all-time deposits minus
- * withdrawals per asset, summed across a chain's assets only in dollars — the
- * one unit they share. An unpriced asset keeps its token amount and counts
- * toward `unpricedAssets` rather than vanishing from the total.
- *
- * Assets that never moved are absent, as they are in the view the endpoint reads:
- * it aggregates flows, so an asset with none has no row.
- */
-function lockedByChain(assets: AssetOut[], flows: FlowRow[]): ChainLocked[] {
-  const totals = new Map<number, { net: number; lastTs: number }>();
-  for (const f of flows) {
-    const t = totals.get(f.assetIdU64) ?? { net: 0, lastTs: 0 };
-    t.net += f.inAmt - f.outAmt;
-    t.lastTs = Math.max(t.lastTs, f.ts);
-    totals.set(f.assetIdU64, t);
-  }
-
-  const byChain = new Map<number, ChainLocked>();
-  for (const asset of assets) {
-    const total = totals.get(asset.assetIdU64);
-    if (!total) continue;
-    const lockedUsd = asset.priceUsd === null ? null : total.net * asset.priceUsd;
-    const chain = byChain.get(asset.chainId) ?? {
-      chainId: asset.chainId,
-      lockedUsd: null,
-      unpricedAssets: 0,
-      assets: [],
-    };
-    if (lockedUsd === null) chain.unpricedAssets += 1;
-    else chain.lockedUsd = (chain.lockedUsd ?? 0) + lockedUsd;
-    chain.assets.push({
-      assetIdU64: asset.assetIdU64,
-      tokenHex: asset.tokenHex,
-      symbol: asset.symbol,
-      amount: total.net,
-      lockedUsd,
-      lastTs: total.lastTs,
-    });
-    byChain.set(asset.chainId, chain);
-  }
-
-  for (const chain of byChain.values()) {
-    chain.assets.sort(
-      (a, b) => richestFirst(a.lockedUsd, b.lockedUsd) || a.assetIdU64 - b.assetIdU64,
-    );
-  }
-  return [...byChain.values()].sort(
-    (a, b) => richestFirst(a.lockedUsd, b.lockedUsd) || a.chainId - b.chainId,
-  );
-}
-
-/** Fold rows into per-bucket accumulators, returned in ascending bucket order. */
-function bucketize<Row, Acc>(
-  rows: Row[],
-  bucket: number,
-  tsOf: (r: Row) => number,
-  init: (ts: number) => Acc,
-  fold: (acc: Acc, r: Row) => void,
-): Acc[] {
-  const map = new Map<number, Acc>();
-  for (const r of rows) {
-    const k = bucketOf(tsOf(r), bucket);
-    let cur = map.get(k);
-    if (!cur) {
-      cur = init(k);
-      map.set(k, cur);
-    }
-    fold(cur, r);
-  }
-  return [...map.entries()].sort(([a], [b]) => a - b).map(([, v]) => v);
-}
-
 export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
-  const latency = opts.latencyMs ?? 200;
-  const failureRate = opts.failureRate ?? 0;
-  const healthy = opts.healthy ?? true;
-  const seed = opts.seed ?? 0xdeadbeef;
+  const {
+    latencyMs = DEFAULT_LATENCY_MS,
+    failureRate = 0,
+    healthy = true,
+    seed = DEFAULT_SEED,
+  } = opts;
 
   const rng = mulberry32(seed);
   // Failure injection draws from its own stream: sharing `rng` would make the
@@ -170,59 +78,25 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
   const chaos = mulberry32(seed ^ 0x9e3779b9);
 
   const now = opts.nowSec ?? Math.floor(Date.now() / 1000);
-  const assets = buildAssets(rng, now);
-  const flows = buildHourlyFlows(rng, assets, HOURS_OF_HISTORY, now);
-  const advances = buildTreeAdvances(rng, flows);
+  const generated = buildAssets(rng, now);
+  const assets = generated.map((g) => g.asset);
+  const flows = buildHourlyFlows(rng, generated, HOURS_OF_HISTORY, now);
+  const transactions = classifyTransactions(buildTreeAdvances(rng, flows), assets);
   const priceOf = new Map(assets.map((a) => [a.assetIdU64, a.priceUsd]));
+  const assetChainIds = assets.map((a) => a.chainId);
 
-  const wait = () => new Promise<void>((r) => setTimeout(r, latency));
-  const maybeFail = () => {
+  const wait = () => new Promise<void>((resolve) => setTimeout(resolve, latencyMs));
+
+  /** Every endpoint but `health` goes through here: the latency, and the
+   *  injected failure that exercises the error paths. */
+  const respond = async () => {
+    await wait();
     if (failureRate > 0 && chaos() < failureRate) {
       throw new Error("503 mock: simulated failure");
     }
   };
-  const respond = async () => {
-    await wait();
-    maybeFail();
-  };
 
-  /**
-   * The classified feed, derived from tree advances the way the backend does:
-   * an advance with a matching asset flow is a withdraw, one without is a
-   * transfer; deposits are counted at flush time and escrows still awaiting a
-   * flush are pending. The modulus split is deterministic so the mock exercises
-   * every badge.
-   */
-  const allTransactions: TxOut[] = advances.map((t, i) => {
-    const kind: TxKind =
-      i % 7 === 0 ? "withdraw" : i % 7 === 1 ? "deposit" : i % 7 === 2 ? "pending" : "transfer";
-    const asset = assets[i % assets.length];
-    const movesValue = kind !== "transfer";
-    return {
-      chainId: t.chainId,
-      txHashHex: t.txHashHex,
-      blockNumber: t.blockNumber,
-      blockTs: t.blockTs,
-      kind,
-      assetIdU64: movesValue ? asset.assetIdU64 : null,
-      amount: movesValue ? (((i % 40) + 1) / 4).toString() : null,
-    };
-  });
-
-  const selectTransactions = (q: RecentTxQuery): TxOut[] =>
-    allTransactions
-      .filter(
-        (t) =>
-          (q.chainId === undefined || t.chainId === q.chainId) &&
-          (q.sinceTs === undefined || t.blockTs >= q.sinceTs) &&
-          // Before the slice, as the backend filters before its LIMIT: a
-          // pinned kind returns a full page, not the survivors of a mixed one.
-          (q.kind === undefined || t.kind === q.kind),
-      )
-      .sort((a, b) => b.blockTs - a.blockTs)
-      .slice(0, q.limit ?? 100);
-
-  const selectFlows = (q: FlowQuery) =>
+  const selectFlows = (q: FlowQuery): FlowRow[] =>
     flows.filter(
       (r) =>
         (q.chainId === undefined || r.chainId === q.chainId) &&
@@ -253,7 +127,7 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
       const singleAsset = new Set(rows.map((r) => r.assetIdU64)).size <= 1;
       const buckets = bucketize<FlowRow, FlowAcc>(
         rows,
-        q.bucketSec ?? 86400,
+        q.bucketSec ?? DAY,
         (r) => r.ts,
         (ts) => ({ ts, in: 0, out: 0, inUsd: null, outUsd: null, unpriced: new Set() }),
         (acc, r) => {
@@ -285,10 +159,9 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
 
     async getTxCounts(q: CountQuery): Promise<CountPoint[]> {
       await respond();
-      const rows = selectFlows({ chainId: q.chainId, sinceTs: q.sinceTs });
       return bucketize(
-        rows,
-        q.bucketSec ?? 3600,
+        selectFlows({ chainId: q.chainId, sinceTs: q.sinceTs }),
+        q.bucketSec ?? HOUR,
         (r) => r.ts,
         (ts) => ({ ts, count: 0 }),
         (acc, r) => {
@@ -299,15 +172,19 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
 
     async getRecentTransactions(q: RecentTxQuery): Promise<TxOut[]> {
       await respond();
-      return selectTransactions(q);
+      return selectTransactions(transactions, q);
     },
 
     async getTxKinds(q: CountQuery): Promise<KindCounts[]> {
       await respond();
-      const txs = selectTransactions({ chainId: q.chainId, sinceTs: q.sinceTs, limit: 1000 });
+      const rows = selectTransactions(transactions, {
+        chainId: q.chainId,
+        sinceTs: q.sinceTs,
+        limit: KIND_SCAN_LIMIT,
+      });
       return bucketize(
-        txs,
-        q.bucketSec ?? 3600,
+        rows,
+        q.bucketSec ?? HOUR,
         (t) => t.blockTs,
         (ts) => ({ ts, deposit: 0, pending: 0, transfer: 0, withdraw: 0 }),
         (acc, t) => {
@@ -318,40 +195,7 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
 
     async getChainFlows24h(): Promise<ChainFlow[]> {
       await respond();
-      // Mirror the backend contract, which carries counts and no value:
-      // `hourlyIn` is transactions per hour, `inflow`/`outflow`/`hourlyOut` are
-      // reserved and 0. Summing each chain's token amounts here — the previous
-      // shape — was the cross-asset total `getAssetFlows` refuses to produce, and
-      // the grid drew its "vol" shares off it.
-      //
-      // The window is anchored on the instance's `now` rather than a fresh clock
-      // read: reading here made it advance between calls, so `nowSec` did not
-      // actually pin the dataset.
-      const hourStart = windowStart(now);
-      // Every indexed chain, quiet ones at zero: absent means "nobody indexes
-      // this chain", which is not what an idle chain is.
-      const chainIds = [...new Set([...assets.map((a) => a.chainId), ...IDLE_CHAIN_IDS])];
-
-      return (
-        chainIds
-          .map((chainId): ChainFlow => {
-            const hourlyIn = zeroHours();
-            let txCount = 0;
-            for (const f of flows) {
-              const slot = Math.floor((f.ts - hourStart) / 3600);
-              // Out-of-window rows are dropped, not clamped: a clamped slot adds a
-              // foreign hour's count to an edge bucket, which reads as real
-              // activity in that hour.
-              if (f.chainId !== chainId || slot < 0 || slot >= WINDOW_HOURS) continue;
-              hourlyIn[slot] += f.txCount;
-              txCount += f.txCount;
-            }
-            return { chainId, inflow: 0, outflow: 0, hourlyIn, hourlyOut: zeroHours(), txCount };
-          })
-          // Chain id breaks ties so the quiet chains keep a stable order rather
-          // than shuffling between requests, as the backend orders them.
-          .sort((a, b) => b.txCount - a.txCount || a.chainId - b.chainId)
-      );
+      return chainFlows24h(flows, assetChainIds, now);
     },
   };
 }

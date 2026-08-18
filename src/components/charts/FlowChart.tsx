@@ -1,14 +1,16 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { FlowPoint } from "../../api";
 import { amountFmt, amounts, type Denom, isUsd } from "../../lib/denom";
 import { fmtTs } from "../../lib/format";
-import { domainSpan, type TimeDomain } from "../../lib/time";
+import type { TimeDomain } from "../../lib/time";
 import ChartCursor from "./ChartCursor";
 import ChartDot from "./ChartDot";
+import ChartEmpty from "./ChartEmpty";
 import ChartFrame from "./ChartFrame";
-import { baselineY, pathArea, pathLine, resolveDomain, xScale, yScale } from "./chartLib";
-import { useChartGeometry } from "./useChartGeometry";
+import ChartGradients, { fillUrl } from "./ChartGradients";
+import { pathArea, pathLine } from "./chartLib";
 import { useChartHover } from "./useChartHover";
+import { usePlotFrame } from "./usePlotFrame";
 
 interface Props {
   data: FlowPoint[];
@@ -18,41 +20,40 @@ interface Props {
   height?: number;
 }
 
-const Defs = (
-  <>
-    <linearGradient id="infill" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.45" />
-      <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-    </linearGradient>
-    <linearGradient id="outfill" x1="0" x2="0" y1="0" y2="1">
-      <stop offset="0%" stopColor="var(--warn)" stopOpacity="0.30" />
-      <stop offset="100%" stopColor="var(--warn)" stopOpacity="0" />
-    </linearGradient>
-  </>
-);
+const GRADIENT_ID = "flowchart";
+
+const tsOf = (p: FlowPoint) => p.ts;
 
 export default function FlowChart({ data, denom, domain, height = 280 }: Props) {
-  const { ref, geom } = useChartGeometry(height);
-  const view = useMemo(() => {
-    const dom = resolveDomain(data, (d) => d.ts, domain);
-    const series = data.map((p) => ({ p, v: amounts(p, denom) }));
-    const max = Math.max(1, ...series.map((s) => Math.max(s.v.in, s.v.out)));
-    const x = xScale(geom, dom);
-    const y = yScale(geom, max);
-    const points = series.map(({ p, v }) => ({ x: x(p.ts), yIn: y(v.in), yOut: y(v.out), v, p }));
-    return { dom, max, points };
-  }, [data, denom, geom, domain]);
+  // The axis fits whichever series the denomination selects, so switching
+  // between tokens and dollars rescales the plot with the numbers on it.
+  const valuesOf = useCallback(
+    (p: FlowPoint) => {
+      const v = amounts(p, denom);
+      return [v.in, v.out];
+    },
+    [denom],
+  );
 
-  const { dom, max, points } = view;
-  const { point: hoverPt, handlers } = useChartHover(geom, points);
+  const { ref, frame } = usePlotFrame(data, { height, domain, tsOf, valuesOf });
 
-  if (data.length === 0) return <div className="empty">no data</div>;
+  const points = useMemo(
+    () =>
+      data.map((p) => {
+        const v = amounts(p, denom);
+        return { x: frame.x(p.ts), yIn: frame.y(v.in), yOut: frame.y(v.out), v, p };
+      }),
+    [data, denom, frame],
+  );
 
-  const baseline = baselineY(geom);
+  const { point: hovered, handlers } = useChartHover(frame.geom, points);
+
+  if (data.length === 0) return <ChartEmpty />;
+
+  const fmt = amountFmt(denom);
   const lineIn = points.map((p) => ({ x: p.x, y: p.yIn }));
   const lineOut = points.map((p) => ({ x: p.x, y: p.yOut }));
-  const fmt = amountFmt(denom);
-  const span = domainSpan(dom);
+  const first = points[0];
 
   const legend = (
     <>
@@ -62,12 +63,12 @@ export default function FlowChart({ data, denom, domain, height = 280 }: Props) 
       <span className="lg lg--out">
         <span className="lg__sw" /> outflow
       </span>
-      {hoverPt && (
+      {hovered && (
         <span className="muted chart__tip">
-          {fmtTs(hoverPt.p.ts, span)} · <span className="accent">in {fmt(hoverPt.v.in)}</span> ·{" "}
-          <span className="warn">out {fmt(hoverPt.v.out)}</span>
-          {hoverPt.p.unpricedAssets > 0 && isUsd(denom) && (
-            <span className="warn"> · {hoverPt.p.unpricedAssets} unpriced</span>
+          {fmtTs(hovered.p.ts, frame.span)} · <span className="accent">in {fmt(hovered.v.in)}</span>{" "}
+          · <span className="warn">out {fmt(hovered.v.out)}</span>
+          {hovered.p.unpricedAssets > 0 && isUsd(denom) && (
+            <span className="warn"> · {hovered.p.unpricedAssets} unpriced</span>
           )}
         </span>
       )}
@@ -76,32 +77,30 @@ export default function FlowChart({ data, denom, domain, height = 280 }: Props) 
 
   return (
     <ChartFrame
-      geom={geom}
-      domain={dom}
-      max={max}
+      frame={frame}
       containerRef={ref}
       title="Inflow and outflow over time"
-      defs={Defs}
+      defs={<ChartGradients id={GRADIENT_ID} />}
       legend={legend}
       {...handlers}
     >
-      <path d={pathArea(lineOut, baseline)} fill="url(#outfill)" />
-      <path d={pathArea(lineIn, baseline)} fill="url(#infill)" />
+      <path d={pathArea(lineOut, frame.baseline)} fill={fillUrl(GRADIENT_ID, "out")} />
+      <path d={pathArea(lineIn, frame.baseline)} fill={fillUrl(GRADIENT_ID, "in")} />
       <path d={pathLine(lineOut)} className="line line--out" />
       <path d={pathLine(lineIn)} className="line line--in" />
 
       {/* A single bucket draws a zero-length path, so mark the point itself. */}
-      {points.length === 1 && (
+      {points.length === 1 && first && (
         <g>
-          <ChartDot x={points[0].x} y={points[0].yOut} series="out" />
-          <ChartDot x={points[0].x} y={points[0].yIn} series="in" />
+          <ChartDot x={first.x} y={first.yOut} series="out" />
+          <ChartDot x={first.x} y={first.yIn} series="in" />
         </g>
       )}
 
-      {hoverPt && (
-        <ChartCursor geom={geom} x={hoverPt.x}>
-          <ChartDot x={hoverPt.x} y={hoverPt.yIn} series="in" />
-          <ChartDot x={hoverPt.x} y={hoverPt.yOut} series="out" />
+      {hovered && (
+        <ChartCursor frame={frame} x={hovered.x}>
+          <ChartDot x={hovered.x} y={hovered.yIn} series="in" />
+          <ChartDot x={hovered.x} y={hovered.yOut} series="out" />
         </ChartCursor>
       )}
     </ChartFrame>

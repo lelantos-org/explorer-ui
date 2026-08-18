@@ -1,11 +1,11 @@
 import { useMemo } from "react";
 import { type KindCounts, TX_KINDS, type TxKind } from "../../api";
 import { fmtNum, fmtTs } from "../../lib/format";
-import { domainSpan, type TimeDomain } from "../../lib/time";
+import type { TimeDomain } from "../../lib/time";
+import ChartEmpty from "./ChartEmpty";
 import ChartFrame from "./ChartFrame";
-import { baselineY, resolveDomain, xScale, yScale } from "./chartLib";
-import { useChartGeometry } from "./useChartGeometry";
 import { useChartHover } from "./useChartHover";
+import { type PlotFrame, usePlotFrame } from "./usePlotFrame";
 
 interface Props {
   data: KindCounts[];
@@ -47,56 +47,70 @@ const MAX_BAR_W = 14;
  *  leave a visible mark. */
 const MIN_BAR_H = 1.5;
 
+const tsOf = (d: KindCounts) => d.ts;
+// Grouped, not stacked: the axis fits the tallest single kind, so a short
+// series stays readable next to a dominant one.
+const valuesOf = (d: KindCounts) => PLOTTED_KINDS.map((k) => d[k]);
+
+interface Bar {
+  kind: TxKind;
+  value: number;
+  x: number;
+  /** Height in pixels; 0 for a bucket where the kind saw nothing. */
+  h: number;
+}
+
+interface Group {
+  /** Centre of the group, which is also what the cursor snaps to. */
+  x: number;
+  bars: Bar[];
+  p: KindCounts;
+}
+
+/** Bar and lane widths, in pixels. One slot per bucket *duration*, split into a
+ *  lane per kind. */
+function barLayout(frame: PlotFrame, bucketSec: number) {
+  const laneRaw = ((bucketSec / frame.span) * frame.geom.iw * GROUP_FILL) / PLOTTED_KINDS.length;
+  // Whole pixels: a fractional width leaves both edges of every bar half-lit,
+  // which reads as a soft bar rather than a thin one.
+  const barW = Math.round(Math.min(Math.max(laneRaw * BAR_FILL, MIN_BAR_W), MAX_BAR_W));
+  const lane = barW / BAR_FILL;
+  return { barW, lane, group: lane * PLOTTED_KINDS.length };
+}
+
 export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: Props) {
-  const { ref, geom } = useChartGeometry(height);
-  const view = useMemo(() => {
-    const dom = resolveDomain(data, (d) => d.ts, domain);
-    const span = domainSpan(dom);
-    // Grouped, not stacked: the axis fits the tallest single kind, so a short
-    // series stays readable next to a dominant one.
-    const max = Math.max(1, ...data.flatMap((d) => PLOTTED_KINDS.map((k) => d[k])));
-    const x = xScale(geom, dom);
-    const y = yScale(geom, max);
-    const baseline = baselineY(geom);
+  const { ref, frame } = usePlotFrame(data, { height, domain, tsOf, valuesOf });
 
-    // One slot per bucket *duration*, split into a lane per kind.
-    const laneRaw = ((bucketSec / span) * geom.iw * GROUP_FILL) / PLOTTED_KINDS.length;
-    // Whole pixels: a fractional width leaves both edges of every bar
-    // half-lit, which reads as a soft bar rather than a thin one.
-    const barW = Math.round(Math.min(Math.max(laneRaw * BAR_FILL, MIN_BAR_W), MAX_BAR_W));
-    const lane = barW / BAR_FILL;
-    const group = lane * PLOTTED_KINDS.length;
+  const { groups, barW, group } = useMemo(() => {
+    const { barW, lane, group } = barLayout(frame, bucketSec);
+    const left = frame.geom.pad.l;
+    const right = frame.geom.W - frame.geom.pad.r;
 
-    const left = geom.pad.l;
-    const right = geom.W - geom.pad.r;
-
-    const points = data.map((p) => {
+    const groups = data.map((p): Group => {
       // A bucket labelled at its start covers [ts, ts+bucket), so centre the
       // group on the middle of that span rather than on its left edge.
-      const centre = x(p.ts + bucketSec / 2);
+      const centre = frame.x(p.ts + bucketSec / 2);
       // Keep the group inside the plot: the newest bucket is usually only
       // half-elapsed, so its centre can sit past the right edge.
       const gx = Math.min(Math.max(centre - group / 2, left), right - group);
-      const bars = PLOTTED_KINDS.map((kind, i) => {
+      const bars = PLOTTED_KINDS.map((kind, i): Bar => {
         const value = p[kind];
         return {
           kind,
           value,
           x: Math.round(gx + i * lane + (lane - barW) / 2),
-          h: value > 0 ? Math.max(MIN_BAR_H, Math.round(baseline - y(value))) : 0,
+          h: value > 0 ? Math.max(MIN_BAR_H, Math.round(frame.baseline - frame.y(value))) : 0,
         };
       });
       return { x: gx + group / 2, bars, p };
     });
-    return { dom, max, points, barW, baseline, group };
-  }, [data, bucketSec, geom, domain]);
 
-  const { dom, max, points, barW, baseline, group } = view;
-  const { point: hoverPt, handlers } = useChartHover(geom, points);
+    return { groups, barW, group };
+  }, [data, bucketSec, frame]);
 
-  if (data.length === 0) return <div className="empty">no data</div>;
+  const { point: hovered, handlers } = useChartHover(frame.geom, groups);
 
-  const span = domainSpan(dom);
+  if (data.length === 0) return <ChartEmpty />;
 
   const legend = (
     <>
@@ -105,11 +119,11 @@ export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: 
           <span className="lg__sw" /> {k}
         </span>
       ))}
-      {hoverPt && (
+      {hovered && (
         <span className="muted chart__tip">
-          {fmtTs(hoverPt.p.ts, span)} ·{" "}
-          {PLOTTED_KINDS.filter((k) => hoverPt.p[k] > 0)
-            .map((k) => `${k} ${fmtNum(hoverPt.p[k])}`)
+          {fmtTs(hovered.p.ts, frame.span)} ·{" "}
+          {PLOTTED_KINDS.filter((k) => hovered.p[k] > 0)
+            .map((k) => `${k} ${fmtNum(hovered.p[k])}`)
             .join(" · ") || "no activity"}
         </span>
       )}
@@ -118,9 +132,7 @@ export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: 
 
   return (
     <ChartFrame
-      geom={geom}
-      domain={dom}
-      max={max}
+      frame={frame}
       roundY
       containerRef={ref}
       title="Transactions by kind over time"
@@ -129,32 +141,32 @@ export default function TxKindsChart({ data, bucketSec, domain, height = 240 }: 
     >
       {/* Band behind the hovered group rather than a cursor line: with four
           bars per bucket a line would land on top of one of them. */}
-      {hoverPt && (
+      {hovered && (
         <rect
-          x={hoverPt.x - group / 2}
-          y={geom.pad.t}
+          x={hovered.x - group / 2}
+          y={frame.geom.pad.t}
           width={group}
-          height={geom.ih}
+          height={frame.geom.ih}
           className="bar__band"
         />
       )}
 
-      {points.map((pt) => (
-        <g key={pt.p.ts}>
-          {pt.bars.map((b) =>
-            b.h > 0 ? (
+      {groups.map((g) => (
+        <g key={g.p.ts}>
+          {g.bars
+            .filter((b) => b.h > 0)
+            .map((b) => (
               <rect
                 key={b.kind}
                 x={b.x}
-                y={baseline - b.h}
+                y={frame.baseline - b.h}
                 width={barW}
                 height={b.h}
                 className={`bar bar--${b.kind}`}
               >
                 <title>{`${b.kind}: ${b.value}`}</title>
               </rect>
-            ) : null,
-          )}
+            ))}
         </g>
       ))}
     </ChartFrame>

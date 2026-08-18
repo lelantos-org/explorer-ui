@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { baselineY, type ChartGeometry, crisp } from "./chartLib";
+import { crisp } from "./chartLib";
+import type { PlotFrame } from "./usePlotFrame";
 
 interface Props {
-  geom: ChartGeometry;
+  frame: PlotFrame;
   /** Plot x of the hovered point, in chart units. */
   x: number;
   /** Markers on the series the cursor crosses — one per plotted series. */
@@ -11,10 +12,16 @@ interface Props {
 
 /** The vertical line marking the hovered bucket, drawn from the top of the plot
  *  down to the baseline. */
-export default function ChartCursor({ geom, x, children }: Props) {
+export default function ChartCursor({ frame, x, children }: Props) {
   return (
     <g>
-      <line x1={crisp(x)} x2={crisp(x)} y1={geom.pad.t} y2={baselineY(geom)} className="cursor" />
+      <line
+        x1={crisp(x)}
+        x2={crisp(x)}
+        y1={frame.geom.pad.t}
+        y2={frame.baseline}
+        className="cursor"
+      />
       {children}
     </g>
   );

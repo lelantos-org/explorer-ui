@@ -163,23 +163,48 @@ const PROFILES: AssetProfile[] = [
   },
 ];
 
-const CHAINS = [1, 1, 1, 10, 42161, 8453];
+/** Which chain each profile lands on, by position. Repeats deliberately:
+ *  chain 1 carries several assets, which is what the grouped picker is for. */
+const CHAINS: readonly [number, ...number[]] = [1, 1, 1, 10, 42161, 8453];
+
+/** First registry id. Ids are assigned in profile order from here. */
+const ASSET_ID_BASE = 1000;
+
+/** Pick from a non-empty list by wrapping index — total, and without a cast:
+ *  index 0 of a non-empty tuple is always present. */
+const cycle = <T>(list: readonly [T, ...T[]], i: number): T => list[i % list.length] ?? list[0];
+
+/**
+ * An asset and the profile that drives its history.
+ *
+ * They travel together rather than as two arrays lined up by index: the flow
+ * builder used to read `PROFILES[i]` for `assets[i]`, so filtering or
+ * reordering the assets anywhere in between would have silently paired each
+ * one with another token's volume and volatility.
+ */
+export interface GeneratedAsset {
+  asset: AssetOut;
+  profile: AssetProfile;
+}
 
 /**
  * Mock `inAmt`/`outAmt` are already whole tokens, so `priceUsd` applies to
  * them directly. Real flows arrive as base units and the backend divides by
  * the token's `decimals` first — `scale` is never the divisor.
  */
-export function buildAssets(rng: Rng, now: number): AssetOut[] {
-  return PROFILES.map((p, i) => ({
-    chainId: CHAINS[i % CHAINS.length],
-    assetIdU64: 1000 + i,
-    tokenHex: hex(rng, 20),
-    scale: p.scale,
-    decimals: p.decimals,
-    symbol: p.symbolUnresolved ? null : p.name,
-    priceUsd: p.priceUsd,
-    priceAt: p.priceUsd === null ? null : now,
+export function buildAssets(rng: Rng, now: number): GeneratedAsset[] {
+  return PROFILES.map((profile, i) => ({
+    profile,
+    asset: {
+      chainId: cycle(CHAINS, i),
+      assetIdU64: ASSET_ID_BASE + i,
+      tokenHex: hex(rng, 20),
+      scale: profile.scale,
+      decimals: profile.decimals,
+      symbol: profile.symbolUnresolved ? null : profile.name,
+      priceUsd: profile.priceUsd,
+      priceAt: profile.priceUsd === null ? null : now,
+    },
   }));
 }
 
@@ -205,7 +230,7 @@ function loadCurve(absHour: number, phaseHours: number): number {
 
 export function buildHourlyFlows(
   rng: Rng,
-  assets: AssetOut[],
+  generated: GeneratedAsset[],
   hours: number,
   now: number,
 ): FlowRow[] {
@@ -213,9 +238,7 @@ export function buildHourlyFlows(
   const hourStart = Math.floor(now / 3600) * 3600;
   const startTs = hourStart - hours * 3600;
 
-  for (let i = 0; i < assets.length; i++) {
-    const asset = assets[i];
-    const profile = PROFILES[i];
+  for (const { asset, profile } of generated) {
     const hourlyBase = profile.baseVolume / 24;
 
     for (let h = 0; h < hours; h++) {

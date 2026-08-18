@@ -31,13 +31,13 @@ export function indexAssets(assets: AssetOut[] | null): Map<string, AssetOut> {
  * Counts have to be taken from this rather than the whole registry: a headline
  * naming a chain beside a registry-wide count reads as that many assets on the
  * chain.
+ *
+ * The scope arrives already parsed — `lib/scope` is where URL text becomes ids —
+ * so this only ever compares numbers.
  */
 export function assetsInScope(assets: AssetOut[] | null, scope: Scope): AssetOut[] | null {
   if (!assets) return null;
-  // The scope arrives as URL text; parse it once and compare numbers, so a
-  // hand-edited "07" still selects chain 7.
-  const chainId = scope.chainId ? Number(scope.chainId) : null;
-  const assetIdU64 = scope.assetIdU64 ? Number(scope.assetIdU64) : null;
+  const { chainId, assetIdU64 } = scope;
   return assets.filter(
     (a) =>
       (chainId === null || a.chainId === chainId) &&

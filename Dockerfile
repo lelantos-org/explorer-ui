@@ -8,9 +8,13 @@ WORKDIR /app
 # VITE_API_TARGET is dev-server-only and deliberately absent.
 ARG VITE_API_BASE
 ARG VITE_USE_MOCK
+# `.git` is dockerignored, so the build cannot read the commit itself; CI
+# passes it. Absent, the footer reads "dev".
+ARG VITE_COMMIT
 
 ENV VITE_API_BASE=$VITE_API_BASE \
-    VITE_USE_MOCK=$VITE_USE_MOCK
+    VITE_USE_MOCK=$VITE_USE_MOCK \
+    VITE_COMMIT=$VITE_COMMIT
 
 # No .npmrc and no BuildKit npm secret: unlike webapp-ui, nothing here comes
 # from the @lelantos-org GitHub Packages registry.

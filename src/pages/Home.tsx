@@ -1,4 +1,4 @@
-import type { AssetOut, FlowPoint } from "../api";
+import { useMemo } from "react";
 import TxChart from "../components/charts/TxChart";
 import TxKindsChart from "../components/charts/TxKindsChart";
 import ChainFlowGrid from "../components/home/ChainFlowGrid";
@@ -8,6 +8,15 @@ import Hero from "../components/home/Hero";
 import KpiBar from "../components/home/KpiBar";
 import LatestTxList from "../components/home/LatestTxList";
 import LockedByChain from "../components/home/LockedByChain";
+import {
+  chainsMeta,
+  countScope,
+  countsMeta,
+  flowMeta,
+  kindsMeta,
+  LOADING,
+  lockedMeta,
+} from "../components/home/meta";
 import Card from "../components/ui/Card";
 import Segmented from "../components/ui/Segmented";
 import {
@@ -18,91 +27,72 @@ import {
   useRecentTx,
   useTxKinds,
 } from "../hooks/queries";
-import { type Filters, useFilters } from "../hooks/useFilters";
-import {
-  type ChainsSummary,
-  type LockedSummary,
-  peakCount,
-  sumCounts,
-  sumFlows,
-  summarizeChains,
-  summarizeLocked,
-} from "../lib/aggregate";
-import { assetLabel, assetsInScope } from "../lib/assets";
-import { type Denom, denomLabel, pickDenom, USD_AT_SPOT } from "../lib/denom";
-import { fmtBucket, fmtNum, fmtUsd, joinMeta } from "../lib/format";
+import { useFilters } from "../hooks/useFilters";
+import { peakCount, sumCounts, sumFlows, summarizeChains, summarizeLocked } from "../lib/aggregate";
+import { assetsInScope } from "../lib/assets";
+import { pickDenom } from "../lib/denom";
 import { KIND_FILTER_OPTIONS } from "../lib/kinds";
 import { groupAssetsByChain } from "../lib/scope";
 
+const RECENT_TX_LIMIT = 20;
+
 export default function Home() {
-  const filters = useFilters();
+  const { scope, range, txKind, hasFilter, setScope, setRange, setTxKind, selectChain, clear } =
+    useFilters();
+
   const assets = useAssets();
   const chainFlows = useChainFlows24h();
   const locked = useLocked();
-  const recentTx = useRecentTx(20, filters.txKind);
-  const txKinds = useTxKinds(filters.chainId, filters.range);
-  const flowAndTx = useFlowAndTx({
-    chainId: filters.chainId,
-    assetIdU64: filters.assetIdU64,
-    range: filters.range,
-  });
+  const recentTx = useRecentTx(RECENT_TX_LIMIT, txKind);
+  const txKinds = useTxKinds(scope.chainId, range);
+  const flowAndTx = useFlowAndTx(scope, range);
 
-  const flows = flowAndTx.data?.flows ?? null;
-  const counts = flowAndTx.data?.counts ?? null;
-  const domain = flowAndTx.data?.domain ?? null;
+  const { flows = null, counts = null, domain = null } = flowAndTx.data ?? {};
 
   // One denomination for the whole range, so the chart, the KPI tiles and the
   // hero can never disagree about what their numbers mean.
   const denom = pickDenom(flows);
   const totals = sumFlows(flows, denom);
-  const bucket = fmtBucket(filters.range.bucket);
 
-  // `/v1/tx-counts` and `/v1/tx-kinds` take a chain and no asset, so pinning one
-  // narrows the flows and leaves every count chain-wide. Say it on the tiles and
-  // cards that keep the wider scope rather than letting the row read as one
-  // asset's transactions.
-  const countScope = filters.assetIdU64 ? "all assets" : undefined;
-  const countMeta = joinMeta([`bucket ${bucket}`, countScope]);
-
-  const scopedAssets = assetsInScope(assets.data, filters);
+  const scopedAssets = useMemo(() => assetsInScope(assets.data, scope), [assets.data, scope]);
+  const scopeGroups = useMemo(
+    () => groupAssetsByChain(assets.data, chainFlows.data),
+    [assets.data, chainFlows.data],
+  );
 
   return (
     <section className="home">
       <Hero
-        rangeLabel={filters.range.label}
+        rangeLabel={range.label}
         assetCount={scopedAssets?.length ?? null}
-        chainId={filters.chainId}
+        chainId={scope.chainId}
         netFlow={totals?.net ?? null}
         denom={denom}
       />
 
       <FilterBar
-        scope={filters.scope}
-        rangeIdx={filters.rangeIdx}
-        hasFilter={filters.hasFilter}
+        scope={scope}
+        range={range.label}
+        hasFilter={hasFilter}
         loading={flowAndTx.loading}
-        groups={groupAssetsByChain(assets.data, chainFlows.data)}
-        onScopeChange={filters.setScope}
-        onRangeChange={filters.setRangeIdx}
-        onClear={filters.clear}
+        groups={scopeGroups}
+        onScopeChange={setScope}
+        onRangeChange={setRange}
+        onClear={clear}
       />
 
       {flowAndTx.error && <div className="err">! {flowAndTx.error}</div>}
 
       <Card title="chain flows · last 24h" meta={chainsMeta(summarizeChains(chainFlows.data))}>
-        <ChainFlowGrid
-          data={chainFlows.data}
-          selected={filters.chainId ? Number(filters.chainId) : null}
-          onSelect={filters.selectChain}
-        />
+        <ChainFlowGrid data={chainFlows.data} selected={scope.chainId} onSelect={selectChain} />
       </Card>
 
       <Card title="escrowed by chain" meta={lockedMeta(summarizeLocked(locked.data))}>
         <LockedByChain
           data={locked.data}
           loading={locked.loading}
-          selected={filters.chainId ? Number(filters.chainId) : null}
-          onSelect={filters.selectChain}
+          selected={scope.chainId}
+          onSelect={selectChain}
         />
       </Card>
 
@@ -111,35 +101,29 @@ export default function Home() {
         outflow={totals?.outflow ?? null}
         txTotal={sumCounts(counts)}
         peak={peakCount(counts)}
-        bucketSec={filters.range.bucket}
+        bucketSec={range.bucket}
         denom={denom}
-        countScope={countScope}
+        countScope={countScope(scope)}
       />
 
       <Card
         title="inflow / outflow"
-        meta={flowMeta(filters, denom, flows, scopedAssets)}
+        meta={flowMeta(scope, range, denom, flows, scopedAssets)}
         variant="chart"
       >
         <FlowSection flows={flows} denom={denom} domain={domain} loading={flowAndTx.loading} />
       </Card>
 
-      <Card title="transactions over time" meta={countMeta} variant="chart">
+      <Card title="transactions over time" meta={countsMeta(range, scope)} variant="chart">
         <TxChart data={counts ?? []} domain={domain} />
       </Card>
 
       <Card
         title="transactions by kind"
-        meta={
-          // Grouped, not stacked: bars are compared against each other, so the
-          // axis is per-kind and not a bucket total. `pending` is named as
-          // excluded rather than silently dropped — the plot is not every
-          // transaction, and a reader totalling the bars should know that.
-          txKinds.data ? `grouped by kind · pending excluded · ${countMeta}` : "loading…"
-        }
+        meta={txKinds.data ? kindsMeta(range, scope) : LOADING}
         variant="chart"
       >
-        <TxKindsChart data={txKinds.data ?? []} bucketSec={filters.range.bucket} domain={domain} />
+        <TxKindsChart data={txKinds.data ?? []} bucketSec={range.bucket} domain={domain} />
       </Card>
 
       <Card
@@ -150,74 +134,20 @@ export default function Home() {
         actions={
           <Segmented
             options={KIND_FILTER_OPTIONS}
-            value={filters.txKind}
+            value={txKind}
             disabled={recentTx.loading}
-            onChange={filters.setTxKind}
+            onChange={setTxKind}
           />
         }
-        meta={recentTx.data ? `${recentTx.data.length} most recent` : "loading…"}
+        meta={recentTx.data ? `${recentTx.data.length} most recent` : LOADING}
       >
         <LatestTxList
           data={recentTx.data}
           assets={assets.data}
           loading={recentTx.loading}
-          kind={filters.txKind}
+          kind={txKind}
         />
       </Card>
     </section>
   );
-}
-
-function chainsMeta(s: ChainsSummary | null): string {
-  if (!s) return "loading…";
-  // inflow/outflow are reserved backend fields, still zero today — omit them
-  // rather than render 0 as a measurement.
-  return joinMeta([
-    `${s.chains} chains`,
-    s.hasValues && `in ${fmtNum(s.inflow)}`,
-    s.hasValues && `out ${fmtNum(s.outflow)}`,
-    `${fmtNum(s.tx)} tx`,
-  ]);
-}
-
-/**
- * Name the unit rather than leaving the reader to guess. Token amounts are
- * per-asset, dollars are the only cross-asset value, and a partial dollar total
- * says how much it is leaving out.
- */
-function flowMeta(
-  filters: Filters,
-  denom: Denom,
-  flows: FlowPoint[] | null,
-  scopedAssets: AssetOut[] | null,
-): string {
-  // A pinned asset is the only member of the scope. It is named by symbol or
-  // address; "unknown token" covers the registry not being loaded yet, which the
-  // registry id would only paper over.
-  const scoped = filters.assetIdU64 ? scopedAssets?.[0] : undefined;
-  return joinMeta([
-    filters.assetIdU64 ? `asset ${scoped ? assetLabel(scoped) : "unknown token"}` : "all assets",
-    denomLabel(denom, flows),
-    filters.chainId && `chain ${filters.chainId}`,
-    `bucket ${fmtBucket(filters.range.bucket)}`,
-  ]);
-}
-
-/**
- * The card's own caveat line: what the network holds, and what that figure is
- * leaving out. A chain whose assets are all unpriced contributes nothing to the
- * total, so the count of excluded assets travels with it.
- */
-function lockedMeta(summary: LockedSummary | null): string {
-  if (!summary) return "loading…";
-  if (summary.chains === 0) return "nothing escrowed";
-  const { chains, totalUsd, unpricedAssets } = summary;
-  return joinMeta([
-    totalUsd === null
-      ? `${chains} chains · no usable prices`
-      : `${fmtUsd(totalUsd)} across ${chains} chains`,
-    `deposits − withdrawals · ${USD_AT_SPOT}`,
-    unpricedAssets > 0 &&
-      `${unpricedAssets} unpriced asset${unpricedAssets === 1 ? "" : "s"} excluded`,
-  ]);
 }

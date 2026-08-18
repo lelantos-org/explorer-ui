@@ -1,87 +1,86 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { ALL_KINDS, isTxKind, type KindFilter } from "../lib/kinds";
-import { RANGES, type Range, rangeIndexOf } from "../lib/ranges";
-import { decodeScope, EMPTY_SCOPE, encodeScope, type Scope } from "../lib/scope";
+import { type Range, type RangeLabel, resolveRange } from "../lib/ranges";
+import { chainScope, EMPTY_SCOPE, isScoped, parseId, type Scope } from "../lib/scope";
 import { setOrDelete, useSetUrlParams, useUrlParams } from "./useUrlState";
 
 export interface Filters {
-  chainId: string;
-  assetIdU64: string;
-  /** The chain+asset selection as one value; see `lib/scope`. */
-  scope: string;
-  rangeIdx: number;
+  /** The chain+asset selection; see `lib/scope`. */
+  scope: Scope;
   range: Range;
   /** Kind pinned on the latest-transactions feed. Scopes that one card, not the
    *  page, so it is deliberately outside `hasFilter`. */
   txKind: KindFilter;
+  /** Whether the page as a whole is narrowed — the scope only; see `txKind`. */
   hasFilter: boolean;
 }
 
 export interface FilterActions {
-  setScope: (v: string) => void;
-  setRangeIdx: (i: number) => void;
-  setTxKind: (k: KindFilter) => void;
-  selectChain: (id: number | null) => void;
-  selectAsset: (chainId: number, assetIdU64: number) => void;
+  setScope: (scope: Scope) => void;
+  setRange: (label: RangeLabel) => void;
+  setTxKind: (kind: KindFilter) => void;
+  /** Pin a whole chain, or clear the scope with `null`. */
+  selectChain: (chainId: number | null) => void;
   clear: () => void;
 }
+
+export type FilterState = Filters & FilterActions;
 
 const PARAM_CHAIN = "chain";
 const PARAM_ASSET = "asset";
 const PARAM_RANGE = "range";
 const PARAM_KIND = "kind";
 
-/** Ids are digits on the wire, so a hand-edited `?chain=abc` is dropped rather
- *  than sent on to the API as `NaN`. */
-function idParam(v: string | null): string {
-  return v && /^\d+$/.test(v) ? v : "";
-}
-
 /** An unknown `?kind=` reads as no filter — the backend rejects one it does not
  *  know, and a hand-edited URL should show the feed, not an error. */
-function kindParam(v: string | null): KindFilter {
-  return isTxKind(v) ? v : ALL_KINDS;
+function kindParam(value: string | null): KindFilter {
+  return isTxKind(value) ? value : ALL_KINDS;
 }
+
+const idText = (id: number | null) => (id === null ? "" : String(id));
 
 /**
  * The page's query state, held in the URL so a filtered view can be bookmarked
  * or shared.
+ *
+ * Every action keeps a stable identity across renders, so passing them down as
+ * props does not defeat memoisation in the components that receive them.
  */
-export function useFilters(): Filters & FilterActions {
+export function useFilters(): FilterState {
   const params = useUrlParams();
   const setParams = useSetUrlParams();
 
   const scope = useMemo<Scope>(() => {
-    const chainId = idParam(params.get(PARAM_CHAIN));
+    const chainId = parseId(params.get(PARAM_CHAIN));
     // An asset id is only unique within its chain, so it cannot outlive one.
-    return chainId ? { chainId, assetIdU64: idParam(params.get(PARAM_ASSET)) } : EMPTY_SCOPE;
+    if (chainId === null) return EMPTY_SCOPE;
+    return { chainId, assetIdU64: parseId(params.get(PARAM_ASSET)) };
   }, [params]);
 
-  const rangeIdx = rangeIndexOf(params.get(PARAM_RANGE));
+  const range = resolveRange(params.get(PARAM_RANGE));
   const txKind = kindParam(params.get(PARAM_KIND));
 
-  const writeScope = (next: Scope) =>
-    setParams((p) => {
-      setOrDelete(p, PARAM_CHAIN, next.chainId);
-      setOrDelete(p, PARAM_ASSET, next.chainId ? next.assetIdU64 : "");
-    });
+  const setScope = useCallback(
+    (next: Scope) =>
+      setParams((p) => {
+        setOrDelete(p, PARAM_CHAIN, idText(next.chainId));
+        // The asset param cannot outlive its chain, so clearing the chain
+        // clears it too rather than leaving a dangling `?asset=`.
+        setOrDelete(p, PARAM_ASSET, next.chainId === null ? "" : idText(next.assetIdU64));
+      }),
+    [setParams],
+  );
 
-  return {
-    chainId: scope.chainId,
-    assetIdU64: scope.assetIdU64,
-    scope: encodeScope(scope),
-    rangeIdx,
-    range: RANGES[rangeIdx],
-    txKind,
-    hasFilter: !!scope.chainId,
+  const actions = useMemo<FilterActions>(
+    () => ({
+      setScope,
+      selectChain: (chainId) => setScope(chainId === null ? EMPTY_SCOPE : chainScope(chainId)),
+      clear: () => setScope(EMPTY_SCOPE),
+      setRange: (label) => setParams((p) => p.set(PARAM_RANGE, label)),
+      setTxKind: (kind) => setParams((p) => setOrDelete(p, PARAM_KIND, kind)),
+    }),
+    [setScope, setParams],
+  );
 
-    setScope: (v) => writeScope(decodeScope(v)),
-    selectChain: (id) =>
-      writeScope(id === null ? EMPTY_SCOPE : { chainId: String(id), assetIdU64: "" }),
-    selectAsset: (chainId, assetIdU64) =>
-      writeScope({ chainId: String(chainId), assetIdU64: String(assetIdU64) }),
-    clear: () => writeScope(EMPTY_SCOPE),
-    setRangeIdx: (i) => setParams((p) => p.set(PARAM_RANGE, RANGES[i].label)),
-    setTxKind: (k) => setParams((p) => setOrDelete(p, PARAM_KIND, k)),
-  };
+  return { scope, range, txKind, hasFilter: isScoped(scope), ...actions };
 }

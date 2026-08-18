@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { at, first } from "../../test/at";
 import { createMockApi } from "./index";
 
 // nowSec is pinned, not just the seed. createMockApi captures the wall clock
@@ -68,7 +69,7 @@ describe("mock determinism", () => {
 describe("mock flow contract", () => {
   it("emits token amounts only when a single asset is in scope", async () => {
     const assets = await shared.listAssets();
-    const one = assets[0];
+    const one = first(assets);
 
     const pinned = await shared.getAssetFlows({
       chainId: one.chainId,
@@ -102,12 +103,12 @@ describe("mock transaction feed", () => {
     const rows = await shared.getRecentTransactions({ limit: 15 });
     expect(rows).toHaveLength(15);
     for (let i = 1; i < rows.length; i++) {
-      expect(rows[i - 1].blockTs).toBeGreaterThanOrEqual(rows[i].blockTs);
+      expect(at(rows, i - 1).blockTs).toBeGreaterThanOrEqual(at(rows, i).blockTs);
     }
   });
 
   it("speaks exactly the TxOut shape, with no extra wire fields", async () => {
-    const [row] = await shared.getRecentTransactions({ limit: 1 });
+    const row = first(await shared.getRecentTransactions({ limit: 1 }));
     expect(Object.keys(row).sort()).toEqual([
       "amount",
       "assetIdU64",
@@ -150,8 +151,8 @@ describe("mock transaction feed", () => {
 
 describe("mock escrowed balances", () => {
   it("reports a balance, not a volume: deposits minus withdrawals", async () => {
-    const [chain] = await shared.getLocked();
-    const asset = chain.assets[0];
+    const chain = first(await shared.getLocked());
+    const asset = first(chain.assets);
     const flows = await shared.getAssetFlows({
       chainId: chain.chainId,
       assetIdU64: asset.assetIdU64,
@@ -162,7 +163,7 @@ describe("mock escrowed balances", () => {
   });
 
   it("adds a chain's assets in dollars only, since tokens do not add", async () => {
-    const [chain] = await shared.getLocked();
+    const chain = first(await shared.getLocked());
     const priced = chain.assets.filter((a) => a.lockedUsd !== null);
     const sum = priced.reduce((s, a) => s + (a.lockedUsd ?? 0), 0);
     expect(chain.lockedUsd).toBeCloseTo(sum, 6);
@@ -189,10 +190,10 @@ describe("mock escrowed balances", () => {
   });
 
   it("narrows to one chain when asked", async () => {
-    const [chain] = await shared.getLocked();
+    const chain = first(await shared.getLocked());
     const scoped = await shared.getLocked(chain.chainId);
     expect(scoped).toHaveLength(1);
-    expect(scoped[0].chainId).toBe(chain.chainId);
+    expect(first(scoped).chainId).toBe(chain.chainId);
   });
 });
 
@@ -204,7 +205,7 @@ describe("mock chain flows", () => {
   });
 
   it("carries transaction counts, and totals them", async () => {
-    const [row] = await shared.getChainFlows24h();
+    const row = first(await shared.getChainFlows24h());
     const sum = (a: number[]) => a.reduce((s, v) => s + v, 0);
     expect(row.txCount).toBe(sum(row.hourlyIn));
     expect(row.txCount).toBeGreaterThan(0);
@@ -240,7 +241,7 @@ describe("mock chain flows", () => {
     // real activity in an hour that had none.
     const nowSec = 1_700_000_000;
     const hourStart = Math.floor(nowSec / 3600) * 3600 - 23 * 3600;
-    const [row] = await shared.getChainFlows24h();
+    const row = first(await shared.getChainFlows24h());
     const counts = await shared.getTxCounts({
       chainId: row.chainId,
       bucketSec: 3600,

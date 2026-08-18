@@ -1,11 +1,21 @@
-import { useLayoutEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { type ChartGeometry, type ChartPad, geometry } from "./chartLib";
 
 /**
  * Width used until the container has been measured, and in environments with no
- * layout at all (jsdom): geometry stays finite rather than collapsing to zero.
+ * layout at all: geometry stays finite rather than collapsing to zero.
  */
 const FALLBACK_W = 960;
+
+/**
+ * `useLayoutEffect` on the client, `useEffect` on the server.
+ *
+ * There is no layout to read during a server render, and React warns about the
+ * layout variant there — loudly, once per chart, over every test run. The
+ * client keeps the layout timing, which is what puts the measured width into
+ * the first paint.
+ */
+const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export interface ChartBox {
   /** Callback ref for the element the chart fills. */
@@ -30,7 +40,7 @@ export function useChartGeometry(height: number, pad?: ChartPad): ChartBox {
   const [node, setNode] = useState<HTMLElement | null>(null);
   const [width, setWidth] = useState(0);
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!node) return;
     // Whole pixels only: a fractional coordinate space would put every gridline
     // and label back on a half pixel, which is the blur this avoids.

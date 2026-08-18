@@ -1,6 +1,7 @@
 import type { FlowPoint } from "../../api";
 import { type Denom, hasAmounts } from "../../lib/denom";
 import type { TimeDomain } from "../../lib/time";
+import ChartEmpty from "../charts/ChartEmpty";
 import FlowChart from "../charts/FlowChart";
 
 interface Props {
@@ -18,14 +19,16 @@ interface Props {
  * unlike token amounts, so it says that instead of drawing one.
  */
 export default function FlowSection({ flows, denom, domain, loading }: Props) {
-  if (flows && flows.length === 0 && !loading) {
-    return <div className="empty">no flow data for this range</div>;
+  const settled = flows !== null && !loading;
+
+  if (settled && flows.length === 0) {
+    return <ChartEmpty>no flow data for this range</ChartEmpty>;
   }
-  if (flows && flows.length > 0 && !hasAmounts(denom)) {
+  if (flows !== null && flows.length > 0 && !hasAmounts(denom)) {
     return (
-      <div className="empty">
+      <ChartEmpty>
         no comparable unit across these assets — pick a single asset above, or wait for price data
-      </div>
+      </ChartEmpty>
     );
   }
   return <FlowChart data={flows ?? []} denom={denom} domain={domain} />;

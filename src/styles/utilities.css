@@ -22,6 +22,18 @@
   margin-bottom: 12px;
 }
 
+/* A render that threw, rather than a request that failed: the boundary replaces
+   the whole page with this, so it is given room and a stacked layout. */
+.err--fatal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 40px auto;
+  max-width: 640px;
+  padding: 20px 24px;
+}
+
 /* Connection state: a dot and its label. */
 .status { display: inline-flex; align-items: center; gap: 8px; }
 .dot {

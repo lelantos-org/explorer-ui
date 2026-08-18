@@ -1,4 +1,5 @@
 import { useId } from "react";
+import ChartGradients, { fillUrl } from "./ChartGradients";
 import { baselineY, type ChartPad, indexScale, pathArea, pathLine, yScale } from "./chartLib";
 import { useChartGeometry } from "./useChartGeometry";
 
@@ -10,16 +11,19 @@ interface Props {
 
 const SPARK_PAD: ChartPad = { l: 4, r: 4, t: 4, b: 4 };
 
+/** A bare hourly trace, with no axes, ticks or hover — the chain cards carry
+ *  their figures beside it, so the shape is all this has to say. */
 export default function Sparkline({ in: inflow, out: outflow, height = 56 }: Props) {
-  // Gradient ids must be unique per instance but stable across renders.
-  // useId embeds colons, which are awkward inside url(#…) — strip them.
-  const uid = useId().replace(/:/g, "");
+  // Gradient ids must be unique per instance but stable across renders: a page
+  // holds one of these per chain card. useId embeds colons, which are awkward
+  // inside url(#…) — strip them.
+  const gradientId = `spark${useId().replace(/:/g, "")}`;
   const { ref, geom } = useChartGeometry(height, SPARK_PAD);
 
-  const n = Math.max(inflow.length, outflow.length);
-  if (n === 0) return null;
+  const count = Math.max(inflow.length, outflow.length);
+  if (count === 0) return null;
 
-  const x = indexScale(geom, n);
+  const x = indexScale(geom, count);
   const y = yScale(geom, Math.max(1, ...inflow, ...outflow));
   const baseline = baselineY(geom);
   const project = (values: number[]) => values.map((v, i) => ({ x: x(i), y: y(v) }));
@@ -41,17 +45,10 @@ export default function Sparkline({ in: inflow, out: outflow, height = 56 }: Pro
       >
         <title>Hourly activity, last 24h</title>
         <defs>
-          <linearGradient id={`spIn-${uid}`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.45" />
-            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient id={`spOut-${uid}`} x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stopColor="var(--warn)" stopOpacity="0.30" />
-            <stop offset="100%" stopColor="var(--warn)" stopOpacity="0" />
-          </linearGradient>
+          <ChartGradients id={gradientId} />
         </defs>
-        <path d={pathArea(outPts, baseline)} fill={`url(#spOut-${uid})`} />
-        <path d={pathArea(inPts, baseline)} fill={`url(#spIn-${uid})`} />
+        <path d={pathArea(outPts, baseline)} fill={fillUrl(gradientId, "out")} />
+        <path d={pathArea(inPts, baseline)} fill={fillUrl(gradientId, "in")} />
         <path d={pathLine(outPts)} className="spark__line spark__line--out" />
         <path d={pathLine(inPts)} className="spark__line spark__line--in" />
       </svg>

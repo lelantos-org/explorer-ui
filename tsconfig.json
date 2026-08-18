@@ -11,10 +11,23 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    /* Correctness. `noUncheckedIndexedAccess` is the load-bearing one: an
+       array lookup is `T | undefined`, so a missing bucket, tick or option has
+       to be handled where it is read rather than surfacing as `undefined` in
+       the DOM. */
     "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Hygiene. `verbatimModuleSyntax` keeps type-only imports marked as such,
+       so nothing that exists only in the type system reaches the bundle. */
+    "verbatimModuleSyntax": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noUnusedParameters": true
   },
   "include": ["src"]
 }

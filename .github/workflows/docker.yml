@@ -44,6 +44,13 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      # The footer names the build on screen. The image build cannot read it
+      # itself — `.git` is dockerignored — so it is resolved here and passed in
+      # as a build arg. Short form: the footer has room for a ref, not a sha.
+      - name: Resolve build commit
+        id: commit
+        run: echo "short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -77,9 +84,12 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          # Each line is a literal KEY=VALUE; the action does not strip
+          # comments, so keep any explanation outside this block.
           build-args: |
             VITE_API_BASE=${{ env.VITE_API_BASE }}
             VITE_USE_MOCK=${{ env.VITE_USE_MOCK }}
+            VITE_COMMIT=${{ steps.commit.outputs.short }}
           # No `secrets: npm_token` here, unlike webapp-ui: this package pulls
           # nothing from GitHub Packages, so the build needs no registry auth.
           cache-from: type=gha,scope=explorer-ui

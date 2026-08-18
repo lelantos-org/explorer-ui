@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { first } from "../test/at";
 import { createHttpApi } from "./http";
 
 /** A fetch that answers every request with one JSON body. */
@@ -49,7 +50,7 @@ describe("getRecentTransactions query", () => {
 describe("getAssetFlows wire mapping", () => {
   it("parses whole-token decimal strings into numbers", async () => {
     const api = createHttpApi({ fetchFn: serving([flowRow()]) });
-    const [p] = await api.getAssetFlows({});
+    const p = first(await api.getAssetFlows({}));
     expect(p.in).toBe(14);
     expect(p.out).toBe(1.5);
     expect(p.inUsd).toBe(26_400);
@@ -57,7 +58,7 @@ describe("getAssetFlows wire mapping", () => {
 
   it("keeps an absent token total null, since several assets have no sum", async () => {
     const api = createHttpApi({ fetchFn: serving([flowRow({ in: null, out: null })]) });
-    const [p] = await api.getAssetFlows({});
+    const p = first(await api.getAssetFlows({}));
     expect(p.in).toBeNull();
     expect(p.out).toBeNull();
   });
@@ -68,7 +69,7 @@ describe("getAssetFlows wire mapping", () => {
     // and printed "NaN" instead of falling back to dollars.
     const { in: _in, out: _out, ...withoutAmounts } = flowRow();
     const api = createHttpApi({ fetchFn: serving([withoutAmounts]) });
-    const [p] = await api.getAssetFlows({});
+    const p = first(await api.getAssetFlows({}));
     expect(p.in).toBeNull();
     expect(p.out).toBeNull();
   });
