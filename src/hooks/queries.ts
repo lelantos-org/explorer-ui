@@ -15,9 +15,11 @@ import { rangeDomain, type TimeDomain } from "../lib/time";
 import { type Async, useAsync } from "./useAsync";
 
 /**
- * How often the page re-reads the backend. The header's health dot polls, so
- * the figures beside it have to as well — a "live" badge over a snapshot taken
- * at page load is worse than no badge.
+ * How often the page re-reads the backend.
+ *
+ * Every series refreshes on the same interval, so no two cards can drift into
+ * describing different moments — a chart and the tiles above it disagreeing is
+ * worse than both being a little stale.
  */
 const REFRESH_MS = 30_000;
 

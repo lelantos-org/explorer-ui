@@ -34,16 +34,8 @@
   padding: 20px 24px;
 }
 
-/* Connection state: a dot and its label. */
-.status { display: inline-flex; align-items: center; gap: 8px; }
-.dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  display: inline-block;
-}
-.dot--ok { background: var(--accent); animation: pulse 2s infinite; }
-.dot--err { background: var(--err); }
-.dot--idle { background: var(--fg-mute); }
-
+/* The filter bar's in-flight marker — the only live-region text left now that
+   the header carries no connection widget. */
 .live {
   font-size: 11px;
   letter-spacing: 0.1em;

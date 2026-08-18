@@ -2,14 +2,7 @@
    off — a new animation is only reachable from here, so it cannot be added
    without the reduced-motion opt-out being updated with it. */
 
-/* Live status dot: breathing, not blinking. */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
-}
-
-/* "LIVE" label, faster and deeper than the dot so the two read as one signal
-   rather than a beat. */
+/* The filter bar's "querying…" marker. */
 @keyframes blink {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
@@ -28,5 +21,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home > *, .dot--ok, .live, .chain-card--ghost { animation: none; }
+  .home > *, .live, .chain-card--ghost { animation: none; }
 }

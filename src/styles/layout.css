@@ -24,7 +24,6 @@
   z-index: 10;
 }
 .hdr__left { display: flex; align-items: baseline; gap: 10px; }
-.hdr__right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
 
 .brand {
   color: var(--accent);
