@@ -1,4 +1,5 @@
 import { type Denom, signedFmt, unitShort } from "../../lib/denom";
+import { plural } from "../../lib/format";
 
 interface Props {
   rangeLabel: string;
@@ -20,8 +21,10 @@ export default function Hero({ rangeLabel, assetCount, chainId, netFlow, denom }
           <span className="accent">lelantos</span> <span className="muted">/</span> explorer
         </h1>
         <div className="hero__sub muted">
-          zero-knowledge flow telemetry · {rangeLabel} window · {assetCount ?? "—"} asset
-          {assetCount === 1 ? "" : "s"}
+          {/* The count is still loading as `null`, which is a dash rather than
+              a zero — "0 assets" would be a registry the backend never read. */}
+          zero-knowledge flow telemetry · {rangeLabel} window ·{" "}
+          {assetCount === null ? "— assets" : plural(assetCount, "asset")}
           {chainId !== null && ` · chain ${chainId}`}
         </div>
       </div>

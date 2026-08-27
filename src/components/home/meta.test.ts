@@ -15,6 +15,8 @@ const asset = (symbol: string | null): AssetOut => ({
   symbol,
   priceUsd: null,
   priceAt: null,
+  depositBps: null,
+  withdrawBps: null,
 });
 
 const pinnedAsset: Scope = { chainId: 1, assetIdU64: 1000 };

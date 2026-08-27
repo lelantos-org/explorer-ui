@@ -9,15 +9,16 @@ import type { AssetOut, FlowPoint } from "../../api";
 import type { ChainsSummary, LockedSummary } from "../../lib/aggregate";
 import { assetLabel } from "../../lib/assets";
 import { type Denom, denomLabel, USD_AT_SPOT } from "../../lib/denom";
-import { fmtBucket, fmtNum, fmtUsd, joinMeta } from "../../lib/format";
+import { hasUnknownFee } from "../../lib/fees";
+import { fmtBucket, fmtNum, fmtUsd, joinMeta, plural } from "../../lib/format";
 import type { Range } from "../../lib/ranges";
-import type { Scope } from "../../lib/scope";
+import type { Scope, ScopeGroup } from "../../lib/scope";
 
 export const LOADING = "loading…";
 
 /** "1 unpriced asset" / "3 unpriced assets", or nothing when none are. */
 const unpricedNote = (count: number): string | false =>
-  count > 0 && `${count} unpriced asset${count === 1 ? "" : "s"} excluded`;
+  count > 0 && `${plural(count, "unpriced asset")} excluded`;
 
 /**
  * What the count-based cards cover, which is wider than the flow cards whenever
@@ -26,6 +27,25 @@ const unpricedNote = (count: number): string | false =>
  */
 export function countScope(scope: Scope): string | undefined {
   return scope.assetIdU64 !== null ? "all assets" : undefined;
+}
+
+/**
+ * What the registry covers, and how much of it the indexer has not resolved.
+ *
+ * The unpriced note stays out of this one: the registry's own gaps are the
+ * unknown fee legs, which are what stops a wallet quoting a shield. A price is
+ * decoration by comparison.
+ */
+export function registryMeta(groups: ScopeGroup[]): string {
+  const assets = groups.flatMap((g) => g.assets);
+  // `hasUnknownFee` rather than a null check spelled out again here: what
+  // counts as an unindexed rate is decided once, in `lib/fees`.
+  const unindexed = assets.filter(hasUnknownFee).length;
+  return joinMeta([
+    plural(assets.length, "asset"),
+    plural(groups.length, "chain"),
+    unindexed > 0 && `${unindexed} with unindexed fees`,
+  ]);
 }
 
 export function countsMeta(range: Range, scope: Scope): string {

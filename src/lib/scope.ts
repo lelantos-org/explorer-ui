@@ -80,3 +80,20 @@ export function groupAssetsByChain(
       assets: [...list].sort((x, y) => x.assetIdU64 - y.assetIdU64),
     }));
 }
+
+/**
+ * The same groups narrowed to the selected chain.
+ *
+ * Chain only — a pinned asset deliberately does not narrow this further. The
+ * registry is what an asset is chosen *from*, so hiding the alternatives the
+ * moment one is picked would leave no way to compare or change it; the rest of
+ * the page already answers "this asset", and this answers "what else is here".
+ *
+ * Distinct from `assetsInScope`, which flattens: a registry has to keep its
+ * chain headings, and a pinned chain that owns no assets must still appear —
+ * that is a real state, not an empty result.
+ */
+export function groupsInScope(groups: ScopeGroup[], scope: Scope): ScopeGroup[] {
+  if (scope.chainId === null) return groups;
+  return groups.filter((g) => g.chainId === scope.chainId);
+}

@@ -7,6 +7,7 @@ import {
   fmtUsd,
   fmtUsdSigned,
   joinMeta,
+  plural,
 } from "./format";
 
 /**
@@ -110,7 +111,7 @@ export function denomLabel(d: Denom, flows: FlowPoint[] | null): string {
     // The worst bucket, because that is how many assets the range as a whole
     // cannot account for.
     const worst = Math.max(0, ...(flows ?? []).map((p) => p.unpricedAssets));
-    return joinMeta([USD_AT_SPOT, `${worst} unpriced asset${worst === 1 ? "" : "s"} excluded`]);
+    return joinMeta([USD_AT_SPOT, `${plural(worst, "unpriced asset")} excluded`]);
   }
   return "no common unit — pick one asset";
 }

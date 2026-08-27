@@ -50,6 +50,12 @@ interface AssetProfile {
    *  cannot price, which is what exercises the partial-coverage UI. */
   priceUsd: number | null;
   decimals: number;
+  /** Protocol fee rates in bps. Omit to model an asset whose `AssetFeeSet`
+   *  the indexer has not seen yet: the registry serves `null` on both legs,
+   *  which is what exercises the unknown-vs-zero distinction. A `0` here is a
+   *  real zero-rate leg, not an absence. */
+  depositBps?: number;
+  withdrawBps?: number;
   /** Daily volume baseline. */
   baseVolume: number;
   /** Variance of hourly noise (lower = stable like USDC). */
@@ -66,6 +72,8 @@ interface AssetProfile {
 const PROFILES: AssetProfile[] = [
   {
     name: "USDC",
+    depositBps: 0,
+    withdrawBps: 20,
     scale: "1000000",
     decimals: 6,
     priceUsd: 1.0,
@@ -78,6 +86,8 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "WETH",
+    depositBps: 0,
+    withdrawBps: 20,
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: 1882.37,
@@ -90,6 +100,8 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "DAI",
+    depositBps: 0,
+    withdrawBps: 0,
     scale: "1000000000000000000",
     decimals: 18,
     priceUsd: 0.9998,
@@ -102,6 +114,8 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "WBTC",
+    depositBps: 25,
+    withdrawBps: 25,
     scale: "100000000",
     decimals: 8,
     priceUsd: 61240.5,
@@ -114,6 +128,8 @@ const PROFILES: AssetProfile[] = [
   },
   {
     name: "USDT",
+    depositBps: 20,
+    withdrawBps: 30,
     scale: "1000000",
     decimals: 6,
     priceUsd: 1.0002,
@@ -204,6 +220,8 @@ export function buildAssets(rng: Rng, now: number): GeneratedAsset[] {
       symbol: profile.symbolUnresolved ? null : profile.name,
       priceUsd: profile.priceUsd,
       priceAt: profile.priceUsd === null ? null : now,
+      depositBps: profile.depositBps ?? null,
+      withdrawBps: profile.withdrawBps ?? null,
     },
   }));
 }

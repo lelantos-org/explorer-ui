@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import TxChart from "../components/charts/TxChart";
 import TxKindsChart from "../components/charts/TxKindsChart";
+import AssetRegistry from "../components/home/AssetRegistry";
 import ChainFlowGrid from "../components/home/ChainFlowGrid";
 import FilterBar from "../components/home/FilterBar";
 import FlowSection from "../components/home/FlowSection";
@@ -16,6 +17,7 @@ import {
   kindsMeta,
   LOADING,
   lockedMeta,
+  registryMeta,
 } from "../components/home/meta";
 import Card from "../components/ui/Card";
 import Segmented from "../components/ui/Segmented";
@@ -32,7 +34,7 @@ import { peakCount, sumCounts, sumFlows, summarizeChains, summarizeLocked } from
 import { assetsInScope } from "../lib/assets";
 import { pickDenom } from "../lib/denom";
 import { KIND_FILTER_OPTIONS } from "../lib/kinds";
-import { groupAssetsByChain } from "../lib/scope";
+import { groupAssetsByChain, groupsInScope } from "../lib/scope";
 
 const RECENT_TX_LIMIT = 20;
 
@@ -59,6 +61,10 @@ export default function Home() {
     () => groupAssetsByChain(assets.data, chainFlows.data),
     [assets.data, chainFlows.data],
   );
+  // The picker offers every chain; the registry shows the selected one. Chain
+  // only: a pinned asset narrows the rest of the page but not this card, which
+  // is the list that asset was chosen from.
+  const registryGroups = useMemo(() => groupsInScope(scopeGroups, scope), [scopeGroups, scope]);
 
   return (
     <section className="home">
@@ -82,6 +88,21 @@ export default function Home() {
       />
 
       {flowAndTx.error && <div className="err">! {flowAndTx.error}</div>}
+
+      <Card
+        title="supported assets"
+        // Directly under the filter bar and narrowed by it: this is what the
+        // scope above is selecting from, so it reads as the filter's subject
+        // rather than as another metric further down the page.
+        meta={assets.data ? registryMeta(registryGroups) : LOADING}
+      >
+        <AssetRegistry
+          groups={registryGroups}
+          loading={assets.loading}
+          selected={scope.chainId}
+          onSelect={selectChain}
+        />
+      </Card>
 
       <Card title="chain flows · last 24h" meta={chainsMeta(summarizeChains(chainFlows.data))}>
         <ChainFlowGrid data={chainFlows.data} selected={scope.chainId} onSelect={selectChain} />

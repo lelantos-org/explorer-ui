@@ -12,6 +12,8 @@ const asset = (symbol: string | null, chainId = 1, assetIdU64 = 1000): AssetOut 
   symbol,
   priceUsd: null,
   priceAt: null,
+  depositBps: null,
+  withdrawBps: null,
 });
 
 describe("assetLabel", () => {

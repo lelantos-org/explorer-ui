@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AssetOut, ChainFlow } from "../api";
-import { decodeScope, EMPTY_SCOPE, encodeScope, groupAssetsByChain } from "./scope";
+import { decodeScope, EMPTY_SCOPE, encodeScope, groupAssetsByChain, groupsInScope } from "./scope";
 
 const asset = (chainId: number, assetIdU64: number): AssetOut => ({
   chainId,
@@ -11,6 +11,8 @@ const asset = (chainId: number, assetIdU64: number): AssetOut => ({
   symbol: null,
   priceUsd: null,
   priceAt: null,
+  depositBps: null,
+  withdrawBps: null,
 });
 
 const chain = (chainId: number): ChainFlow => ({
@@ -69,5 +71,42 @@ describe("groupAssetsByChain", () => {
 
   it("is empty while both requests are still in flight", () => {
     expect(groupAssetsByChain(null, null)).toEqual([]);
+  });
+});
+
+describe("groupsInScope", () => {
+  const groups = [
+    { chainId: 1, assets: [asset(1, 10), asset(1, 11)] },
+    { chainId: 8453, assets: [asset(8453, 20)] },
+  ];
+
+  it("returns every chain when nothing is pinned", () => {
+    expect(groupsInScope(groups, EMPTY_SCOPE)).toHaveLength(2);
+  });
+
+  it("keeps only the pinned chain, with all of its assets", () => {
+    const out = groupsInScope(groups, { chainId: 1, assetIdU64: null });
+    expect(out.map((g) => g.chainId)).toEqual([1]);
+    expect(out[0]?.assets).toHaveLength(2);
+  });
+
+  // The registry is what an asset is picked from, so pinning one must not
+  // hide the alternatives beside it.
+  it("keeps the whole chain when an asset is pinned", () => {
+    const out = groupsInScope(groups, { chainId: 1, assetIdU64: 11 });
+    expect(out[0]?.assets.map((x) => x.assetIdU64)).toEqual([10, 11]);
+  });
+
+  // A chain can report activity while registering nothing. Pinning it must
+  // still show the heading, so the page says which chain it is filtered to.
+  it("keeps a pinned chain that owns no assets", () => {
+    const out = groupsInScope([{ chainId: 5, assets: [] }], { chainId: 5, assetIdU64: null });
+    expect(out.map((g) => g.chainId)).toEqual([5]);
+    expect(out[0]?.assets).toEqual([]);
+  });
+
+  it("drops the other chains", () => {
+    const out = groupsInScope(groups, { chainId: 1, assetIdU64: 10 });
+    expect(out.map((g) => g.chainId)).toEqual([1]);
   });
 });

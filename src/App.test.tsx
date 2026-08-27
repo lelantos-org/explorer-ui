@@ -34,6 +34,7 @@ describe("App", () => {
       "inflow / outflow",
       "transactions over time",
       "transactions by kind",
+      "supported assets",
       "latest transactions",
     ]) {
       expect(html).toContain(title);

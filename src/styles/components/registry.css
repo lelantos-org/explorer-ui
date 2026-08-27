@@ -1,0 +1,126 @@
+/* Supported-asset registry: one block per chain, each with a header that
+   scopes the page and a table of the assets that chain accepts. Reuses `.tbl`
+   for the rows — this is the same kind of reference table as the tx feed. */
+
+.registry {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.registry__chain {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-1);
+}
+
+/* The pinned chain gets the same treatment a selected chain card does, so the
+   page reads as one selection rather than two independent highlights. */
+.registry__chain--on {
+  border-color: var(--accent);
+}
+
+.registry__hdr {
+  display: grid;
+  /* Badge and name sit together; the count and the affordance are pushed to
+     the far edge so every chain's hint lands in the same place. */
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 9px 12px;
+  background: var(--bg-2);
+  border: none;
+  border-bottom: 1px solid var(--line);
+  color: inherit;
+  font: inherit;
+  transition: background 80ms var(--ease-soft);
+}
+.registry__hdr:hover {
+  background: var(--bg-3);
+}
+
+/* A badge, so the chain reads as a label rather than as the first word of the
+   name beside it. */
+.registry__short {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+}
+.registry__chain--on .registry__short {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.registry__name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.registry__count,
+.registry__hint {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Only worth reading when you are looking for it — until then it should not
+   compete with the chain name. */
+.registry__hint {
+  opacity: 0;
+  transition: opacity 80ms var(--ease-soft);
+}
+.registry__hdr:hover .registry__hint,
+.registry__chain--on .registry__hint {
+  opacity: 1;
+}
+.registry__chain--on .registry__hint {
+  color: var(--accent);
+}
+
+/* The card is the scroll owner, so the table inside a bordered block draws no
+   second border and caps no height of its own. */
+.registry__tbl {
+  border: none;
+  border-radius: 0;
+  max-height: none;
+}
+
+/* ── fee pills ─────────────────────────────────────────────────────────
+   Three states that must not blur into each other: a charged rate, a
+   deliberate zero, and one the indexer has not seen. Only the last is muted —
+   a zero rate is a real answer and should read like one. */
+.fee {
+  display: inline-block;
+  min-width: 52px;
+  text-align: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid transparent;
+}
+.fee--charged {
+  background: var(--bg-2);
+  border-color: var(--line);
+}
+.fee--free {
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.08);
+  border-color: rgba(var(--accent-rgb), 0.25);
+  letter-spacing: 0.04em;
+}
+/* No pill at all: an unknown rate is an absence, and a chip around a dash
+   makes it look like a value. */
+.fee--unknown {
+  color: var(--fg-mute);
+  background: none;
+  border-color: transparent;
+}

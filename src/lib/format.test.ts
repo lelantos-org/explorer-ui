@@ -8,6 +8,7 @@ import {
   fmtUsd,
   fmtUsdSigned,
   joinMeta,
+  plural,
 } from "./format";
 
 describe("fmtNum", () => {
@@ -96,5 +97,19 @@ describe("joinMeta", () => {
 
   it("has nothing to say about nothing", () => {
     expect(joinMeta([])).toBe("");
+  });
+});
+
+describe("plural", () => {
+  it("agrees with its count", () => {
+    expect(plural(1, "asset")).toBe("1 asset");
+    expect(plural(2, "asset")).toBe("2 assets");
+    expect(plural(0, "asset")).toBe("0 assets");
+  });
+
+  // Counts share the thousands separator the rest of the UI uses, so a large
+  // registry does not read as a different kind of number.
+  it("groups a large count", () => {
+    expect(plural(1234, "chain")).toBe("1,234 chains");
   });
 });

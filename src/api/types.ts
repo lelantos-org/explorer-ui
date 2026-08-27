@@ -21,6 +21,15 @@ export interface AssetOut {
   priceUsd: number | null;
   /** Provider timestamp for priceUsd. null whenever priceUsd is. */
   priceAt: number | null;
+  /** Protocol fee on a shield of this asset, in basis points, charged **on top
+   *  of** the principal. Rates are per asset and per leg — the pool has no
+   *  global fee — so null means the indexer has not seen an `AssetFeeSet` yet.
+   *  Never render null as 0: a real 0 is a common configuration and arrives as
+   *  the number 0. */
+  depositBps: number | null;
+  /** Protocol fee on an unshield of this asset, in basis points, **skimmed
+   *  from** the proceeds. Same null semantics as `depositBps`. */
+  withdrawBps: number | null;
 }
 
 export interface FlowPoint {
