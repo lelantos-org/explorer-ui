@@ -32,10 +32,11 @@ describe("App", () => {
     for (const title of [
       "chain flows · last 24h",
       "inflow / outflow",
-      "transactions over time",
       "transactions by kind",
       "supported assets",
+      "withdrawal anonymity",
       "latest transactions",
+      "pool notes",
     ]) {
       expect(html).toContain(title);
     }

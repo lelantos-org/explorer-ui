@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import TxChart from "../components/charts/TxChart";
 import TxKindsChart from "../components/charts/TxKindsChart";
+import AnonymitySets from "../components/home/AnonymitySets";
 import AssetRegistry from "../components/home/AssetRegistry";
 import ChainFlowGrid from "../components/home/ChainFlowGrid";
 import FilterBar from "../components/home/FilterBar";
@@ -10,27 +10,31 @@ import KpiBar from "../components/home/KpiBar";
 import LatestTxList from "../components/home/LatestTxList";
 import LockedByChain from "../components/home/LockedByChain";
 import {
+  anonymityMeta,
   chainsMeta,
   countScope,
-  countsMeta,
   flowMeta,
   kindsMeta,
   LOADING,
   lockedMeta,
+  poolNotesMeta,
   registryMeta,
 } from "../components/home/meta";
+import PoolNotes from "../components/home/PoolNotes";
 import Card from "../components/ui/Card";
 import Segmented from "../components/ui/Segmented";
 import {
+  useAnonymitySets,
   useAssets,
   useChainFlows24h,
   useFlowAndTx,
   useLocked,
+  usePoolNotes,
   useRecentTx,
   useTxKinds,
 } from "../hooks/queries";
 import { useFilters } from "../hooks/useFilters";
-import { peakCount, sumCounts, sumFlows, summarizeChains, summarizeLocked } from "../lib/aggregate";
+import { sumCounts, sumFlows, summarizeChains, summarizeLocked } from "../lib/aggregate";
 import { assetsInScope } from "../lib/assets";
 import { pickDenom } from "../lib/denom";
 import { KIND_FILTER_OPTIONS } from "../lib/kinds";
@@ -47,6 +51,8 @@ export default function Home() {
   const locked = useLocked();
   const recentTx = useRecentTx(RECENT_TX_LIMIT, txKind);
   const txKinds = useTxKinds(scope.chainId, range);
+  const anonymity = useAnonymitySets(scope);
+  const poolNotes = usePoolNotes(scope.chainId);
   const flowAndTx = useFlowAndTx(scope, range);
 
   const { flows = null, counts = null, domain = null } = flowAndTx.data ?? {};
@@ -121,8 +127,6 @@ export default function Home() {
         inflow={totals?.inflow ?? null}
         outflow={totals?.outflow ?? null}
         txTotal={sumCounts(counts)}
-        peak={peakCount(counts)}
-        bucketSec={range.bucket}
         denom={denom}
         countScope={countScope(scope)}
       />
@@ -135,16 +139,16 @@ export default function Home() {
         <FlowSection flows={flows} denom={denom} domain={domain} loading={flowAndTx.loading} />
       </Card>
 
-      <Card title="transactions over time" meta={countsMeta(range, scope)} variant="chart">
-        <TxChart data={counts ?? []} domain={domain} />
-      </Card>
-
       <Card
         title="transactions by kind"
         meta={txKinds.data ? kindsMeta(range, scope) : LOADING}
         variant="chart"
       >
         <TxKindsChart data={txKinds.data ?? []} bucketSec={range.bucket} domain={domain} />
+      </Card>
+
+      <Card title="withdrawal anonymity" meta={anonymityMeta(anonymity.data)}>
+        <AnonymitySets data={anonymity.data} assets={assets.data} loading={anonymity.loading} />
       </Card>
 
       <Card
@@ -165,8 +169,18 @@ export default function Home() {
         <LatestTxList
           data={recentTx.data}
           assets={assets.data}
+          cohorts={anonymity.data}
           loading={recentTx.loading}
           kind={txKind}
+        />
+      </Card>
+
+      <Card title="pool notes" meta={poolNotesMeta(poolNotes.data)}>
+        <PoolNotes
+          data={poolNotes.data}
+          loading={poolNotes.loading}
+          selected={scope.chainId}
+          onSelect={selectChain}
         />
       </Card>
     </section>

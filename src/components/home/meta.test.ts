@@ -1,10 +1,21 @@
 import { describe, expect, it } from "vitest";
-import type { AssetOut } from "../../api";
+import type { AnonymitySet, AssetOut, PoolNotes } from "../../api";
 import { resolveRange } from "../../lib/ranges";
 import { EMPTY_SCOPE, type Scope } from "../../lib/scope";
-import { chainsMeta, countScope, countsMeta, flowMeta, lockedMeta } from "./meta";
+import {
+  anonymityMeta,
+  chainsMeta,
+  countScope,
+  countsMeta,
+  flowMeta,
+  lockedMeta,
+  poolNotesMeta,
+} from "./meta";
 
 const range = resolveRange("30d");
+
+/** What every caption reads while its data is still in flight. */
+const LOADING_TEXT = "loading…";
 
 const asset = (symbol: string | null): AssetOut => ({
   chainId: 1,
@@ -92,5 +103,86 @@ describe("lockedMeta", () => {
 
   it("says nothing about exclusions when the total covers everything", () => {
     expect(lockedMeta({ chains: 1, totalUsd: 10, unpricedAssets: 0 })).not.toContain("unpriced");
+  });
+});
+
+const cohort = (count: number, publicOut = "500", recentCount = count): AnonymitySet => ({
+  chainId: 1,
+  assetIdU64: 1000,
+  publicOut,
+  count,
+  recentCount,
+  firstTs: 1,
+  lastTs: 2,
+});
+
+describe("anonymityMeta", () => {
+  /**
+   * The load-bearing claim on this card. An anonymity set is every withdrawal
+   * of that denomination the pool has ever seen, so the card ignores the range
+   * the rest of the page is filtered to. Unsaid, a reader takes the counts for
+   * the selected window and reads every k as far smaller than it is.
+   */
+  it("says the counts cover all history, not the selected range", () => {
+    expect(anonymityMeta([cohort(40)])).toContain("all history");
+  });
+
+  /**
+   * Part C's only regression guard. The upper-bound claim is stated in prose in
+   * exactly one place at card level, and prose with no test rots silently.
+   */
+  it("says the counts are an upper bound, not a headcount", () => {
+    expect(anonymityMeta([cohort(40)])).toContain("at most");
+  });
+
+  it("counts dormant cohorts, naming the window", () => {
+    const meta = anonymityMeta([cohort(40, "500", 0), cohort(40, "200", 4)]);
+    expect(meta).toContain("1 dormant in 30d");
+  });
+
+  it("says nothing about dormancy when every cohort is active", () => {
+    expect(anonymityMeta([cohort(40)])).not.toContain("dormant");
+  });
+
+  it("counts how many sets are below the threshold", () => {
+    const meta = anonymityMeta([cohort(1, "10"), cohort(4, "20"), cohort(90, "50")]);
+    expect(meta).toContain("3 denominations");
+    expect(meta).toContain("2 below k=10");
+  });
+
+  it("says nothing about thin sets when none are", () => {
+    expect(anonymityMeta([cohort(90)])).not.toContain("below");
+  });
+
+  it("separates loading from having no denominations", () => {
+    expect(anonymityMeta(null)).toBe(LOADING_TEXT);
+    expect(anonymityMeta([])).toBe("no denominations recorded");
+  });
+});
+
+const notes = (over: Partial<PoolNotes> = {}): PoolNotes => ({
+  chainId: 1,
+  leaves: 1_000,
+  feeNotes: 200,
+  lastTs: 1,
+  ...over,
+});
+
+describe("poolNotesMeta", () => {
+  it("warns that the per-chain counts do not add", () => {
+    // Each chain has its own tree, so notes on one are no cover on another. The
+    // card's shape — a row of numbers — otherwise invites summing them.
+    expect(poolNotesMeta([notes(), notes({ chainId: 10 })])).toContain("not summable");
+  });
+
+  it("says the headline figure excludes relayer notes", () => {
+    const meta = poolNotesMeta([notes()]);
+    expect(meta).toContain("relayer notes excluded");
+    expect(meta).toContain("200 relayer notes");
+  });
+
+  it("separates loading from an empty tree", () => {
+    expect(poolNotesMeta(null)).toBe(LOADING_TEXT);
+    expect(poolNotesMeta([])).toBe("no notes committed");
   });
 });

@@ -43,7 +43,6 @@
   display: inline-block;
 }
 .lg--in .lg__sw,
-.lg--tx .lg__sw { background: var(--accent); }
 .lg--out .lg__sw { background: var(--warn); }
 .lg--deposit .lg__sw { background: var(--kind-deposit); }
 .lg--pending .lg__sw { background: var(--kind-pending); }
@@ -67,7 +66,6 @@
 }
 .line { stroke-width: 1.75; paint-order: stroke; }
 .line--in,
-.line--tx { stroke: var(--accent); }
 .line--out { stroke: var(--warn); stroke-dasharray: 5 3; }
 
 /* HOVER: a line down the plot, plus a marker on each series it crosses. */

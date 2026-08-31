@@ -1,4 +1,6 @@
 import type {
+  AnonymitySet,
+  AnonymitySetQuery,
   AssetOut,
   ChainFlow,
   ChainLocked,
@@ -9,6 +11,7 @@ import type {
   FlowQuery,
   KindCounts,
   LockedAsset,
+  PoolNotes,
   RecentTxQuery,
   TxOut,
 } from "./types";
@@ -95,6 +98,25 @@ export function createHttpApi(opts: HttpApiOpts = {}): ExplorerApi {
         bucketSec: q.bucketSec,
         sinceTs: q.sinceTs,
       }),
+
+    // `publicOut` and `count` stay as the backend sent them: `publicOut` is a
+    // uint64 string that must not be parsed, and `count` is a plain number.
+    async getAnonymitySets(q: AnonymitySetQuery): Promise<AnonymitySet[]> {
+      // `recentCount` is newer than the rest of the row, so a backend that has
+      // not been redeployed omits it. Absent becomes `null` — unknown — rather
+      // than being left `undefined` for the UI to trip over, and never zero,
+      // which would report every cohort dormant on a version skew.
+      type Wire = Omit<AnonymitySet, "recentCount"> & { recentCount?: number | null };
+      const rows = await get<Wire[]>("/v1/anonymity-set", {
+        chainId: q.chainId,
+        assetIdU64: q.assetIdU64,
+        limit: q.limit,
+        recentSec: q.recentSec,
+      });
+      return rows.map((r) => ({ ...r, recentCount: r.recentCount ?? null }));
+    },
+
+    getPoolNotes: (chainId?: number) => get<PoolNotes[]>("/v1/pool-notes", { chainId }),
 
     getChainFlows24h: () => get<ChainFlow[]>("/v1/chain-flows-24h"),
 

@@ -8,21 +8,20 @@
  */
 
 /** Gradient id for a series within a namespace, as `url(#…)` wants it. */
-export const fillUrl = (id: string, series: "in" | "out" | "tx") => `url(#${id}-${series})`;
+export const fillUrl = (id: string, series: "in" | "out") => `url(#${id}-${series})`;
 
 interface Props {
   /** Namespace for this instance's ids; see `fillUrl`. */
   id: string;
   /** Which series to define. Defaults to the inflow/outflow pair. */
-  series?: readonly ("in" | "out" | "tx")[];
+  series?: readonly ("in" | "out")[];
 }
 
 /** Colour and peak opacity per series. Each fades to fully transparent at the
  *  baseline, so a filled area never hides the gridlines under it. */
-const STOPS: Record<"in" | "out" | "tx", { colour: string; opacity: number }> = {
+const STOPS: Record<"in" | "out", { colour: string; opacity: number }> = {
   in: { colour: "var(--accent)", opacity: 0.45 },
   out: { colour: "var(--warn)", opacity: 0.3 },
-  tx: { colour: "var(--accent)", opacity: 0.35 },
 };
 
 export default function ChartGradients({ id, series = ["in", "out"] }: Props) {

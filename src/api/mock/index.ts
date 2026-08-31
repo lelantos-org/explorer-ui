@@ -1,4 +1,6 @@
 import type {
+  AnonymitySet,
+  AnonymitySetQuery,
   AssetOut,
   ChainFlow,
   ChainLocked,
@@ -8,6 +10,7 @@ import type {
   FlowPoint,
   FlowQuery,
   KindCounts,
+  PoolNotes,
   RecentTxQuery,
   TxOut,
 } from "../types";
@@ -22,6 +25,7 @@ import {
   mulberry32,
 } from "./generate";
 import { lockedByChain } from "./locked";
+import { anonymitySets, poolNotes } from "./privacy";
 import { classifyTransactions, selectTransactions } from "./transactions";
 
 export interface MockApiOpts {
@@ -81,7 +85,11 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
   const generated = buildAssets(rng, now);
   const assets = generated.map((g) => g.asset);
   const flows = buildHourlyFlows(rng, generated, HOURS_OF_HISTORY, now);
-  const transactions = classifyTransactions(buildTreeAdvances(rng, flows), assets);
+  // Hoisted rather than inlined: the privacy figures read the advances
+  // directly, and re-generating them would draw from `rng` again and produce a
+  // second, different tree.
+  const advances = buildTreeAdvances(rng, flows);
+  const transactions = classifyTransactions(advances, assets);
   const priceOf = new Map(assets.map((a) => [a.assetIdU64, a.priceUsd]));
   const assetChainIds = assets.map((a) => a.chainId);
 
@@ -191,6 +199,16 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
           acc[t.kind] += 1;
         },
       );
+    },
+
+    async getAnonymitySets(q: AnonymitySetQuery): Promise<AnonymitySet[]> {
+      await respond();
+      return anonymitySets(transactions, q, now);
+    },
+
+    async getPoolNotes(chainId?: number): Promise<PoolNotes[]> {
+      await respond();
+      return poolNotes(advances, transactions, chainId);
     },
 
     async getChainFlows24h(): Promise<ChainFlow[]> {

@@ -1,4 +1,5 @@
-import type { AssetOut, TxKind, TxOut } from "../../api";
+import type { AnonymitySet, AssetOut, TxKind, TxOut } from "../../api";
+import { type Cohorts, indexCohorts, txPrivacy } from "../../lib/anonymity";
 import { assetKey, indexAssets } from "../../lib/assets";
 import { getChainMeta, getTxUrl } from "../../lib/chains";
 import { fmtAge } from "../../lib/format";
@@ -11,10 +12,37 @@ interface Props {
   /** Registry, used to name the asset a row moved: its symbol when the indexer
    *  has one, its address otherwise. */
   assets: AssetOut[] | null;
+  /** Cohort sizes per denomination, joined onto the withdrawals to say how much
+   *  cover each one got. Null while loading: the column then reports unknown
+   *  rather than guessing a k. */
+  cohorts: AnonymitySet[] | null;
   loading: boolean;
   /** The kind the feed is pinned to. Named in the empty state so a filter with
    *  no matches never reads as a dead chain. */
   kind: KindFilter;
+}
+
+/**
+ * What cover a row got. The tone carries the reading; the title carries why.
+ *
+ * Only withdrawals publish a denomination, so only they have an anonymity set
+ * to report. The rest take the same dash the amount column gives a row it has
+ * no figure for — the alternative, scoring them on an axis they are not on,
+ * reads as a verdict where there is no measurement.
+ */
+function PrivacyCell({ tx, cohorts }: { tx: TxOut; cohorts: Cohorts }) {
+  const privacy = txPrivacy(tx, cohorts);
+  if (privacy === null)
+    return (
+      <span className="muted" title="Only withdrawals publish a denomination.">
+        —
+      </span>
+    );
+  return (
+    <span className={`priv priv--${privacy.tone}`} title={privacy.title}>
+      {privacy.label}
+    </span>
+  );
 }
 
 function KindBadge({ kind }: { kind: TxKind }) {
@@ -47,12 +75,13 @@ function AssetCell({ tx, byAsset }: { tx: TxOut; byAsset: Map<string, AssetOut> 
   );
 }
 
-export default function LatestTxList({ data, assets, loading, kind }: Props) {
+export default function LatestTxList({ data, assets, cohorts, loading, kind }: Props) {
   if (loading && !data) return <div className="empty">loading…</div>;
   if (!data || data.length === 0)
     return <div className="empty">no recent {kind && `${kind} `}activity</div>;
 
   const byAsset = indexAssets(assets);
+  const byDenom = indexCohorts(cohorts);
 
   return (
     <div className="tbl-wrap">
@@ -65,6 +94,7 @@ export default function LatestTxList({ data, assets, loading, kind }: Props) {
             <th>asset</th>
             <th>block</th>
             <th>amount</th>
+            <th>privacy</th>
             <th>tx</th>
           </tr>
         </thead>
@@ -87,6 +117,9 @@ export default function LatestTxList({ data, assets, loading, kind }: Props) {
                   {/* Transfers move no public value, and an unresolved token
                       shows nothing rather than a wrong number. */}
                   {r.amount === null ? <span className="muted">—</span> : r.amount}
+                </td>
+                <td>
+                  <PrivacyCell tx={r} cohorts={byDenom} />
                 </td>
                 <td>
                   {url ? (

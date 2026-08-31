@@ -1,15 +1,10 @@
 import { amountFmt, type Denom, unitShort } from "../../lib/denom";
-import { fmtBucket, fmtNum, joinMeta } from "../../lib/format";
+import { fmtNum } from "../../lib/format";
 
 interface Props {
   inflow: number | null;
   outflow: number | null;
   txTotal: number | null;
-  /** Transactions in the busiest single bucket of the range. */
-  peak: number | null;
-  /** Bucket width the peak was measured over. It is the tile's unit — "peak"
-   *  means nothing without the window it peaked in. */
-  bucketSec: number;
   /** Unit of the amount tiles; the two count tiles are always plain numbers. */
   denom: Denom;
   /** Scope the counts actually cover, when it is wider than the amounts'. The
@@ -42,18 +37,9 @@ function Tile({
 
 const dash = "···";
 
-export default function KpiBar({
-  inflow,
-  outflow,
-  txTotal,
-  peak,
-  bucketSec,
-  denom,
-  countScope,
-}: Props) {
+export default function KpiBar({ inflow, outflow, txTotal, denom, countScope }: Props) {
   const fmtAmount = amountFmt(denom);
   const amountUnit = unitShort(denom);
-  const peakUnit = joinMeta([fmtBucket(bucketSec), countScope]);
   return (
     <div className="kpis">
       <Tile
@@ -69,16 +55,9 @@ export default function KpiBar({
         cls="warn"
       />
       <Tile
-        label="∑ transactions"
+        label="∑ commitments"
         unit={countScope}
         value={txTotal !== null ? fmtNum(txTotal) : dash}
-      />
-      <Tile
-        // No arrow glyph: ▲/▼ mean direction on the flow tiles above, and a
-        // peak is a magnitude.
-        label="peak"
-        unit={peakUnit}
-        value={peak !== null ? fmtNum(peak) : dash}
       />
     </div>
   );

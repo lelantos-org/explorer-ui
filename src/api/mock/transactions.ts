@@ -28,6 +28,50 @@ const kindAt = (i: number): TxKind => KIND_CYCLE[i % KIND_CYCLE.length] ?? "tran
  *  shows a spread of magnitudes rather than one repeated figure. */
 const AMOUNT_STEPS = 40;
 
+/**
+ * A withdrawal denomination ladder in circuit units: `{1, 2, 5} x 10^e`, the
+ * shape `docs/src/guide/denominations.md` describes.
+ *
+ * Circuit units, not whole tokens. A denomination is a fixed integer precisely
+ * so it does not move when the yield index does, which is what lets withdrawals
+ * from different times share one anonymity set.
+ */
+const LADDER = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000, 20_000, 50_000];
+
+/**
+ * Which denomination a withdrawal publishes, weighted toward the middle rungs.
+ *
+ * Real ladders are not used evenly: the middle carries most of the volume while
+ * the extremes are thin. Reproducing that is the point of the mock here — a flat
+ * distribution would give every denomination a healthy cohort and the UI's
+ * thin-set warning would never render without a live backend.
+ */
+const DENOM_CYCLE: number[] = LADDER.flatMap((denom, i) => {
+  const distance = Math.abs(i - (LADDER.length - 1) / 2);
+  const weight = Math.max(1, Math.round(LADDER.length - 2 * distance));
+  return Array<number>(weight).fill(denom);
+});
+
+/** Every 23rd withdrawal goes off-ladder, publishing an integer nobody else
+ *  does. Coprime with the kind cycle's 7, so the two patterns do not align.
+ *  These are the `k = 1` rows: a unique `publicOut` is linkable to the deposit
+ *  that funded it, which is the case the UI most needs to surface. */
+const OFF_LADDER_EVERY = 23;
+
+/** The oldest advances predate the contract emitting `publicIn`/`publicOut`, so
+ *  their denomination is unknown rather than zero — the distinction the
+ *  `public_out IS NOT NULL` filter rests on, and a path the UI must render as
+ *  unknown rather than as a cohort of nothing. */
+const UNINDEXED_BEFORE = 40;
+
+/** The denomination a withdrawal at position `i` published, or null when the
+ *  indexer never observed one. */
+function denominationAt(i: number): string | null {
+  if (i < UNINDEXED_BEFORE) return null;
+  if (i % OFF_LADDER_EVERY === 0) return String(3_333 + i);
+  return String(DENOM_CYCLE[i % DENOM_CYCLE.length] ?? 1);
+}
+
 /** The classified feed, derived from tree advances the way the backend derives
  *  it. Ordering is left to `selectTransactions`, which sorts newest-first. */
 export function classifyTransactions(advances: TreeAdvance[], assets: AssetOut[]): TxOut[] {
@@ -44,6 +88,10 @@ export function classifyTransactions(advances: TreeAdvance[], assets: AssetOut[]
       kind,
       assetIdU64: movesValue ? asset.assetIdU64 : null,
       amount: movesValue ? (((i % AMOUNT_STEPS) + 1) / 4).toString() : null,
+      // Only a withdrawal publishes a denomination. A deposit's amount is
+      // public but it is not drawn from a ladder, and a transfer publishes no
+      // value at all.
+      publicOut: kind === "withdraw" ? denominationAt(i) : null,
     };
   });
 }

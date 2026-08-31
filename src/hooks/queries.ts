@@ -1,13 +1,16 @@
 import {
+  type AnonymitySet,
   type AssetOut,
   type ChainFlow,
   type ChainLocked,
   type CountPoint,
   type FlowPoint,
   type KindCounts,
+  type PoolNotes,
   type TxOut,
   useApi,
 } from "../api";
+import { COHORT_LIMIT, RECENT_WINDOW_SEC } from "../lib/anonymity";
 import { ALL_KINDS, type KindFilter } from "../lib/kinds";
 import type { Range } from "../lib/ranges";
 import type { Scope } from "../lib/scope";
@@ -72,6 +75,47 @@ export function useTxKinds(chainId: number | null, range: Range): Async<KindCoun
     [api, chainId, range.label],
     live,
   );
+}
+
+/**
+ * The backend's own maximum page.
+ *
+ * These rows are a lookup table as much as a list: the feed joins every
+ * withdrawal against them to report its k, so a page that stopped short would
+ * leave the rows past the cut reporting an unknown cohort. Off-ladder
+ * withdrawals each make a denomination of their own, so the row count tracks
+ * how *unlike* a ladder the pool's usage is rather than the ladder's size.
+ */
+/**
+ * Withdrawal cohorts per denomination.
+ *
+ * Deliberately not windowed by the range: an anonymity set is every withdrawal
+ * of that size in the pool's history, so narrowing it to the visible range would
+ * report a smaller k than a user actually has.
+ */
+export function useAnonymitySets(scope: Scope): Async<AnonymitySet[]> {
+  const api = useApi();
+  const { chainId, assetIdU64 } = scope;
+  return useAsync(
+    () =>
+      api.getAnonymitySets({
+        chainId: param(chainId),
+        assetIdU64: param(assetIdU64),
+        limit: COHORT_LIMIT,
+        // Sent explicitly rather than left to the backend's default: the UI
+        // writes the label, so it has to own the number.
+        recentSec: RECENT_WINDOW_SEC,
+      }),
+    [api, chainId, assetIdU64],
+    live,
+  );
+}
+
+/** Tree occupancy per chain. Unscoped shows every chain, which is the only
+ *  correct way to read counts that must never be summed together. */
+export function usePoolNotes(chainId: number | null): Async<PoolNotes[]> {
+  const api = useApi();
+  return useAsync(() => api.getPoolNotes(param(chainId)), [api, chainId], live);
 }
 
 export interface FlowAndTx {

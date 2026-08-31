@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ChainFlow, ChainLocked, CountPoint, FlowPoint } from "../api";
 import { at } from "../test/at";
-import {
-  chainShares,
-  peakCount,
-  sumCounts,
-  sumFlows,
-  summarizeChains,
-  summarizeLocked,
-} from "./aggregate";
+import { chainShares, sumCounts, sumFlows, summarizeChains, summarizeLocked } from "./aggregate";
 
 const flow = (p: Partial<FlowPoint> & { ts: number }): FlowPoint => ({
   in: null,
@@ -58,17 +51,13 @@ describe("count reducers", () => {
     { ts: 7200, count: 1 },
   ];
 
-  it("totals and peaks over the range", () => {
+  it("totals over the range", () => {
     expect(sumCounts(counts)).toBe(13);
-    expect(peakCount(counts)).toBe(9);
   });
 
   it("separates 'no data yet' from 'no activity'", () => {
     expect(sumCounts(null)).toBeNull();
-    expect(peakCount(null)).toBeNull();
     expect(sumCounts([])).toBe(0);
-    // An empty range has no bucket to call the peak.
-    expect(peakCount([])).toBeNull();
   });
 });
 

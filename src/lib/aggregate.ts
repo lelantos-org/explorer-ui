@@ -31,12 +31,6 @@ export function sumCounts(counts: CountPoint[] | null): number | null {
   return counts.reduce((s, p) => s + p.count, 0);
 }
 
-/** Tallest single bucket in the range; null when there is nothing to compare. */
-export function peakCount(counts: CountPoint[] | null): number | null {
-  if (!counts || counts.length === 0) return null;
-  return counts.reduce((m, p) => (p.count > m ? p.count : m), 0);
-}
-
 export interface ChainsSummary {
   chains: number;
   inflow: number;

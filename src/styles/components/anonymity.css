@@ -1,0 +1,159 @@
+/* Withdrawal cohorts, per-chain note counts, and the feed's privacy column.
+
+   One tone scale runs through all three, so a reading learned in one place
+   carries to the others: accent means covered, warn means thin, error means no
+   cover at all, and muted means unknown — never zero. */
+
+/* --- cohort bars ------------------------------------------------------- */
+
+.asets {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aset__hdr {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+/* The denomination leads: it is the cohort's identity, and the column of
+   integers is what a reader scans down. */
+.aset__denom {
+  font-weight: 600;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.aset__asset {
+  color: var(--fg-mute);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+/* Pushed to the trailing edge so every k lines up regardless of how long the
+   asset label ran. */
+.aset__k {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-dim);
+}
+
+.aset__track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-3);
+  overflow: hidden;
+}
+
+.aset__bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width var(--t-med);
+}
+
+.aset--counted .aset__bar { background: var(--accent); }
+.aset--thin .aset__bar { background: var(--warn); }
+.aset--unique .aset__bar { background: var(--err); }
+
+.aset--thin .aset__k { color: var(--warn); }
+.aset--unique .aset__k { color: var(--err); font-weight: 600; }
+
+/* Recency, under the bar. Deliberately quiet: it qualifies the k above it
+   rather than competing with it. */
+.aset__recent {
+  font-size: 10px;
+  margin-top: 3px;
+}
+
+/* A cohort with no activity in the window. Warn, not error — its k is real and
+   an anonymity set is all-history; what is missing is recent cover, which is a
+   caution rather than the absence of cover that `unique` reports. */
+.aset__dormant {
+  color: var(--warn);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The count of rows the card left off, since it shows only the thinnest. */
+.aset__more {
+  font-size: 11px;
+  padding-top: 2px;
+}
+
+/* --- per-chain note counts -------------------------------------------- */
+
+.notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.notes__row {
+  display: grid;
+  grid-template-areas:
+    "chain age"
+    "val val"
+    "sub sub";
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 12px 14px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+
+.notes__row:hover { border-color: var(--line-strong); }
+
+.notes__row--on {
+  border-color: var(--accent);
+  background: var(--bg-1);
+}
+
+.notes__chain {
+  grid-area: chain;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+
+.notes__age { grid-area: age; font-size: 10px; }
+
+/* The user-note count is the figure; leaves and relayer notes explain how it
+   was arrived at, so they sit under it rather than beside it. */
+.notes__val {
+  grid-area: val;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg);
+}
+
+.notes__sub { grid-area: sub; font-size: 10px; }
+
+/* --- the feed's privacy column ----------------------------------------
+
+   Withdrawals only: every other kind gets the plain muted dash the table
+   already uses for a figure it does not have. */
+
+.priv {
+  font-size: 11px;
+  font-family: var(--mono);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.priv--counted { color: var(--fg-dim); }
+.priv--thin { color: var(--warn); }
+.priv--unique { color: var(--err); font-weight: 600; }
+/* Unknown, never zero. Muted so it reads as absent data rather than a verdict. */
+.priv--unknown { color: var(--fg-mute); }
