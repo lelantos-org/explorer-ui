@@ -1,5 +1,6 @@
 import type { ChainFlow } from "../../api";
 import { chainShares } from "../../lib/aggregate";
+import Skeleton from "../ui/Skeleton";
 import ChainFlowCard from "./ChainFlowCard";
 
 interface Props {
@@ -11,11 +12,13 @@ interface Props {
 export default function ChainFlowGrid({ data, selected, onSelect }: Props) {
   if (data === null) {
     return (
-      <div className="chain-grid">
+      // Card-shaped rather than rows, so it keeps the grid layout — but it is
+      // announced as one loading region like every other card's placeholder.
+      <Skeleton className="chain-grid">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="chain-card chain-card--ghost" />
+          <div key={i} className="chain-card chain-card--ghost" aria-hidden="true" />
         ))}
-      </div>
+      </Skeleton>
     );
   }
 

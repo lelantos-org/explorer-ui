@@ -56,9 +56,16 @@ describe("AnonymitySets", () => {
     expect(html.indexOf("k = 2")).toBeLessThan(html.indexOf("k = 90"));
   });
 
-  it("keeps the raw denomination available even when the label is abbreviated", () => {
-    // `fmtCompact` renders 50000 as "50k"; the exact integer is the cohort's
-    // identity, so it stays in the title.
+  it("prints the denomination in full rather than abbreviating it", () => {
+    // A magnitude label collapses neighbouring denominations onto one string —
+    // 100000000 and 100000512 both read "100.0M" — and a denomination is the
+    // cohort's identity, so two distinct sets would draw as one repeated row.
+    const html = render([set({ publicOut: "100000000" }), set({ publicOut: "100000512" })]);
+    expect(html).toContain("100,000,000");
+    expect(html).toContain("100,000,512");
+  });
+
+  it("keeps the raw denomination available in the title", () => {
     expect(render([set({ publicOut: "50000" })])).toContain("publicOut 50000");
   });
 
@@ -68,8 +75,33 @@ describe("AnonymitySets", () => {
     expect(render([set()])).toContain("USDC");
   });
 
-  it("falls back to the asset id when the registry has not resolved a symbol", () => {
-    expect(render([set({ assetIdU64: 7777 })])).toContain("asset 7777");
+  it("says so when the registry cannot name the asset", () => {
+    const html = render([set({ assetIdU64: 7777 })]);
+    expect(html).toContain("unknown asset");
+    // The circuit id still identifies the cohort, so the row is not anonymous.
+    expect(html).toContain("#7777");
+  });
+
+  it("tells apart two ids that share a token and a denomination", () => {
+    // The registry rejects a duplicate id but not a duplicate token, so one
+    // ERC-20 is routinely registered twice — a plain entry and a yield-bearing
+    // one. Those are separate anonymity sets: the circuit binds the id, so a
+    // withdrawal under one gives no cover to a withdrawal under the other.
+    // Labelled by symbol alone the two rows would be indistinguishable, and a
+    // reader would add a k of 1 to a k of 3 and get cover that does not exist.
+    const twin: AssetOut = { ...asset, assetIdU64: 2000 };
+    const html = renderToString(
+      <AnonymitySets
+        data={[
+          set({ assetIdU64: 1000, publicOut: "100000000", count: 3 }),
+          set({ assetIdU64: 2000, publicOut: "100000000", count: 1 }),
+        ]}
+        assets={[asset, twin]}
+        loading={false}
+      />,
+    ).replaceAll("<!-- -->", "");
+    expect(html).toContain("#1000");
+    expect(html).toContain("#2000");
   });
 
   it("shows the thinnest sets and says how many it left off", () => {
@@ -129,7 +161,14 @@ describe("AnonymitySets", () => {
   });
 
   it("separates loading from genuinely having no denominations", () => {
-    expect(render(null, true)).toContain("loading…");
+    expect(render(null, true)).toContain('aria-label="loading"');
     expect(render([])).toContain("no withdrawals with a recorded denomination");
+  });
+
+  /** A refetch must not replace rows that are still good; see PoolNotes. */
+  it("keeps the rows on screen while a refetch is in flight", () => {
+    const html = render([set({ count: 40 })], true);
+    expect(html).not.toContain('aria-label="loading"');
+    expect(html).toContain("k = 40");
   });
 });

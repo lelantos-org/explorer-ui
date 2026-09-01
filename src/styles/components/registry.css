@@ -5,7 +5,7 @@
 .registry {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-12);
 }
 
 .registry__chain {
@@ -27,11 +27,11 @@
      the far edge so every chain's hint lands in the same place. */
   grid-template-columns: auto 1fr auto auto;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-10);
   width: 100%;
   text-align: left;
   cursor: pointer;
-  padding: 9px 12px;
+  padding: 9px var(--sp-12);
   background: var(--bg-2);
   border: none;
   border-bottom: 1px solid var(--line);
@@ -46,7 +46,7 @@
 /* A badge, so the chain reads as a label rather than as the first word of the
    name beside it. */
 .registry__short {
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   padding: 3px 7px;
@@ -60,13 +60,13 @@
 }
 
 .registry__name {
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
 .registry__count,
 .registry__hint {
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -101,9 +101,9 @@
   display: inline-block;
   min-width: 52px;
   text-align: center;
-  padding: 2px 8px;
+  padding: var(--sp-2) var(--sp-8);
   border-radius: 999px;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   border: 1px solid transparent;
 }
@@ -123,4 +123,33 @@
   color: var(--fg-mute);
   background: none;
   border-color: transparent;
+}
+
+/* The return column. Three states that must stay visually distinct: a blank
+   cell (plain custody — no venue, so no return), a muted dash (bound but not
+   polled, so genuinely unknown), and the figure itself. */
+.registry__growth { font-variant-numeric: tabular-nums; }
+/* Positive growth takes the accent rather than a green: the palette has no
+   success colour, and inventing one here would be the only green in the app. */
+.registry__growth--up { color: var(--accent); }
+
+/* An empty cell reads as an oversight, so plain custody gets a faint rule that
+   says "measured, and there is nothing here" rather than nothing at all. */
+.registry__plain::before {
+  content: "·";
+  color: var(--line-strong);
+}
+
+/* A halt stops accrual and leaves the venue bound, so it annotates the figure
+   instead of replacing it. */
+.registry__halted {
+  margin-left: var(--sp-6);
+  padding: 1px 5px;
+  border: 1px solid var(--err);
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--err);
+  white-space: nowrap;
 }

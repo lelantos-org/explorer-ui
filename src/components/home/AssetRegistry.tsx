@@ -1,14 +1,23 @@
-import type { AssetOut } from "../../api";
-import { assetLabel } from "../../lib/assets";
-import { getChainMeta, getTokenUrl } from "../../lib/chains";
+import type { AssetOut, YieldAsset } from "../../api";
+import { assetKey } from "../../lib/assets";
+import { getChainMeta } from "../../lib/chains";
 import { feeDisplay } from "../../lib/fees";
-import { fmtUsd } from "../../lib/format";
-import { withHexPrefix } from "../../lib/hex";
+import { fmtGrowth, fmtUsd } from "../../lib/format";
 import type { ScopeGroup } from "../../lib/scope";
+import { indexGrowth, isPolled } from "../../lib/yield";
+import AssetLink from "../ui/AssetLink";
+import Skeleton, { BarRow, BarRows } from "../ui/Skeleton";
+
+/** Yield rows by `chainId:assetIdU64`, so a row resolves its own binding
+ *  without the registry having to be joined upstream. */
+export type YieldIndex = Map<string, YieldAsset>;
 
 interface Props {
   groups: ScopeGroup[];
   loading: boolean;
+  /** Yield bindings, keyed by asset. `null` while still loading — an asset with
+   *  no entry is plain custody, which is a different thing from unknown. */
+  yields: YieldIndex | null;
   /** Chain currently pinned by the filter bar, or null for all of them. */
   selected: number | null;
   onSelect?: (chainId: number | null) => void;
@@ -27,6 +36,60 @@ function Fee({ bps }: { bps: number | null }) {
   );
 }
 
+/**
+ * What an asset's custody has earned since its venue was bound.
+ *
+ * Four states, and they must not collapse into one another:
+ *
+ * - **bindings not loaded** — nothing at all. The bindings arrive in their own
+ *   request, so until it lands this column knows nothing about any asset, and
+ *   must not answer for one.
+ * - **plain custody** — loaded, and this asset has no binding. Marked, not
+ *   dashed: it has no return, which is a different claim from one whose return
+ *   is unknown, and every dash elsewhere in this UI means unknown.
+ * - **bound, unpolled** — a dash. The binding is event-sourced and the state is
+ *   polled, so the gap between them is normal and genuinely unknown.
+ * - **polled** — the figure, signed.
+ *
+ * The first two are the easy pair to conflate: an absent row means "does not
+ * earn" only once the request behind it has come back, so the lookup takes the
+ * whole index rather than the row it resolves to.
+ *
+ * Never an annual rate: one current index per asset is stored and overwritten
+ * every poll, so there is no period to annualise over. A halt is badged here
+ * rather than given a column of its own — it explains why a figure has stopped
+ * moving, which is only meaningful next to the figure.
+ */
+function Return({ yields, asset }: { yields: YieldIndex | null; asset: AssetOut }) {
+  if (yields === null) return null;
+
+  const row = yields.get(assetKey(asset.chainId, asset.assetIdU64));
+  if (!row) return <span className="registry__plain" title="plain custody — does not earn" />;
+
+  const growth = indexGrowth(row.indexRay);
+  return (
+    <>
+      {growth === null || !isPolled(row) ? (
+        <span className="muted" title="bound to a venue, but not polled yet">
+          —
+        </span>
+      ) : (
+        <span
+          className={`registry__growth ${growth > 0 ? "registry__growth--up" : ""}`}
+          title="total return since the venue was bound — not an annual rate"
+        >
+          {fmtGrowth(growth)}
+        </span>
+      )}
+      {row.halted && (
+        <span className="registry__halted" title="accrual is halted; the venue is still bound">
+          halted
+        </span>
+      )}
+    </>
+  );
+}
+
 /** Spot price, or a marked gap. Absence is the provider's, not the pool's. */
 function Price({ usd }: { usd: number | null }) {
   if (usd === null) {
@@ -39,52 +102,15 @@ function Price({ usd }: { usd: number | null }) {
   return <>{fmtUsd(usd)}</>;
 }
 
-/**
- * The asset's name, linking out to its page on the chain's explorer.
- *
- * The address is the link rather than a column of its own: it identifies the
- * token but nobody reads a truncated hex, and every reason to want it — check
- * the contract, see holders — is a click away on the explorer.
- *
- * `assetLabel` supplies the text, so an asset whose `symbol()` never resolved
- * is named by its short address here exactly as it is everywhere else.
- */
-function AssetName({ asset }: { asset: AssetOut }) {
-  const label = assetLabel(asset);
-  const full = withHexPrefix(asset.tokenHex);
-  const url = getTokenUrl(asset.chainId, asset.tokenHex);
-
-  // Local dev chains have no explorer, so the name stays plain text rather
-  // than becoming a link into nowhere. The address is still in the tooltip.
-  if (!url) {
-    return (
-      <span className="asset__sym" title={full}>
-        {label}
-      </span>
-    );
-  }
-
-  return (
-    <a
-      className="asset__sym lnk lnk--inline"
-      href={url}
-      target="_blank"
-      rel="noreferrer"
-      title={`${full} — open on the explorer`}
-    >
-      {label}
-    </a>
-  );
-}
-
 interface ChainProps {
   group: ScopeGroup;
+  yields: YieldIndex | null;
   /** Whether this chain is the one the filter bar has pinned. */
   pinned: boolean;
   onToggle?: () => void;
 }
 
-function ChainAssets({ group, pinned, onToggle }: ChainProps) {
+function ChainAssets({ group, yields, pinned, onToggle }: ChainProps) {
   const meta = getChainMeta(group.chainId);
   const count = group.assets.length;
 
@@ -93,6 +119,7 @@ function ChainAssets({ group, pinned, onToggle }: ChainProps) {
       <button
         type="button"
         className="registry__hdr"
+        aria-pressed={pinned}
         onClick={onToggle}
         title={pinned ? "clear the chain filter" : `filter the page to ${meta.name}`}
       >
@@ -112,20 +139,39 @@ function ChainAssets({ group, pinned, onToggle }: ChainProps) {
         // this is a real state rather than a loading one.
         <div className="empty">no assets registered</div>
       ) : (
-        <div className="tbl-wrap registry__tbl">
+        // Focusable so it can be scrolled from the keyboard: a region that
+        // scrolls but cannot be reached by Tab is unusable without a pointer
+        // (WCAG 2.1.1). Named so the stop is not anonymous.
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll container must be focusable to be scrollable without a pointer (WCAG 2.1.1); the rule does not model overflow
+        <section className="tbl-wrap registry__tbl" tabIndex={0} aria-label={`${meta.name} assets`}>
           <table className="tbl">
             <thead>
               <tr>
-                <th>asset</th>
-                <th className="tbl__num">price</th>
+                <th scope="col">asset</th>
+                <th scope="col" className="tbl__num">
+                  price
+                </th>
                 {/* Named by direction rather than by leg: "shield" and
                     "unshield" are the pool's words, "in"/"out" is what a
                     reader is actually deciding between. */}
-                <th className="tbl__num" title="charged on top of the amount you shield">
+                <th
+                  scope="col"
+                  className="tbl__num"
+                  title="charged on top of the amount you shield"
+                >
                   fee in
                 </th>
-                <th className="tbl__num" title="skimmed from the amount you unshield">
+                <th scope="col" className="tbl__num" title="skimmed from the amount you unshield">
                   fee out
+                </th>
+                {/* Blank for most assets, which is the point: the column says
+                    at a glance which of them earn. */}
+                <th
+                  scope="col"
+                  className="tbl__num"
+                  title="total return since the venue was bound, for assets whose custody earns — not an annual rate"
+                >
+                  return
                 </th>
               </tr>
             </thead>
@@ -133,7 +179,7 @@ function ChainAssets({ group, pinned, onToggle }: ChainProps) {
               {group.assets.map((a) => (
                 <tr key={a.assetIdU64}>
                   <td>
-                    <AssetName asset={a} />
+                    <AssetLink asset={a} />
                   </td>
                   <td className="mono tbl__num">
                     <Price usd={a.priceUsd} />
@@ -144,11 +190,14 @@ function ChainAssets({ group, pinned, onToggle }: ChainProps) {
                   <td className="tbl__num">
                     <Fee bps={a.withdrawBps} />
                   </td>
+                  <td className="tbl__num">
+                    <Return yields={yields} asset={a} />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </section>
       )}
     </div>
   );
@@ -158,14 +207,26 @@ function ChainAssets({ group, pinned, onToggle }: ChainProps) {
  * Every asset the pool accepts, grouped under the chain that owns it.
  *
  * Reference material rather than a metric: what a wallet needs before it can
- * shield anything — which tokens are accepted, what each leg costs, and which
- * fields the indexer has not resolved yet.
+ * shield anything — which tokens are accepted, what each leg costs, whether the
+ * custody earns, and which fields the indexer has not resolved yet.
+ *
+ * Yield lives here as one column rather than as a second table. Yield-bearing
+ * assets are a subset of these rows, so listing them separately meant
+ * cross-referencing two tables to answer "does this asset earn?".
  *
  * Fees are per asset and per leg, so they only exist as a table like this;
  * there is no single number a header could carry.
  */
-export default function AssetRegistry({ groups, loading, selected, onSelect }: Props) {
-  if (loading && groups.length === 0) return <div className="empty">loading…</div>;
+export default function AssetRegistry({ groups, loading, yields, selected, onSelect }: Props) {
+  if (loading && groups.length === 0) {
+    return (
+      <Skeleton>
+        {/* The chain header, then rows at the five columns' settled widths. */}
+        <BarRow widths={["44px", "72px", "60px"]} height={14} />
+        <BarRows count={3} widths={["96px", "56px", "44px", "44px", "52px"]} />
+      </Skeleton>
+    );
+  }
   if (groups.length === 0) return <div className="empty">no assets registered yet</div>;
 
   return (
@@ -174,6 +235,7 @@ export default function AssetRegistry({ groups, loading, selected, onSelect }: P
         <ChainAssets
           key={group.chainId}
           group={group}
+          yields={yields}
           pinned={selected === group.chainId}
           onToggle={() => onSelect?.(selected === group.chainId ? null : group.chainId)}
         />

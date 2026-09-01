@@ -151,16 +151,79 @@ describe("mock transaction feed", () => {
 });
 
 describe("mock escrowed balances", () => {
+  /** Every asset on every chain, flattened with the chain it came from. */
+  const allAssets = async () =>
+    (await shared.getLocked()).flatMap((c) => c.assets.map((a) => ({ chainId: c.chainId, a })));
+
+  const netFlow = async (chainId: number, assetIdU64: number) => {
+    const flows = await shared.getAssetFlows({ chainId, assetIdU64, bucketSec: 86400 });
+    return flows.reduce((s, p) => s + (p.in ?? 0) - (p.out ?? 0), 0);
+  };
+
   it("reports a balance, not a volume: deposits minus withdrawals", async () => {
-    const chain = first(await shared.getLocked());
-    const asset = first(chain.assets);
-    const flows = await shared.getAssetFlows({
-      chainId: chain.chainId,
-      assetIdU64: asset.assetIdU64,
-      bucketSec: 86400,
-    });
-    const net = flows.reduce((s, p) => s + (p.in ?? 0) - (p.out ?? 0), 0);
-    expect(asset.amount).toBeCloseTo(net, 6);
+    // Scoped to a plain-custody asset, which is the only kind this identity
+    // holds for: nothing but a flow moves its balance.
+    const rows = await allAssets();
+    const plain = rows.find(({ a }) => a.basis === "flowDifference");
+    expect(plain).toBeDefined();
+    if (!plain) return;
+    expect(plain.a.amount).toBeCloseTo(await netFlow(plain.chainId, plain.a.assetIdU64), 6);
+  });
+
+  /**
+   * Yield is not a flow. Growth fires no event, so `in − out` misses everything
+   * the venue has earned — which is exactly why these assets carry a different
+   * basis instead of being netted like the rest.
+   */
+  it("reads a yield asset's balance from its venue rather than from its flows", async () => {
+    const rows = await allAssets();
+    const earning = rows.find(({ a }) => a.basis === "venueHoldings");
+    expect(earning).toBeDefined();
+    if (!earning) return;
+    const net = await netFlow(earning.chainId, earning.a.assetIdU64);
+    expect(earning.a.amount).toBeGreaterThan(net);
+  });
+
+  /**
+   * The escrow cannot owe money. A negative balance is a real signal — the
+   * indexer missed deposits — and the card renders it as an alarm, so a
+   * generator that produces one by accident fires that alarm on fabricated
+   * data and trains the eye to ignore it.
+   *
+   * The generator draws each hour's flows independently, so this holds only
+   * because withdrawals are capped at the balance accumulated so far.
+   */
+  it("never escrows a negative balance, however outflow-biased the asset", async () => {
+    const rows = await allAssets();
+    expect(rows.length).toBeGreaterThan(0);
+    for (const { chainId, a } of rows) {
+      expect(
+        a.amount,
+        `chain ${chainId} asset ${a.assetIdU64} (${a.symbol}) went negative`,
+      ).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  /** Outflow-biased assets must still drain — capping withdrawals should bound
+   *  the walk, not flatten every asset into the same growth story. */
+  it("still lets an outflow-biased asset drain far below an inflow-biased one", async () => {
+    const rows = await allAssets();
+    const amounts = rows.map(({ a }) => a.amount ?? 0).sort((x, y) => x - y);
+    const smallest = amounts[0] ?? 0;
+    const largest = amounts[amounts.length - 1] ?? 0;
+    expect(largest).toBeGreaterThan(smallest * 100);
+  });
+
+  /** The escrow card and the yield card read one asset, so they must not be
+   *  able to report two different balances for it. */
+  it("agrees with the yield endpoint about what a yield asset holds", async () => {
+    const rows = await allAssets();
+    const earning = rows.find(({ a }) => a.basis === "venueHoldings");
+    expect(earning).toBeDefined();
+    if (!earning) return;
+    const yields = await shared.getYield();
+    const row = yields.find((y) => y.assetIdU64 === earning.a.assetIdU64);
+    expect(row?.gross).toBeCloseTo(earning.a.amount ?? Number.NaN, 6);
   });
 
   it("adds a chain's assets in dollars only, since tokens do not add", async () => {

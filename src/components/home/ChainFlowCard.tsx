@@ -25,6 +25,8 @@ export default function ChainFlowCard({ flow, share, hasValues, selected, onClic
       type="button"
       className={`chain-card ${selected ? "chain-card--on" : ""} ${idle ? "chain-card--idle" : ""}`}
       title={idle ? "indexed, no transactions in the last 24h" : undefined}
+      // Selecting a chain was signalled by border colour alone.
+      aria-pressed={selected}
       onClick={onClick}
     >
       <div className="chain-card__top">

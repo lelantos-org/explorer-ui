@@ -61,6 +61,14 @@ export interface LockedSummary {
   totalUsd: number | null;
   /** Assets excluded from `totalUsd` for want of a price, across every chain. */
   unpricedAssets: number;
+  /**
+   * Assets whose balance is what the venue holds rather than what flowed.
+   *
+   * Counted because it changes what the total *means*: with any of these in it,
+   * the headline is no longer "deposits minus withdrawals" — yield fires no
+   * flow, so that definition would understate them by everything ever earned.
+   */
+  venueHeldAssets: number;
 }
 
 /**
@@ -74,11 +82,13 @@ export function summarizeLocked(locked: ChainLocked[] | null): LockedSummary | n
   if (!locked) return null;
   let totalUsd: number | null = null;
   let unpricedAssets = 0;
+  let venueHeldAssets = 0;
   for (const c of locked) {
     if (c.lockedUsd !== null) totalUsd = (totalUsd ?? 0) + c.lockedUsd;
     unpricedAssets += c.unpricedAssets;
+    venueHeldAssets += c.assets.filter((a) => a.basis === "venueHoldings").length;
   }
-  return { chains: locked.length, totalUsd, unpricedAssets };
+  return { chains: locked.length, totalUsd, unpricedAssets, venueHeldAssets };
 }
 
 /**

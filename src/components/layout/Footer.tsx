@@ -16,7 +16,13 @@ export default function Footer() {
     <footer className="ftr">
       <span className="ftr__brand">Lelantos</span>
       <span className="ftr__sep" aria-hidden="true" />
-      <span className="ftr__note muted">no cookies 🍪 · no tracking 👁️ · no accounts 👤</span>
+      {/* The glyphs repeat the words beside them, so they are ornament. Left
+          audible they read as "no cookies cookie no tracking eye no accounts
+          bust in silhouette". */}
+      <span className="ftr__note muted">
+        no cookies <span aria-hidden="true">🍪</span> · no tracking{" "}
+        <span aria-hidden="true">👁️</span> · no accounts <span aria-hidden="true">👤</span>
+      </span>
       <span className="ftr__sep" aria-hidden="true" />
       <a className="ftr__link" href={WALLET_URL} target="_blank" rel="noopener noreferrer">
         wallet

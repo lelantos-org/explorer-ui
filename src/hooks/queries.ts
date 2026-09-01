@@ -9,6 +9,7 @@ import {
   type PoolNotes,
   type TxOut,
   useApi,
+  type YieldAsset,
 } from "../api";
 import { COHORT_LIMIT, RECENT_WINDOW_SEC } from "../lib/anonymity";
 import { ALL_KINDS, type KindFilter } from "../lib/kinds";
@@ -109,6 +110,16 @@ export function useAnonymitySets(scope: Scope): Async<AnonymitySet[]> {
     [api, chainId, assetIdU64],
     live,
   );
+}
+
+/**
+ * Yield-bearing assets. Unscoped, like `useLocked`: the card is the
+ * network-wide view of what earns, and the filter bar's chain narrows the series
+ * above it rather than this list.
+ */
+export function useYield(): Async<YieldAsset[]> {
+  const api = useApi();
+  return useAsync(() => api.getYield(), [api], live);
 }
 
 /** Tree occupancy per chain. Unscoped shows every chain, which is the only

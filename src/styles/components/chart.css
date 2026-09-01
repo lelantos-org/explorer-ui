@@ -16,10 +16,10 @@
 .chart__svg { user-select: none; }
 .chart__legend {
   display: flex;
-  gap: 18px;
+  gap: var(--sp-18);
   align-items: center;
-  margin-bottom: 10px;
-  font-size: 11px;
+  margin-bottom: var(--sp-10);
+  font-size: var(--text-xs);
   color: var(--fg-dim);
   flex-wrap: wrap;
   letter-spacing: 0.06em;
@@ -35,15 +35,28 @@
 }
 
 /* Legend entry and its colour swatch. */
-.lg { display: inline-flex; align-items: center; gap: 8px; }
+.lg { display: inline-flex; align-items: center; gap: var(--sp-8); }
 .lg__sw {
   width: 12px;
   height: 3px;
   border-radius: 2px;
   display: inline-block;
 }
-.lg--in .lg__sw,
-.lg--out .lg__sw { background: var(--warn); }
+/* Inflow and outflow are one categorical pair: accent solid against warn
+   dashed, which is the encoding the sparkline, the hover dots, the area
+   gradients and the hover readout all already use. Both swatches were warn, so
+   the legend could not tell the two series apart any more than the plot could.
+   The dashes are reproduced here rather than implied: a legend whose swatch does
+   not look like the mark it names is not a legend. */
+.lg--in .lg__sw { background: var(--accent); }
+.lg--out .lg__sw {
+  background: repeating-linear-gradient(
+    90deg,
+    var(--warn) 0 5px,
+    transparent 5px 8px
+  );
+  border-radius: 0;
+}
 .lg--deposit .lg__sw { background: var(--kind-deposit); }
 .lg--pending .lg__sw { background: var(--kind-pending); }
 .lg--transfer .lg__sw { background: var(--kind-transfer); }
@@ -52,7 +65,11 @@
 /* AXES. Hairlines are drawn on pixel centres by `crisp()`, so they cover one
    row of pixels rather than two half-lit ones. */
 .grid { stroke: var(--line); stroke-width: 1; stroke-dasharray: 1 4; }
-.axis { fill: var(--fg-mute); font-size: 10px; font-family: var(--mono); letter-spacing: 0.04em; }
+/* The one place the 11px floor is not applied: tick labels sit at fixed
+   intervals, so a larger step starts overlapping its neighbours rather than
+   just reading bigger. Named as its own token so it is a decision, not a
+   leftover. */
+.axis { fill: var(--fg-mute); font-size: var(--text-axis); font-family: var(--mono); letter-spacing: 0.04em; }
 
 /* SERIES. The line is the one thing on the chart worth full-precision
    geometry: crisp snapping would flatten the small steps between neighbouring
@@ -65,7 +82,12 @@
   shape-rendering: geometricPrecision;
 }
 .line { stroke-width: 1.75; paint-order: stroke; }
-.line--in,
+/* The two flow series, distinguished by hue *and* by dash so the pair survives
+   colour-vision deficiency and greyscale printing. They were both warn with the
+   same dash pattern — two identical lines overlaid on the app's headline chart,
+   with nothing to tell them apart. Solid for inflow, matching `.spark__line--in`
+   and `.chart__pt--in` below. */
+.line--in { stroke: var(--accent); }
 .line--out { stroke: var(--warn); stroke-dasharray: 5 3; }
 
 /* HOVER: a line down the plot, plus a marker on each series it crosses. */

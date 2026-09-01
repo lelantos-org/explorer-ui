@@ -6,9 +6,10 @@ import {
   RECENT_WINDOW_SEC,
   thinnestFirst,
 } from "../../lib/anonymity";
-import { assetKey, indexAssets } from "../../lib/assets";
+import { assetIdTag, assetKey, assetLabel, indexAssets } from "../../lib/assets";
 import { getChainMeta } from "../../lib/chains";
-import { fmtBucket, fmtCompact, plural } from "../../lib/format";
+import { fmtBucket, fmtDigits, plural } from "../../lib/format";
+import Skeleton, { BarRows } from "../ui/Skeleton";
 
 interface Props {
   data: AnonymitySet[] | null;
@@ -43,6 +44,23 @@ const VISIBLE_ROWS = 12;
 /** Derived from the window itself, so the two cannot disagree. */
 const recentLabel = fmtBucket(RECENT_WINDOW_SEC);
 
+/**
+ * Which asset a cohort belongs to, named by its circuit id as well as its
+ * symbol.
+ *
+ * The id is not decoration. `publicAssetId` is what the circuit binds and what
+ * a withdrawal publishes, and the registry rejects a duplicate id but not a
+ * duplicate token — so one ERC-20 is routinely registered several times, a
+ * plain entry and a yield-bearing one being the ordinary case. Those are
+ * separate anonymity sets: a withdrawal under one id gives no cover to a
+ * withdrawal under another, even at the same denomination of the same token.
+ *
+ * Naming a cohort by symbol alone would print two of them identically, and two
+ * rows reading "WETH · 100,000,000" invite exactly the wrong sum — that a k of
+ * 1 and a k of 3 are really a k of 4. Shown on every row rather than only where
+ * a collision is on screen: whether one is depends on which cohorts made the
+ * cut, and a label that changes with its neighbours is not a name.
+ */
 function AssetName({
   chainId,
   assetIdU64,
@@ -54,10 +72,17 @@ function AssetName({
 }) {
   const asset = byAsset.get(assetKey(chainId, assetIdU64));
   return (
-    <span className="aset__asset">
+    <span
+      className="aset__asset"
+      title={`publicAssetId ${assetIdU64} — the circuit's name for this asset. One token may be registered under several ids, and withdrawals under different ids do not share an anonymity set.`}
+    >
       {getChainMeta(chainId).short}
       {" · "}
-      {asset?.symbol ?? `asset ${assetIdU64}`}
+      {/* Falls back to the token address, not to the id: the id is already
+          printed beside it, and repeating it would name the row twice while
+          still not saying which token it is. */}
+      {asset ? assetLabel(asset) : "unknown asset"}
+      <span className="aset__assetid"> {assetIdTag(assetIdU64)}</span>
     </span>
   );
 }
@@ -74,7 +99,15 @@ function AssetName({
  * and it should not need scrolling to.
  */
 export default function AnonymitySets({ data, assets, loading }: Props) {
-  if (loading && !data) return <div className="empty">loading…</div>;
+  if (loading && !data) {
+    return (
+      <Skeleton>
+        {/* A cohort row is a label and a bar whose length is the whole point,
+            so the placeholder bars run full width rather than sampling one. */}
+        <BarRows count={6} widths={["88px", "100%"]} height={14} />
+      </Skeleton>
+    );
+  }
   if (!data || data.length === 0)
     return <div className="empty">no withdrawals with a recorded denomination</div>;
 
@@ -98,9 +131,12 @@ export default function AnonymitySets({ data, assets, loading }: Props) {
             {/* The raw circuit integer identifies the cohort. It is not
                 converted to whole tokens: a denomination is fixed while the
                 yield index moves what it is worth, so the integer is the only
-                stable name for the set. */}
+                stable name for the set — and it is printed in full for the same
+                reason. Abbreviating it to "100.0M" would render two neighbouring
+                denominations identically, so a card holding two distinct
+                cohorts would read as one row drawn twice. */}
             <span className="aset__denom mono" title={`publicOut ${r.publicOut}`}>
-              {fmtCompact(Number(r.publicOut))}
+              {fmtDigits(r.publicOut)}
             </span>
             <AssetName chainId={r.chainId} assetIdU64={r.assetIdU64} byAsset={byAsset} />
             <span

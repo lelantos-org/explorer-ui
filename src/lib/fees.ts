@@ -1,7 +1,5 @@
 import type { AssetOut } from "../api";
-
-/** Basis-points denominator, matching `FeeConfig.BPS_DENOMINATOR` on chain. */
-const BPS_DENOMINATOR = 10_000;
+import { fmtBps } from "./format";
 
 /**
  * The three states a rate can be in, and the only place they are decided.
@@ -21,18 +19,6 @@ export interface FeeDisplay {
   text: string;
   /** Tooltip: the exact bps, or why there is no number. */
   title: string;
-}
-
-/**
- * Percent form of a bps rate.
- *
- * Rates are capped at `MAX_FEE_BPS` (2000 = 20%) on chain and are usually two
- * digits, so two decimals is enough to separate 20 bps (0.2%) from 25 (0.25%)
- * without padding every row with zeroes.
- */
-function fmtBps(bps: number): string {
-  const pct = (bps / BPS_DENOMINATOR) * 100;
-  return `${Number(pct.toFixed(2))}%`;
 }
 
 export function feeDisplay(bps: number | null): FeeDisplay {

@@ -2,9 +2,9 @@
    to know it is being overridden. */
 
 @media (max-width: 720px) {
-  .hdr { padding: 10px 14px; gap: 10px; }
-  .main { padding: 20px 14px 40px; }
-  .hero { grid-template-columns: 1fr; padding: 18px; }
+  .hdr { padding: var(--sp-10) var(--sp-14); gap: var(--sp-10); }
+  .main { padding: var(--sp-20) var(--sp-14) 40px; }
+  .hero { grid-template-columns: 1fr; padding: var(--sp-18); }
   .hero__t { font-size: 24px; }
   .kpi--xl .kpi__val { font-size: 28px; }
   /* Two sticky bars would eat half a phone screen; the header keeps the slot. */
@@ -12,8 +12,8 @@
   /* Padding keeps the safe-area term from the footer's own breakpoint —
      dropping it here would put the links under the iOS home indicator. */
   .ftr {
-    padding: 12px 14px calc(12px + env(safe-area-inset-bottom, 0px));
-    font-size: 12px;
+    padding: var(--sp-12) var(--sp-14) calc(var(--sp-12) + env(safe-area-inset-bottom, 0px));
+    font-size: var(--text-sm);
   }
-  .ftr__note { font-size: 11px; }
+  .ftr__note { font-size: var(--text-xs); }
 }

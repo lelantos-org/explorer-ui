@@ -1,11 +1,12 @@
 import type { AnonymitySet, AssetOut, TxKind, TxOut } from "../../api";
 import { type Cohorts, indexCohorts, txPrivacy } from "../../lib/anonymity";
-import { assetKey, indexAssets } from "../../lib/assets";
+import { assetIdTag, assetKey, indexAssets } from "../../lib/assets";
 import { getChainMeta, getTxUrl } from "../../lib/chains";
 import { fmtAge } from "../../lib/format";
 import { shortHex, withHexPrefix } from "../../lib/hex";
 import { KIND_TITLE, type KindFilter } from "../../lib/kinds";
 import Hex from "../ui/Hex";
+import Skeleton, { BarRows } from "../ui/Skeleton";
 
 interface Props {
   data: TxOut[] | null;
@@ -70,32 +71,51 @@ function AssetCell({ tx, byAsset }: { tx: TxOut; byAsset: Map<string, AssetOut> 
       {/* The symbol leads when the indexer has read one; the address always
           trails as the thing that actually identifies the token. */}
       {asset.symbol && <span className="asset__sym">{asset.symbol}</span>}
+      {/* The circuit id sits between them because the privacy column next to it
+          is computed per id: two withdrawals of one token at one denomination
+          can carry different k's, and without the id the feed shows the
+          difference while hiding its cause. */}
+      <span className="asset__id" title={`publicAssetId ${tx.assetIdU64}`}>
+        {assetIdTag(tx.assetIdU64)}
+      </span>
       <Hex value={asset.tokenHex} truncate={4} className="asset__tok" />
     </span>
   );
 }
 
 export default function LatestTxList({ data, assets, cohorts, loading, kind }: Props) {
-  if (loading && !data) return <div className="empty">loading…</div>;
+  if (loading && !data) {
+    return (
+      <Skeleton>
+        {/* kind, asset, amount, cohort, age. */}
+        <BarRows count={5} widths={["56px", "72px", "64px", "48px", "32px"]} height={16} />
+      </Skeleton>
+    );
+  }
   if (!data || data.length === 0)
     return <div className="empty">no recent {kind && `${kind} `}activity</div>;
 
   const byAsset = indexAssets(assets);
   const byDenom = indexCohorts(cohorts);
 
+  // The wrapper is focusable so it can be scrolled from the keyboard: this is
+  // the widest table in the app and scrolls horizontally on most screens, and a
+  // region that scrolls but cannot be reached by Tab is unusable without a
+  // pointer (WCAG 2.1.1). Named so the stop is not anonymous.
   return (
-    <div className="tbl-wrap">
+    // biome-ignore lint/a11y/noNoninteractiveTabindex: a scroll container must be focusable to be scrollable without a pointer (WCAG 2.1.1); the rule does not model overflow
+    <section className="tbl-wrap" tabIndex={0} aria-label="latest transactions">
       <table className="tbl">
         <thead>
           <tr>
-            <th>age</th>
-            <th>kind</th>
-            <th>chain</th>
-            <th>asset</th>
-            <th>block</th>
-            <th>amount</th>
-            <th>privacy</th>
-            <th>tx</th>
+            <th scope="col">age</th>
+            <th scope="col">kind</th>
+            <th scope="col">chain</th>
+            <th scope="col">asset</th>
+            <th scope="col">block</th>
+            <th scope="col">amount</th>
+            <th scope="col">privacy</th>
+            <th scope="col">tx</th>
           </tr>
         </thead>
         <tbody>
@@ -133,7 +153,7 @@ export default function LatestTxList({ data, assets, cohorts, loading, kind }: P
                       {shortHex(r.txHashHex, 6)}
                     </a>
                   ) : (
-                    <span className="hex" title={full}>
+                    <span className="hex hex--static" title={full}>
                       {shortHex(r.txHashHex, 6)}
                     </span>
                   )}
@@ -143,6 +163,6 @@ export default function LatestTxList({ data, assets, cohorts, loading, kind }: P
           })}
         </tbody>
       </table>
-    </div>
+    </section>
   );
 }

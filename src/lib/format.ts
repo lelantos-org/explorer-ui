@@ -60,6 +60,30 @@ export function fmtTokens(n: number): string {
 export const fmtUsdSigned = signed(fmtUsd);
 export const fmtTokensSigned = signed(fmtTokens);
 
+/** Basis-points denominator, matching `FeeConfig.BPS_DENOMINATOR` on chain. */
+export const BPS_DENOMINATOR = 10_000;
+
+/**
+ * Percent form of a bps rate.
+ *
+ * Two decimals: the rates the pool carries are usually two digits, and this has
+ * to separate 20 bps (0.2%) from 25 (0.25%) without padding every row with
+ * zeroes. `Number()` trims the ones it does not need.
+ */
+export function fmtBps(bps: number): string {
+  return fmtPercent(bps / BPS_DENOMINATOR);
+}
+
+/** Percent form of a plain fraction. Two decimals, matching `fmtBps`, so a
+ *  measured share and a configured rate read on the same scale. */
+export function fmtPercent(fraction: number): string {
+  return `${Number((fraction * 100).toFixed(2))}%`;
+}
+
+/** A fraction as a return: "+3.42%" reads as a direction where "3.42%" reads as
+ *  a rate. Signed by the same wrapper as every other directional figure. */
+export const fmtGrowth = signed(fmtPercent);
+
 export function fmtTs(ts: number, spanSec: number): string {
   const d = new Date(ts * 1000);
   if (spanSec <= 86400 * 2) return d.toISOString().slice(11, 16);
@@ -99,4 +123,25 @@ export function plural(count: number, noun: string): string {
  */
 export function joinMeta(parts: (string | null | undefined | false)[]): string {
   return parts.filter(Boolean).join(" · ");
+}
+
+/**
+ * A decimal integer string, digit-grouped and otherwise untouched.
+ *
+ * For values that are *names* rather than magnitudes — a withdrawal
+ * denomination identifies a cohort, so two that differ must not render alike.
+ * `fmtCompact` collapses 100000000 and 100000512 onto the same "100.0M", which
+ * puts two distinct anonymity sets on screen as what looks like one repeated
+ * row.
+ *
+ * Grouped from the string, never via `Number`: a circuit denomination is a u256
+ * and anything past 2^53 would be rounded before it reached a formatter.
+ */
+export function fmtDigits(value: string): string {
+  const negative = value.startsWith("-");
+  const digits = negative ? value.slice(1) : value;
+  // Non-numeric input is passed through rather than mangled into groups of a
+  // string that was never a number.
+  if (!/^\d+$/.test(digits)) return value;
+  return (negative ? "-" : "") + digits.replace(/\B(?=(\d{3})+$)/g, ",");
 }

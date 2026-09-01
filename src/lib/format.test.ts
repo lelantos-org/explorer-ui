@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   fmtAge,
+  fmtBps,
   fmtBucket,
+  fmtDigits,
+  fmtGrowth,
   fmtNum,
+  fmtPercent,
   fmtTokens,
   fmtTs,
   fmtUsd,
@@ -111,5 +115,58 @@ describe("plural", () => {
   // registry does not read as a different kind of number.
   it("groups a large count", () => {
     expect(plural(1234, "chain")).toBe("1,234 chains");
+  });
+});
+
+describe("fmtBps and fmtPercent", () => {
+  it("renders a configured rate and a measured share on the same scale", () => {
+    // 500 bps is the same 5% as an idle share of 0.05; the yield card puts them
+    // side by side, so they must not format differently.
+    expect(fmtBps(500)).toBe("5%");
+    expect(fmtPercent(0.05)).toBe("5%");
+  });
+
+  it("keeps two decimals where a rate needs them", () => {
+    // 20 bps and 25 bps are different rates and must not both read "0%".
+    expect(fmtBps(20)).toBe("0.2%");
+    expect(fmtBps(25)).toBe("0.25%");
+  });
+
+  it("spells a real zero as zero", () => {
+    expect(fmtBps(0)).toBe("0%");
+  });
+});
+
+describe("fmtGrowth", () => {
+  it("always carries a direction", () => {
+    // "3.42%" reads as a rate; "+3.42%" reads as a return.
+    expect(fmtGrowth(0.0342)).toBe("+3.42%");
+    expect(fmtGrowth(0)).toBe("+0%");
+  });
+
+  it("uses a minus sign rather than a hyphen", () => {
+    expect(fmtGrowth(-0.01)).toBe("−1%");
+  });
+});
+
+describe("fmtDigits", () => {
+  it("keeps denominations that differ looking different", () => {
+    // The bug this exists for: both of these render as "100.0M" through the
+    // magnitude ladder, so two distinct cohorts drew as one repeated row.
+    expect(fmtDigits("100000000")).toBe("100,000,000");
+    expect(fmtDigits("100000512")).toBe("100,000,512");
+  });
+
+  it("groups without going through Number", () => {
+    // Past 2^53 a round-trip through Number would round the value away.
+    expect(fmtDigits("123456789012345678901234567890")).toBe(
+      "123,456,789,012,345,678,901,234,567,890",
+    );
+  });
+
+  it("leaves short values and non-numeric input alone", () => {
+    expect(fmtDigits("500")).toBe("500");
+    expect(fmtDigits("0")).toBe("0");
+    expect(fmtDigits("0x1f")).toBe("0x1f");
   });
 });

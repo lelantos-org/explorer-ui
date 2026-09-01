@@ -79,7 +79,7 @@ export function signedFmt(d: Denom): (n: number) => string {
  * names dollars is built from this, so the caveat cannot go missing from one of
  * them.
  */
-export const USD_AT_SPOT = "USD · at spot";
+export const USD_AT_SPOT = "USD at spot";
 
 /**
  * Unit name for a tile label, where there is no room for the full caveat.

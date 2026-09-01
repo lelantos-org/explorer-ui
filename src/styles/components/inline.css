@@ -16,6 +16,15 @@
 }
 .hex:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .hex:hover { color: var(--accent); border-color: var(--accent); }
+/* Same value, nothing to click. The feed falls back to this when a chain has no
+   explorer URL to link to; wearing the button's pointer and hover made it look
+   like an action that was never wired. `user-select: all` is the point of the
+   fallback, so it stays — the hash is still selectable in one gesture. */
+.hex--static {
+  cursor: text;
+  border-bottom-style: dotted;
+}
+.hex--static:hover { color: var(--fg-dim); border-color: var(--line-strong); }
 
 /* KIND badge. Hues come from the `--kind-*` tokens, so a colour means the same
    thing here as it does in the chart legend and bars. */
@@ -24,7 +33,7 @@
   padding: 1px 7px;
   border-radius: 999px;
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: var(--text-xs);
   letter-spacing: 0.02em;
   border: 1px solid transparent;
   cursor: help;
@@ -56,4 +65,4 @@
    trails as the thing that actually identifies the token. */
 .asset { display: inline-flex; align-items: baseline; gap: 7px; white-space: nowrap; }
 .asset__sym { color: var(--fg-dim); }
-.asset__tok { font-size: 11px; }
+.asset__tok { font-size: var(--text-xs); }

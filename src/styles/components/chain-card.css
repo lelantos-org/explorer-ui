@@ -4,19 +4,19 @@
 .chain-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
+  gap: var(--sp-12);
 }
 
 .chain-card {
   text-align: left;
   cursor: pointer;
   background: linear-gradient(180deg, var(--bg-2), var(--bg-1));
-  padding: 14px 16px;
+  padding: var(--sp-14) var(--sp-16);
   font-family: var(--sans);
   color: var(--fg);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--sp-12);
   position: relative;
   overflow: hidden;
   transition: border-color var(--t-med), transform var(--t-med), box-shadow var(--t-med);
@@ -63,7 +63,7 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--sp-12);
 }
 .chain-card__short {
   font-size: 18px;
@@ -72,9 +72,9 @@
   color: var(--accent);
 }
 .chain-card__name {
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
-  margin-top: 2px;
+  margin-top: var(--sp-2);
   text-transform: uppercase;
 }
 
@@ -94,33 +94,33 @@
   background: linear-gradient(90deg, var(--accent-dim), var(--accent));
 }
 .chain-card__share__lbl {
-  font-size: 9px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
-  margin-top: 4px;
+  margin-top: var(--sp-4);
 }
 
 .chain-card__nums {
   display: grid;
   /* 4 stats when the backend reports value, 2 when only tx counts exist. */
   grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
-  gap: 6px;
+  gap: var(--sp-6);
 }
-.cn { display: flex; flex-direction: column; gap: 2px; }
+.cn { display: flex; flex-direction: column; gap: var(--sp-2); }
 .cn__lbl {
-  font-size: 9px;
+  font-size: var(--text-xs);
   color: var(--fg-mute);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 .cn__v {
   font-family: var(--mono);
-  font-size: 14px;
+  font-size: var(--text-base);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .chain-card__spark {
   border-top: 1px dashed var(--line);
-  padding-top: 8px;
+  padding-top: var(--sp-8);
   margin-top: auto;
 }

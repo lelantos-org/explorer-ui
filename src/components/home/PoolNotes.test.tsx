@@ -44,7 +44,20 @@ describe("PoolNotes", () => {
   });
 
   it("separates loading from an empty tree", () => {
-    expect(render(null, true)).toContain("loading…");
+    // The skeleton is announced as a loading region; asserting the accessible
+    // name rather than a class keeps this from breaking on a restyle.
+    expect(render(null, true)).toContain('aria-label="loading"');
+  });
+
+  /**
+   * The page re-reads the backend every 30s, so `loading` goes true again with
+   * rows already on screen. Showing the skeleton then would strobe the card
+   * twice a minute and throw away data that is still perfectly good.
+   */
+  it("keeps the rows on screen while a refetch is in flight", () => {
+    const html = render([row()], true);
+    expect(html).not.toContain('aria-label="loading"');
+    expect(html).toContain("800");
     expect(render([])).toContain("no notes committed yet");
   });
 });

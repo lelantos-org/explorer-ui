@@ -19,9 +19,21 @@ const address = (asset: AssetIdentity) => shortHex(asset.tokenHex, ADDRESS_CHARS
 /** Assets are keyed by chain: `assetIdU64` is only unique within one. */
 export const assetKey = (chainId: number, assetIdU64: number) => `${chainId}:${assetIdU64}`;
 
-/** The registry as a lookup, for the pages that resolve an asset per row. */
-export function indexAssets(assets: AssetOut[] | null): Map<string, AssetOut> {
-  return new Map((assets ?? []).map((a) => [assetKey(a.chainId, a.assetIdU64), a]));
+/**
+ * Any per-asset rows as a lookup, for the pages that resolve an asset per row.
+ *
+ * Generic over the row rather than fixed to `AssetOut`: the registry, the
+ * transaction feed and the yield bindings all key the same way, and a second
+ * copy of this `Map` construction is how two of them end up keying differently.
+ *
+ * `null` folds to an empty map. A caller that needs to tell "not loaded" from
+ * "none" keeps that distinction outside this function, where it has the loading
+ * state to hand.
+ */
+export function indexAssets<T extends { chainId: number; assetIdU64: number }>(
+  rows: T[] | null,
+): Map<string, T> {
+  return new Map((rows ?? []).map((r) => [assetKey(r.chainId, r.assetIdU64), r]));
 }
 
 /**
@@ -58,10 +70,44 @@ export function assetLabel(asset: AssetIdentity): string {
 }
 
 /**
- * The picker form, which keeps the address even alongside a symbol: any ERC20
- * can register, so two tokens on one chain may claim the same symbol and the
- * options have to stay tellable apart.
+ * An asset named together with the circuit id it is registered under.
+ *
+ * A separate type from `AssetIdentity` because not every caller has an id —
+ * `AssetLink` names a token by address for an explorer link, where the
+ * registration it arrived through is not the subject.
  */
-export function assetOptionLabel(asset: AssetIdentity): string {
-  return joinMeta([asset.symbol, address(asset)]);
+export type AssetChoice = AssetIdentity & Pick<AssetOut, "assetIdU64">;
+
+/**
+ * The circuit's own name for an asset: its `publicAssetId`.
+ *
+ * Shown wherever assets are listed together, because neither the symbol nor the
+ * address distinguishes them. `AssetRegistry` rejects a duplicate id but not a
+ * duplicate token, so one ERC-20 is routinely registered more than once — a
+ * plain entry and a yield-bearing one being the ordinary case, identical in
+ * symbol, address, scale and decimals.
+ *
+ * That difference is not cosmetic. The id is what the circuit binds and what a
+ * withdrawal publishes, so two registrations of one token are two separate
+ * anonymity sets: a withdrawal under one gives no cover to a withdrawal under
+ * the other. A UI that prints them alike invites the reader to pool them.
+ */
+export const assetIdTag = (assetIdU64: number): string => `#${assetIdU64}`;
+
+/**
+ * The picker form, which keeps both the address and the id alongside a symbol.
+ *
+ * The address was here first, for two different tokens claiming one symbol.
+ * That is the weaker case: two registrations of the *same* token share the
+ * address too, so only the id tells those apart — and the picker scopes the
+ * whole page, so choosing the wrong one silently swaps which anonymity set
+ * every card below is describing.
+ */
+export function assetOptionLabel(asset: AssetChoice): string {
+  return joinMeta([joinParts([asset.symbol, assetIdTag(asset.assetIdU64)]), address(asset)]);
 }
+
+/** The id rides directly on the name it disambiguates ("WETH #4"), rather than
+ *  becoming a third peer in the metadata list where it would read as unrelated
+ *  to the symbol it qualifies. */
+const joinParts = (parts: (string | null)[]): string => parts.filter(Boolean).join(" ");

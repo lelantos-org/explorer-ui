@@ -1,8 +1,10 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { AssetOut } from "../../api";
+import type { AssetOut, YieldAsset } from "../../api";
+import { assetKey } from "../../lib/assets";
 import type { ScopeGroup } from "../../lib/scope";
-import AssetRegistry from "./AssetRegistry";
+import { yieldRow } from "../../test/fixtures";
+import AssetRegistry, { type YieldIndex } from "./AssetRegistry";
 
 const asset = (over: Partial<AssetOut> = {}): AssetOut => ({
   chainId: 8453,
@@ -20,11 +22,22 @@ const asset = (over: Partial<AssetOut> = {}): AssetOut => ({
 
 const group = (assets: AssetOut[], chainId = 8453): ScopeGroup => ({ chainId, assets });
 
-const render = (groups: ScopeGroup[], selected: number | null = null) =>
-  renderToString(<AssetRegistry groups={groups} loading={false} selected={selected} />).replaceAll(
-    "<!-- -->",
-    "",
-  );
+const index = (rows: YieldAsset[]): YieldIndex =>
+  new Map(rows.map((y) => [assetKey(y.chainId, y.assetIdU64), y]));
+
+/** A binding for the asset `asset()` builds. Stated rather than left to two
+ *  fixtures agreeing by luck: the column is a join, and the ids are the join. */
+const bound = (over: Partial<YieldAsset> = {}): YieldAsset =>
+  yieldRow({ chainId: 8453, assetIdU64: 2, ...over });
+
+const render = (
+  groups: ScopeGroup[],
+  selected: number | null = null,
+  yields: YieldIndex | null = null,
+) =>
+  renderToString(
+    <AssetRegistry groups={groups} loading={false} yields={yields} selected={selected} />,
+  ).replaceAll("<!-- -->", "");
 
 describe("AssetRegistry", () => {
   it("shows both fee legs", () => {
@@ -126,5 +139,69 @@ describe("AssetRegistry", () => {
   it("marks the pinned chain", () => {
     expect(render([group([asset()])], 8453)).toContain("registry__chain--on");
     expect(render([group([asset()])], null)).not.toContain("registry__chain--on");
+  });
+
+  describe("the return column", () => {
+    it("shows the return for an asset whose custody earns", () => {
+      const html = render([group([asset()])], null, index([bound()]));
+      expect(html).toContain("+3.42%");
+      expect(html).toContain("return");
+    });
+
+    /**
+     * A plain asset has no return. A dash would say its return is unknown,
+     * which is what a dash means in every other column here — and would put
+     * every non-earning asset in the same visual state as one whose venue has
+     * never been polled.
+     */
+    it("leaves a plain-custody asset blank rather than dashed", () => {
+      const html = render([group([asset()])], null, index([]));
+      expect(html).toContain("plain custody");
+      expect(html).not.toContain("+");
+    });
+
+    it("dashes an asset that is bound but not polled yet", () => {
+      const html = render(
+        [group([asset()])],
+        null,
+        index([bound({ indexRay: null, updatedAt: null })]),
+      );
+      expect(html).toContain("not polled yet");
+      expect(html).not.toContain("plain custody");
+    });
+
+    /** A halt stops accrual and leaves the venue bound, so the figure stays and
+     *  the badge explains why it has stopped moving. */
+    it("badges a halted asset beside its return", () => {
+      const html = render([group([asset()])], null, index([bound({ halted: true })]));
+      expect(html).toContain("halted");
+      expect(html).toContain("+3.42%");
+    });
+
+    /** The column looks like a yield, and a reader takes a yield for a rate. */
+    it("never presents the return as an annual rate", () => {
+      const html = render([group([asset()])], null, index([bound()])).toLowerCase();
+      expect(html).not.toContain("apy");
+      expect(html).not.toContain("apr");
+      expect(html).toContain("not an annual rate");
+    });
+
+    it("renders the column even before the yield rows have loaded", () => {
+      // `null` is loading, not "nothing earns": the table still has to draw.
+      const html = render([group([asset()])], null, null);
+      expect(html).toContain("return");
+    });
+
+    /**
+     * The bindings arrive in their own request. Until it lands, this column
+     * knows nothing about any asset — so it must not answer for one. Claiming
+     * "does not earn" while the answer is still in flight is the same
+     * unknown-as-zero mistake the blank/dash split exists to avoid.
+     */
+    it("claims nothing about an asset while the bindings are still loading", () => {
+      const html = render([group([asset()])], null, null);
+      expect(html).not.toContain("plain custody");
+      expect(html).not.toContain("not polled yet");
+    });
   });
 });

@@ -6,14 +6,18 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  /* Progressive: an engine that does not know dvh keeps the line above. dvh
+     rather than svh — svh sizes to the smallest viewport and leaves a
+     permanent gap once mobile Safari's toolbar retracts. */
+  min-height: 100dvh;
 }
 
 /* HEADER */
 .hdr {
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 12px 24px;
+  gap: var(--sp-18);
+  padding: var(--sp-12) var(--sp-24);
   border-bottom: 1px solid var(--line);
   background: var(--bg-glass);
   backdrop-filter: blur(14px) saturate(150%);
@@ -23,7 +27,7 @@
   top: 0;
   z-index: 10;
 }
-.hdr__left { display: flex; align-items: baseline; gap: 10px; }
+.hdr__left { display: flex; align-items: baseline; gap: var(--sp-10); }
 
 .brand {
   color: var(--accent);
@@ -33,16 +37,16 @@
 .brand__sub {
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .lnk {
   color: var(--fg-dim);
   text-decoration: none;
-  padding: 6px 10px;
+  padding: var(--sp-6) var(--sp-10);
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 500;
   transition: color var(--t-fast), background var(--t-fast);
 }
@@ -61,7 +65,7 @@
 /* CONTENT */
 .main {
   flex: 1;
-  padding: 28px 24px 56px;
+  padding: 28px var(--sp-24) 56px;
   max-width: 1480px;
   width: 100%;
   margin: 0 auto;
@@ -75,11 +79,11 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
-  padding: 18px 24px;
+  gap: var(--sp-8);
+  padding: var(--sp-18) var(--sp-24);
   border-top: 1px solid var(--line);
   background: var(--bg-2);
-  font-size: 13px;
+  font-size: var(--text-md);
 }
 .ftr__brand { color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
 .ftr__sep {
@@ -99,7 +103,7 @@
 /* Present but recessive: wanted when reporting a bug, noise the rest of the
    time. Dropped on narrow screens, where the row has no space to spare. */
 .ftr__ver {
-  font-size: 12px;
+  font-size: var(--text-sm);
   opacity: 0.7;
 }
 
@@ -110,8 +114,8 @@
    that should stay together), rules dropped, gap doing the separating. */
 @media (max-width: 560px) {
   .ftr {
-    gap: 6px 12px;
-    padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    gap: var(--sp-6) var(--sp-12);
+    padding: var(--sp-14) var(--sp-14) calc(var(--sp-14) + env(safe-area-inset-bottom, 0px));
   }
   .ftr__sep { display: none; }
   .ftr__ver { display: none; }

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { AssetOut } from "../api";
-import { assetKey, assetLabel, assetOptionLabel, assetsInScope, indexAssets } from "./assets";
+import {
+  assetIdTag,
+  assetKey,
+  assetLabel,
+  assetOptionLabel,
+  assetsInScope,
+  indexAssets,
+} from "./assets";
 import { EMPTY_SCOPE } from "./scope";
 
 const asset = (symbol: string | null, chainId = 1, assetIdU64 = 1000): AssetOut => ({
@@ -28,11 +35,26 @@ describe("assetLabel", () => {
 
 describe("assetOptionLabel", () => {
   it("keeps the address alongside the symbol, so two claimants stay tellable apart", () => {
-    expect(assetOptionLabel(asset("USDC"))).toBe("USDC · 0xa0b8…eb48");
+    expect(assetOptionLabel(asset("USDC"))).toBe("USDC #1000 · 0xa0b8…eb48");
   });
 
   it("shows the address alone, not twice, when there is no symbol", () => {
-    expect(assetOptionLabel(asset(null))).toBe("0xa0b8…eb48");
+    expect(assetOptionLabel(asset(null))).toBe("#1000 · 0xa0b8…eb48");
+  });
+
+  it("tells apart two registrations of one token", () => {
+    // The case the address cannot cover: same symbol, same token, two ids. The
+    // picker scopes the whole page, so two identical options would make which
+    // anonymity set is on screen a coin flip.
+    const plain = asset("WETH", 1, 1);
+    const yielding = asset("WETH", 1, 4);
+    expect(assetOptionLabel(plain)).not.toBe(assetOptionLabel(yielding));
+  });
+});
+
+describe("assetIdTag", () => {
+  it("names the circuit id the withdrawal publishes", () => {
+    expect(assetIdTag(4)).toBe("#4");
   });
 });
 

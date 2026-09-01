@@ -1,5 +1,5 @@
-import type { AssetOut, ChainLocked } from "../types";
-import type { FlowRow } from "./generate";
+import type { AssetOut, ChainLocked, YieldAsset } from "../types";
+import { type FlowRow, netByAsset } from "./generate";
 
 /**
  * Biggest dollar balance first, with the unpriced trailing.
@@ -10,18 +10,6 @@ import type { FlowRow } from "./generate";
 const richestFirst = (a: number | null, b: number | null) =>
   (b ?? Number.NEGATIVE_INFINITY) - (a ?? Number.NEGATIVE_INFINITY);
 
-/** Net escrowed amount per asset, and when it last moved. */
-function netByAsset(flows: FlowRow[]): Map<number, { net: number; lastTs: number }> {
-  const totals = new Map<number, { net: number; lastTs: number }>();
-  for (const f of flows) {
-    const t = totals.get(f.assetIdU64) ?? { net: 0, lastTs: 0 };
-    t.net += f.inAmt - f.outAmt;
-    t.lastTs = Math.max(t.lastTs, f.ts);
-    totals.set(f.assetIdU64, t);
-  }
-  return totals;
-}
-
 /**
  * Escrowed balances per chain, mirroring `/v1/locked`: all-time deposits minus
  * withdrawals per asset, summed across a chain's assets only in dollars — the
@@ -30,16 +18,35 @@ function netByAsset(flows: FlowRow[]): Map<number, { net: number; lastTs: number
  *
  * Assets that never moved are absent, as they are in the view the endpoint
  * reads: it aggregates flows, so an asset with none has no row.
+ *
+ * `yields` plays the part the endpoint's join to `asset_yield` plays. A yield
+ * asset's balance is what its venue holds, not what flowed: growth fires no
+ * event, so `in − out` misses everything ever earned. Taking the two from one
+ * source here is what stops the escrow card and the yield card disagreeing about
+ * the same asset — which they would, silently, if each derived its own.
  */
-export function lockedByChain(assets: AssetOut[], flows: FlowRow[]): ChainLocked[] {
+export function lockedByChain(
+  assets: AssetOut[],
+  flows: FlowRow[],
+  yields: YieldAsset[] = [],
+): ChainLocked[] {
   const totals = netByAsset(flows);
   const byChain = new Map<number, ChainLocked>();
+  // Only a polled row can supply a balance; a bound-but-unpolled asset falls
+  // back to its flows, exactly as the endpoint's `LEFT JOIN` does when `gross`
+  // is still NULL.
+  const gross = new Map(
+    yields.filter((y) => y.gross !== null).map((y) => [y.assetIdU64, y.gross as number]),
+  );
 
   for (const asset of assets) {
     const total = totals.get(asset.assetIdU64);
     if (!total) continue;
 
-    const lockedUsd = asset.priceUsd === null ? null : total.net * asset.priceUsd;
+    const held = gross.get(asset.assetIdU64);
+    const amount = held ?? total.net;
+    const basis = held === undefined ? "flowDifference" : "venueHoldings";
+    const lockedUsd = asset.priceUsd === null ? null : amount * asset.priceUsd;
     const chain = byChain.get(asset.chainId) ?? {
       chainId: asset.chainId,
       lockedUsd: null,
@@ -53,9 +60,10 @@ export function lockedByChain(assets: AssetOut[], flows: FlowRow[]): ChainLocked
       assetIdU64: asset.assetIdU64,
       tokenHex: asset.tokenHex,
       symbol: asset.symbol,
-      amount: total.net,
+      amount,
       lockedUsd,
       lastTs: total.lastTs,
+      basis,
     });
     byChain.set(asset.chainId, chain);
   }

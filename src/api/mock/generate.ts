@@ -188,7 +188,8 @@ const ASSET_ID_BASE = 1000;
 
 /** Pick from a non-empty list by wrapping index — total, and without a cast:
  *  index 0 of a non-empty tuple is always present. */
-const cycle = <T>(list: readonly [T, ...T[]], i: number): T => list[i % list.length] ?? list[0];
+export const cycle = <T>(list: readonly [T, ...T[]], i: number): T =>
+  list[i % list.length] ?? list[0];
 
 /**
  * An asset and the profile that drives its history.
@@ -235,6 +236,30 @@ export interface FlowRow {
   txCount: number;
 }
 
+/** One asset's net escrowed whole tokens, and when it last moved. */
+export interface AssetNet {
+  net: number;
+  lastTs: number;
+}
+
+/**
+ * Net escrow per asset: all-time deposits minus withdrawals.
+ *
+ * Shared by the escrow and yield builders so a yield asset's holdings start from
+ * the same number its balance would have been — the two are the same quantity
+ * before the venue earns on it, and deriving them separately is how they drift.
+ */
+export function netByAsset(flows: FlowRow[]): Map<number, AssetNet> {
+  const totals = new Map<number, AssetNet>();
+  for (const f of flows) {
+    const t = totals.get(f.assetIdU64) ?? { net: 0, lastTs: 0 };
+    t.net += f.inAmt - f.outAmt;
+    t.lastTs = Math.max(t.lastTs, f.ts);
+    totals.set(f.assetIdU64, t);
+  }
+  return totals;
+}
+
 /** Load multiplier in [~0.2, ~2.0] for an absolute hour-of-epoch. */
 function loadCurve(absHour: number, phaseHours: number): number {
   const hourOfDay = ((absHour % 24) + 24) % 24;
@@ -258,6 +283,13 @@ export function buildHourlyFlows(
 
   for (const { asset, profile } of generated) {
     const hourlyBase = profile.baseVolume / 24;
+    // What the escrow holds as the walk proceeds. The pool starts empty and can
+    // never pay out more than has been deposited into it, so this bounds every
+    // withdrawal below. Without it an asset with a negative `bias` compounds a
+    // net outflow over the whole window and ends on an impossible balance —
+    // which the escrow card then renders as its "indexer missed deposits"
+    // alarm, firing on generated data rather than on a real gap.
+    let held = 0;
 
     for (let h = 0; h < hours; h++) {
       const ts = startTs + h * 3600;
@@ -276,7 +308,13 @@ export function buildHourlyFlows(
       const volume = Math.max(0, hourlyBase * mult);
       const imbalance = profile.bias + gauss(rng) * 0.08;
       const inAmt = Math.max(0, Math.floor(volume * (1 + imbalance)));
-      const outAmt = Math.max(0, Math.floor(volume * (1 - imbalance)));
+      // Capped against the balance *before* this hour's deposits, not after: a
+      // deposit has to be flushed before it can be withdrawn, so it is not cover
+      // for a withdrawal in the same bucket. An outflow-biased asset therefore
+      // drains toward zero and stalls there, which is the shape a draining pool
+      // actually has.
+      const outAmt = Math.min(Math.max(0, Math.floor(volume * (1 - imbalance))), held);
+      held += inAmt - outAmt;
 
       // Tx count scales with volume but compressed (sqrt-ish).
       const intensity = Math.sqrt(mult);

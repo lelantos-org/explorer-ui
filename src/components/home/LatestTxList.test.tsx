@@ -1,6 +1,6 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { AnonymitySet, TxKind, TxOut } from "../../api";
+import type { AnonymitySet, AssetOut, TxKind, TxOut } from "../../api";
 import { ALL_KINDS } from "../../lib/kinds";
 import LatestTxList from "./LatestTxList";
 
@@ -30,6 +30,38 @@ const render = (data: TxOut[], cohorts: AnonymitySet[] | null = [cohort(42)]) =>
   renderToString(
     <LatestTxList data={data} assets={null} cohorts={cohorts} loading={false} kind={ALL_KINDS} />,
   ).replaceAll("<!-- -->", "");
+
+const registered = (assetIdU64: number): AssetOut => ({
+  chainId: 1,
+  assetIdU64,
+  tokenHex: "9fe46736679d2d9a65f0992f2272de9f3c7fa6e0",
+  scale: "10000000000",
+  decimals: 18,
+  symbol: "WETH",
+  priceUsd: null,
+  priceAt: null,
+  depositBps: null,
+  withdrawBps: null,
+});
+
+describe("LatestTxList asset cell", () => {
+  it("names the circuit id the privacy column was computed from", () => {
+    // Two ids can share a token, a symbol and an address while being separate
+    // anonymity sets, so the same denomination of the "same" asset can carry
+    // two different k's. Without the id the feed shows that difference with no
+    // visible cause, and the rows read as a contradiction.
+    const html = renderToString(
+      <LatestTxList
+        data={[tx("withdraw", { assetIdU64: 4 })]}
+        assets={[registered(1), registered(4)]}
+        cohorts={[cohort(42)]}
+        loading={false}
+        kind={ALL_KINDS}
+      />,
+    ).replaceAll("<!-- -->", "");
+    expect(html).toContain("#4");
+  });
+});
 
 describe("LatestTxList privacy column", () => {
   /**
@@ -73,6 +105,8 @@ describe("LatestTxList privacy column", () => {
   });
 
   it("keeps the column in the header", () => {
-    expect(render([tx("transfer")])).toContain("<th>privacy</th>");
+    // Matched on the cell's text rather than its exact tag: the point is that
+    // the column is present, not how the header happens to be attributed.
+    expect(render([tx("transfer")])).toMatch(/<th[^>]*>privacy<\/th>/);
   });
 });

@@ -27,4 +27,8 @@
 @import "./components/registry.css";
 @import "./components/anonymity.css";
 
+/* After the components, so one grouped rule beats each of their own
+   states without needing `!important`. */
+@import "./focus.css";
+
 @import "./responsive.css";

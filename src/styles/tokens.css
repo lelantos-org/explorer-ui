@@ -64,4 +64,43 @@
   --kind-withdraw: var(--warn);
   --kind-withdraw-dim: var(--warn-dim);
   --kind-withdraw-rgb: var(--warn-rgb);
+
+  /* TYPE. Body is 14px, and before these existed 34 of the 51 font-size rules
+     in this stylesheet sat at 11px or below — 18 at 10px and 4 at 9px — for
+     labels, table headers, chip symbols and row ages. Small, wide-tracked
+     uppercase is the house voice, but 9-10px is past the point where it is
+     still readable at arm's length, and it was being used for content, not
+     just ornament.
+
+     11px is the floor. The one exception is named rather than smuggled in:
+     chart tick labels stay at 10px, because they are the one place where a
+     larger step starts colliding with its neighbours instead of just reading
+     bigger. */
+  /* Keyboard focus ring, matching the one rule that already existed (`.hex`).
+     An outline rather than a box-shadow: it is not clipped by an ancestor's
+     overflow, and it does not have to be restated per component background. */
+  --ring: 2px solid var(--accent);
+
+  --text-axis: 10px;
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-base: 14px;
+
+  /* SPACING. The measured ramp, not a grid picked in advance: this file's
+     common steps are 8/10/12/14 with 18 and 24 for card padding, which the
+     even run below covers. The odd values it leaves out — 1, 3, 5, 7, 9 — are
+     hairlines and optical nudges, and stay literal where they are. */
+  --sp-2: 2px;
+  --sp-4: 4px;
+  --sp-6: 6px;
+  --sp-8: 8px;
+  --sp-10: 10px;
+  --sp-12: 12px;
+  --sp-14: 14px;
+  --sp-16: 16px;
+  --sp-18: 18px;
+  --sp-20: 20px;
+  --sp-22: 22px;
+  --sp-24: 24px;
 }

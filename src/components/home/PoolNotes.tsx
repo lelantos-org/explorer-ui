@@ -1,6 +1,7 @@
 import type { PoolNotes as PoolNotesRow } from "../../api";
 import { getChainMeta } from "../../lib/chains";
 import { fmtAge } from "../../lib/format";
+import Skeleton, { BarRows } from "../ui/Skeleton";
 
 interface Props {
   data: PoolNotesRow[] | null;
@@ -19,7 +20,13 @@ interface Props {
  * one card up.
  */
 export default function PoolNotes({ data, loading, selected, onSelect }: Props) {
-  if (loading && !data) return <div className="empty">loading…</div>;
+  if (loading && !data) {
+    return (
+      <Skeleton>
+        <BarRows count={3} widths={["40px", "64px", "140px", "28px"]} height={16} />
+      </Skeleton>
+    );
+  }
   if (!data || data.length === 0) return <div className="empty">no notes committed yet</div>;
 
   return (
@@ -37,6 +44,7 @@ export default function PoolNotes({ data, loading, selected, onSelect }: Props) 
             type="button"
             key={c.chainId}
             className={`notes__row ${on ? "notes__row--on" : ""}`}
+            aria-pressed={on}
             onClick={() => onSelect?.(on ? null : c.chainId)}
           >
             <span className="notes__chain">{getChainMeta(c.chainId).short}</span>

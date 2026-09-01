@@ -10,16 +10,16 @@
 .empty {
   text-align: center;
   color: var(--fg-mute);
-  padding: 22px;
+  padding: var(--sp-22);
 }
 
 .err {
   color: var(--err);
   border: 1px solid rgba(var(--err-rgb), 0.35);
   background: rgba(var(--err-rgb), 0.06);
-  padding: 9px 14px;
+  padding: 9px var(--sp-14);
   border-radius: var(--radius-sm);
-  margin-bottom: 12px;
+  margin-bottom: var(--sp-12);
 }
 
 /* A render that threw, rather than a request that failed: the boundary replaces
@@ -28,17 +28,70 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--sp-10);
   margin: 40px auto;
   max-width: 640px;
-  padding: 20px 24px;
+  padding: var(--sp-20) var(--sp-24);
 }
 
 /* The filter bar's in-flight marker — the only live-region text left now that
    the header carries no connection widget. */
 .live {
-  font-size: 11px;
+  font-size: var(--text-xs);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   animation: blink 1.4s infinite;
+}
+
+/* Loading placeholders. Shaped like the content they stand in for, so a card
+   holds its height and the page below does not jump when the rows land.
+   `shimmer` is shared with `.chain-card--ghost`, which is the same idea at
+   card scale — and, like it, is switched off under reduced motion. */
+.sk {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-10);
+}
+.sk__row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+}
+.sk__bar {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 3px;
+  background: var(--bg-3);
+  animation: shimmer 1.4s infinite;
+}
+/* The last bar in a row takes the slack, so a row ends flush rather than
+   leaving a ragged gutter against the card edge. */
+.sk__row > .sk__bar:last-child { flex: 1 1 auto; }
+
+/* Skip link. Hidden until focused, then a real control at the top-left.
+   `main` carries tabIndex={-1} so the jump moves focus rather than only
+   scrolling. */
+.skip {
+  position: absolute;
+  left: var(--sp-8);
+  top: var(--sp-8);
+  z-index: 100;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  padding: 0;
+  background: var(--bg-1);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip:focus {
+  width: auto;
+  height: auto;
+  clip-path: none;
+  padding: var(--sp-8) var(--sp-12);
 }

@@ -62,10 +62,14 @@ export default function FilterBar({
       </label>
 
       <div className="fld">
+        {/* A plain span, not a <label>: it names a group of buttons rather than
+            one form control, so it is wired through the group's aria-label
+            instead of `htmlFor`. */}
         <span className="fld__lbl">range</span>
         {/* Labels are the range's identity in the URL too (`?range=7d`), so the
             picker's value is the same string that is stored and shared. */}
         <Segmented
+          label="range"
           options={RANGES.map((r) => ({ value: r.label, label: r.label }))}
           value={range}
           disabled={loading}
@@ -75,10 +79,16 @@ export default function FilterBar({
 
       {hasFilter && (
         <button type="button" className="btn btn--ghost" onClick={onClear}>
-          ✕ clear
+          <span aria-hidden="true">✕</span> clear
         </button>
       )}
-      {loading && <span className="muted live">querying…</span>}
+      {/* `.live` is named for a live region and was not one: the status was
+          announced to nobody. Always mounted so the region exists before it
+          has anything to say — a live region added at the same moment as its
+          text is not reliably announced. */}
+      <span className="muted live" role="status" aria-live="polite">
+        {loading ? "querying…" : ""}
+      </span>
     </div>
   );
 }

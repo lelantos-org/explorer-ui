@@ -11,9 +11,11 @@ import type {
   FlowQuery,
   KindCounts,
   LockedAsset,
+  LockedBasis,
   PoolNotes,
   RecentTxQuery,
   TxOut,
+  YieldAsset,
 } from "./types";
 
 export interface HttpApiOpts {
@@ -124,7 +126,15 @@ export function createHttpApi(opts: HttpApiOpts = {}): ExplorerApi {
       // `amount` is a whole-token decimal string for the same reason the flow
       // amounts are: a balance can carry 18 decimals, which JSON numbers cannot
       // hold exactly. Dollars stay plain numbers.
-      type LockedAssetWire = Omit<LockedAsset, "amount"> & { amount: string | null };
+      //
+      // `basis` is newer than the rest of the row, so a backend that has not
+      // been redeployed omits it. Defaulted to `flowDifference` rather than left
+      // undefined: that is what such a backend was in fact reporting for every
+      // asset, and it is the claim that needs no yield tables to be true.
+      type LockedAssetWire = Omit<LockedAsset, "amount" | "basis"> & {
+        amount: string | null;
+        basis?: LockedBasis;
+      };
       type ChainLockedWire = Omit<ChainLocked, "assets"> & { assets: LockedAssetWire[] };
       const rows = await get<ChainLockedWire[]>("/v1/locked", { chainId });
       return rows.map((c) => ({
@@ -132,7 +142,31 @@ export function createHttpApi(opts: HttpApiOpts = {}): ExplorerApi {
         assets: c.assets.map((a) => ({
           ...a,
           amount: a.amount == null ? null : Number(a.amount),
+          basis: a.basis ?? "flowDifference",
         })),
+      }));
+    },
+
+    async getYield(chainId?: number): Promise<YieldAsset[]> {
+      // Only the whole-token amounts are parsed. The normalized pair and
+      // `indexRay` stay strings: they are 78-digit integers that JSON numbers
+      // cannot hold, and nothing downstream does arithmetic on them — the index
+      // is converted for display in `lib/yield`, from the string.
+      type Wire = Omit<YieldAsset, "gross" | "idle" | "accruedFee"> & {
+        gross: string | null;
+        idle: string | null;
+        accruedFee: string | null;
+      };
+      const rows = await get<Wire[]>("/v1/yield", { chainId });
+      // `== null` for the same reason `getAssetFlows` uses it: an omitted field
+      // would otherwise parse to NaN, which passes every null check downstream
+      // and prints "NaN" where a dash belongs.
+      const amount = (v: string | null) => (v == null ? null : Number(v));
+      return rows.map((r) => ({
+        ...r,
+        gross: amount(r.gross),
+        idle: amount(r.idle),
+        accruedFee: amount(r.accruedFee),
       }));
     },
   };

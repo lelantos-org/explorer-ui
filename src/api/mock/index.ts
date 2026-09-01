@@ -13,6 +13,7 @@ import type {
   PoolNotes,
   RecentTxQuery,
   TxOut,
+  YieldAsset,
 } from "../types";
 import { bucketize } from "./bucket";
 import { chainFlows24h } from "./chainFlows";
@@ -27,6 +28,7 @@ import {
 import { lockedByChain } from "./locked";
 import { anonymitySets, poolNotes } from "./privacy";
 import { classifyTransactions, selectTransactions } from "./transactions";
+import { yieldAssets } from "./yield";
 
 export interface MockApiOpts {
   latencyMs?: number;
@@ -162,7 +164,18 @@ export function createMockApi(opts: MockApiOpts = {}): ExplorerApi {
 
     async getLocked(chainId?: number): Promise<ChainLocked[]> {
       await respond();
-      return lockedByChain(assets, selectFlows({ chainId }));
+      // The bindings come from the same call the yield card reads, so the two
+      // cards cannot report different balances for one asset.
+      return lockedByChain(assets, selectFlows({ chainId }), yieldAssets(assets, flows, now));
+    },
+
+    async getYield(chainId?: number): Promise<YieldAsset[]> {
+      await respond();
+      // Built from the unfiltered flows and narrowed afterwards: an asset's
+      // holdings are all-time, so scoping the flows first would shrink `gross`
+      // to whatever the filter let through.
+      const rows = yieldAssets(assets, flows, now);
+      return chainId === undefined ? rows : rows.filter((r) => r.chainId === chainId);
     },
 
     async getTxCounts(q: CountQuery): Promise<CountPoint[]> {
