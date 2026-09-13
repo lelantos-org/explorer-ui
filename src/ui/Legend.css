@@ -1,0 +1,17 @@
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-6) var(--sp-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.legend__i {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-ui);
+  color: var(--fg-dim);
+  text-transform: capitalize;
+}

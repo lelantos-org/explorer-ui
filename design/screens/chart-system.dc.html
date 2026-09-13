@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300..700&family=Public+Sans:wght@400;500;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --bg:#14110E;--bg-1:#1C1815;--bg-2:#241F1A;--bg-3:#2E2822;
+      --fg:#F5F1E8;--fg-dim:#BEB5A6;--fg-mute:#9E9486;
+      --line:#2A241E;--line-strong:#3A332B;
+      --accent:#E0794A;--accent-2:#EA8C60;--warn:#E0A93F;--err:#E67A6E;
+      /* chart series - validated, both modes. see the foundations artboard */
+      --s-deposit:#0083a0;--s-transfer:#7b5fc9;--s-withdraw:#d66e31;--s-pending:#c2538a;--s-good:#4FA96E;
+      --display:"Newsreader",Georgia,serif;
+      --sans:"Public Sans",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+      --mono:"Atkinson Hyperlegible Mono",ui-monospace,Menlo,monospace;
+    }
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);}a:hover{color:var(--accent-2);}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"zero" 1;}
+    .lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);}
+    .card{border:1px solid var(--line);background:var(--bg-1);}
+    .card__h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);}
+    .card__t{font-family:var(--display);font-size:19px;font-weight:600;}
+    .tick{font-family:var(--mono);font-size:11px;fill:var(--fg-mute);}
+    .swatch{width:10px;height:10px;flex:none;}
+  </style>
+</helmet>
+
+<div style="min-height:1420px;padding:0 0 44px;">
+  <div style="background:var(--fg);color:var(--bg);padding:18px 32px;display:flex;align-items:baseline;justify-content:space-between;gap:20px;">
+    <span style="font-family:var(--display);font-size:27px;font-weight:600;">Explorer — chart system</span>
+    <span class="num" style="font-size:13px;opacity:.7;">SAME v2 SYSTEM AS THE WALLET</span>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:30px 32px 0;display:flex;flex-direction:column;gap:24px;">
+
+    <div class="card" style="padding:24px 28px;">
+      <span class="lbl">Inherited unchanged from the wallet</span>
+      <p style="margin:10px 0 0;font-size:16px;color:var(--fg-dim);max-width:82ch;">
+        Newsreader for display, Public Sans for UI, Atkinson Hyperlegible Mono for every figure and hash. Warm ground <span class="num" style="font-size:14px;">#14110E</span>, ember accent <span class="num" style="font-size:14px;">#E0794A</span>, 4px radii. The explorer's own palette was byte-identical to the wallet's old one — same indigo, same cool neutrals — so it inherited the same problem and takes the same fix.
+      </p>
+    </div>
+
+    <div class="card" style="padding:24px 28px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:14px;">
+        <span class="lbl">Series palette — dark</span>
+        <span class="num" style="font-size:13px;color:var(--s-good);">validated · surface #1C1815</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px;">
+        <div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#0083a0;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#0083a0</span><span style="font-size:12px;color:var(--fg-dim);">Deposit</span></div><div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#7b5fc9;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#7b5fc9</span><span style="font-size:12px;color:var(--fg-dim);">Transfer</span></div><div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#d66e31;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#d66e31</span><span style="font-size:12px;color:var(--fg-dim);">Withdraw</span></div><div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#c2538a;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#c2538a</span><span style="font-size:12px;color:var(--fg-dim);">Pending</span></div>
+      </div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:14px;">
+        <span class="lbl">Series palette — paper</span>
+        <span class="num" style="font-size:13px;color:var(--s-good);">validated · surface #FFFDF8</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#007aa8;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#007aa8</span><span style="font-size:12px;color:var(--fg-dim);">Deposit</span></div><div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#7444b4;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#7444b4</span><span style="font-size:12px;color:var(--fg-dim);">Transfer</span></div><div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#b84c00;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#b84c00</span><span style="font-size:12px;color:var(--fg-dim);">Withdraw</span></div><div style="display:flex;flex-direction:column;gap:5px;"><span style="height:46px;background:#b3346b;"></span><span class="num" style="font-size:11px;color:var(--fg-mute);">#b3346b</span><span style="font-size:12px;color:var(--fg-dim);">Pending</span></div>
+      </div>
+      <p style="margin:16px 0 0;font-size:15px;color:var(--fg-dim);max-width:86ch;">
+        Not picked by eye. Generated in OKLCH inside the mode's lightness band, then run through the validator until every check passed: lightness band, chroma floor, colour-vision separation, normal-vision separation, and contrast against the surface.
+      </p>
+    </div>
+
+    <div class="card" style="padding:24px 28px;border-color:var(--warn);">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px;">
+        <span class="num" style="font-size:12px;font-weight:700;color:var(--warn);border:1px solid var(--warn);width:18px;height:18px;display:inline-grid;place-items:center;">~</span>
+        <span class="lbl" style="color:var(--warn);">One warning survives, and it sets three rules</span>
+      </div>
+      <p style="margin:0 0 12px;font-size:16px;color:var(--fg-dim);max-width:86ch;">
+        Deposit and withdraw separate by ΔE 7.5 under deuteranopia — inside the 6–8 band, which is legal <em>only</em> with a second channel of encoding. So, not optional anywhere in this explorer:
+      </p>
+      <div style="display:flex;flex-direction:column;gap:9px;">
+        <div style="display:flex;gap:12px;"><span class="num" style="color:var(--accent);">01</span><span style="font-size:15px;">A legend is always present, and each series is directly labelled where it can be.</span></div>
+        <div style="display:flex;gap:12px;"><span class="num" style="color:var(--accent);">02</span><span style="font-size:15px;">A 2px surface gap between adjacent fills, so bars separate by geometry as well as hue.</span></div>
+        <div style="display:flex;gap:12px;"><span class="num" style="color:var(--accent);">03</span><span style="font-size:15px;">Inflow is solid, outflow is dashed. The flow chart reads correctly in greyscale.</span></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+      <div class="card" style="padding:24px 28px;">
+        <span class="lbl">Colour carries meaning, once</span>
+        <p style="margin:10px 0 0;font-size:15px;color:var(--fg-dim);">A kind hue means the same thing in the bars, the legend and the row badges. Status colours are reserved — <span style="color:var(--err);">unique</span>, <span style="color:var(--warn);">thin</span>, <span style="color:var(--s-good);">covered</span> — and never reused as a fifth series. Each ships with a glyph and a word, so cover is never colour alone.</p>
+      </div>
+      <div class="card" style="padding:24px 28px;">
+        <span class="lbl">Refused</span>
+        <p style="margin:10px 0 0;font-size:15px;color:var(--fg-dim);">No dual axis — two measures at different scales get two charts. No rainbow ramp for magnitude. No value printed on every point. Grid and axes stay recessive at 1px dashed. Text wears text colours; a swatch beside it carries identity.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
@@ -26,6 +27,10 @@ function commitRef(): string {
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    // Mirrors `paths` in tsconfig.json.
+    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+  },
   define: {
     __COMMIT__: JSON.stringify(commitRef()),
   },

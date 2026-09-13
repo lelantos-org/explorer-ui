@@ -1,0 +1,44 @@
+/* Commitment-tree occupancy, one tile per chain. */
+
+.notes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--sp-10);
+}
+
+.notes__row {
+  display: grid;
+  grid-template-areas:
+    "chain age"
+    "val val"
+    "sub sub";
+  grid-template-columns: 1fr auto;
+  gap: var(--sp-2) var(--sp-8);
+  padding: var(--sp-12) var(--sp-14);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.notes__row:hover { border-color: var(--line-strong); }
+/* `--bg-3` rather than `--bg-1`: the ground ramp is semantic, not monotone, so
+   the selected tile lifts off the strip in the dark theme and presses into it
+   in the light one — which is what "picked" looks like in each. */
+.notes__row--on { border-color: var(--accent); background: var(--bg-3); }
+
+.notes__chain {
+  grid-area: chain;
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+}
+.notes__age { grid-area: age; font-size: var(--text-xs); }
+/* The user-note count is the figure; leaves and relayer notes explain how it
+   was arrived at, so they sit under it rather than beside it. */
+.notes__val { grid-area: val; font-size: 22px; font-weight: 700; color: var(--fg); }
+.notes__sub { grid-area: sub; font-size: var(--text-xs); }

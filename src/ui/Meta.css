@@ -1,0 +1,12 @@
+.meta {
+  font-size: var(--text-md);
+  line-height: 1.45;
+  color: var(--fg-mute);
+}
+/* Parts are joined by a dot drawn here rather than typed into the strings, so
+   a part that is absent takes its separator with it. */
+.meta > * + *::before { content: " · "; color: var(--fg-mute); }
+.meta__gaps { color: var(--warn); }
+
+/* Holds one caption line of height, so the header keeps its size. */
+.meta--pending { display: flex; align-items: center; min-height: 1.45em; }

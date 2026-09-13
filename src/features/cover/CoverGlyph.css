@@ -1,0 +1,15 @@
+/* The tone's glyph, boxed in the tone's colour — the channel that is not hue. */
+.glyph {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 17px;
+  height: 17px;
+  border: 1px solid currentColor;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1;
+}
+.glyph--unique { color: var(--err); }
+.glyph--thin { color: var(--warn); }
+.glyph--counted { color: var(--ok); }

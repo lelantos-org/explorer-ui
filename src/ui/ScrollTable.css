@@ -1,0 +1,42 @@
+/* A label row over hairline-ruled rows, drawn straight onto the card rather
+   than boxed inside it. The card is the frame, so the wrapper draws nothing. */
+
+.tbl-wrap { overflow-x: auto; }
+.tbl-wrap:focus-visible { outline-offset: -2px; }
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-ui);
+}
+.tbl th {
+  padding: 11px 14px 9px 0;
+  border-bottom: 1px solid var(--line-strong);
+  text-align: left;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-mute);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 13px 14px 13px 0;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  vertical-align: middle;
+}
+.tbl th:last-child,
+.tbl td:last-child { padding-right: 0; }
+/* Rows are not clickable — the highlight only helps the eye stay on one row
+   while reading across a wide table, so it moves faster than a hover on
+   something you can press. */
+.tbl tbody tr { transition: background 80ms var(--ease-soft); }
+.tbl tbody tr:hover { background: var(--bg-2); }
+
+/* Right-aligned numeric column. Figures line up on their last digit, which is
+   what makes a column of rates scannable; the header follows so it does not
+   float away from what it labels. */
+.tbl th.tbl__num,
+.tbl td.tbl__num { text-align: right; }

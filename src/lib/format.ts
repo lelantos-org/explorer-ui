@@ -145,3 +145,15 @@ export function fmtDigits(value: string): string {
   if (!/^\d+$/.test(digits)) return value;
   return (negative ? "-" : "") + digits.replace(/\B(?=(\d{3})+$)/g, ",");
 }
+
+/**
+ * A formatted figure, split into its digits and its magnitude letter.
+ *
+ * The letter is set smaller and muted so the digits carry the reading: "+$1.84"
+ * is the figure, "M" is the scale it is on. A figure with no letter — anything
+ * under a thousand — comes back whole.
+ */
+export function splitMagnitude(text: string): [digits: string, magnitude: string] {
+  const m = /^(.*\d)([kMBT])$/.exec(text);
+  return m?.[1] && m[2] ? [m[1], m[2]] : [text, ""];
+}

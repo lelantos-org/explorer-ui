@@ -1,4 +1,4 @@
-import type { ChainFlow, ChainLocked, CountPoint, FlowPoint } from "../api";
+import type { ChainFlow, ChainLocked, CountPoint, FlowPoint } from "@/api/types";
 import { amounts, type Denom, hasAmounts } from "./denom";
 
 export interface FlowTotals {

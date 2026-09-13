@@ -1,4 +1,4 @@
-import type { AssetOut } from "../api";
+import type { AssetOut } from "@/api/types";
 import { joinMeta } from "./format";
 import { shortHex } from "./hex";
 import type { Scope } from "./scope";

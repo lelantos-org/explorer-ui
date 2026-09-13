@@ -1,0 +1,24 @@
+.btn {
+  min-height: 36px;
+  padding: var(--sp-8) var(--sp-14);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--t-fast), color var(--t-fast), background var(--t-fast);
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-3);
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn--ghost { background: transparent; }
+
+@media (pointer: coarse) {
+  .btn { min-height: 44px; }
+}

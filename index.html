@@ -3,11 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#f2f3f7" />
+    <meta name="theme-color" content="#14110E" />
     <meta name="referrer" content="no-referrer" />
     <meta name="robots" content="noindex,nofollow" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <!--
+      The three faces the first screen is set in, fetched alongside the HTML
+      rather than after the CSS that names them has been parsed. Newsreader sets
+      the headline, which is the largest thing painted; without the preload it
+      swaps in late and reflows the masthead. `crossorigin` is required for
+      fonts even on the same origin, or the preloaded copy is not reused.
+      Martian Mono is left out: it is 10KB and only sets the wordmark.
+    -->
+    <link rel="preload" href="/fonts/public-sans.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/newsreader.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/atkinson-hyperlegible-mono.woff2" as="font" type="font/woff2" crossorigin />
     <title>Lelantos Explorer</title>
+    <!--
+      Stamp the stored theme before the first paint. Doing this from React would
+      paint the default (dark) for a frame first, so a reader who chose light
+      would see the page flash dark on every load.
+
+      Only a recorded choice is stamped: with no entry the attribute stays off
+      and tokens.css follows `prefers-color-scheme` on its own. The key is
+      shared with src/hooks/useTheme.ts — change both together.
+    -->
+    <script>
+      try {
+        var t = localStorage.getItem("lelantos-theme");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {
+        /* Storage blocked or unavailable: fall through to the system preference. */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

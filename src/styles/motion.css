@@ -1,14 +1,14 @@
-/* Every keyframe animation in the app, next to the one rule that turns them all
-   off — a new animation is only reachable from here, so it cannot be added
-   without the reduced-motion opt-out being updated with it. */
+/* Every keyframe animation in the app, and the one rule that turns all motion
+   off for a reader who asked for that. */
 
-/* The filter bar's "querying…" marker. */
+/* A pulse, for something in flight: the filter bar's "querying…", the
+   header's "connecting…". */
 @keyframes blink {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
 }
 
-/* Placeholder cards while chain flows load. */
+/* Loading placeholders. */
 @keyframes shimmer {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 0.8; }
@@ -20,6 +20,15 @@
   to { opacity: 1; transform: none; }
 }
 
+/* Global rather than a list of the animated classes: a list has to be kept in
+   step with every animation added anywhere, and the first one forgotten moves
+   for a reader who asked it not to. `!important` because this must beat every
+   component's own declaration, which is the one case it exists for. */
 @media (prefers-reduced-motion: reduce) {
-  .home > *, .live, .chain-card--ghost, .sk__bar { animation: none; }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

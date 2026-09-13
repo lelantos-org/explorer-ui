@@ -1,0 +1,8 @@
+.xlink {
+  font-family: var(--mono);
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--t-fast);
+}
+.xlink:hover { color: var(--accent-2); text-decoration: underline; }

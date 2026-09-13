@@ -1,0 +1,64 @@
+.hdr {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-16);
+  padding: 13px 32px;
+  border-bottom: 1px solid var(--line);
+  /* Solid rather than frosted: a sticky bar that lets the charts show through
+     it puts a smeared copy of the series behind the wordmark. */
+  background: var(--bg-1);
+}
+/* Baseline, so `explorer` sits on the name's baseline rather than floating
+   against the mark's centre. */
+.hdr__left { display: flex; align-items: baseline; gap: 9px; }
+.hdr__sub { font-size: var(--text-xs); }
+.hdr__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-10);
+  margin-left: auto;
+}
+
+/* One box for every control in the bar, a fixed 36px tall: `--hdr-h`, which
+   the sticky filter bar parks below, is derived from that height. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-8);
+  height: 36px;
+  padding: 0 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-dim);
+  font-family: var(--sans);
+  font-size: var(--text-ui);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.chip--link,
+.chip--icon {
+  cursor: pointer;
+  transition: color var(--t-fast), border-color var(--t-fast);
+}
+.chip--link:hover,
+.chip--icon:hover { color: var(--accent); border-color: var(--accent); }
+.chip--icon { width: 36px; padding: 0; justify-content: center; }
+
+/* Controls grow to a 44px touch target under a coarse pointer, so the header
+   grows with them — and `--hdr-h` follows, or the filter bar parks under it. */
+@media (pointer: coarse) {
+  :root { --hdr-h: 71px; }
+  .chip { height: 44px; }
+  .chip--icon { width: 44px; }
+}
+
+@media (max-width: 720px) {
+  .hdr { gap: var(--sp-10); padding: var(--sp-10) var(--sp-14); }
+  /* The wallet link is also in the footer; the status and the theme are not. */
+  .chip--link { display: none; }
+}

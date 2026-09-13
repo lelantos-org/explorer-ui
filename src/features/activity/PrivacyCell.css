@@ -1,0 +1,13 @@
+/* The feed's cover column, on the page's cover scale: ok is covered, warn is
+   thin, error is no cover at all. */
+.priv {
+  font-family: var(--mono);
+  font-size: var(--text-ui);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.priv--counted { color: var(--ok); }
+.priv--thin { color: var(--warn); }
+.priv--unique { color: var(--err); }
+/* Unknown, never zero. Muted so it reads as absent data rather than a verdict. */
+.priv--unknown { color: var(--fg-mute); font-weight: 400; font-size: var(--text-md); }

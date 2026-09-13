@@ -1,5 +1,50 @@
-/* Document defaults: reset, page frame, and the ambient backdrop everything
-   else is drawn on top of. */
+/* Document defaults: the typefaces, the reset, focus, and the ground every
+   component is drawn on. */
+
+/* ---------------------------------------------------------------------------
+   Self-hosted, because webapp-ui's CSP is `default-src 'self'` with no
+   `font-src`, and its COEP is `require-corp` — a cross-origin font would need
+   CORP headers Google does not send. explorer-ui has no CSP and could reach
+   Google Fonts, but ships the same files so the two cannot drift.
+
+   All three are variable (weight ranges below are the real axes, not a
+   guess), latin subset only. `swap` because a wallet that renders its balance
+   late is worse than one that renders it in a fallback for 100ms.
+   --------------------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/newsreader.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Public Sans";
+  src: url("/fonts/public-sans.woff2") format("woff2-variations");
+  font-weight: 300 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* The wordmark alone. Subset to the letters of LELANTOS, which is why it is
+   10KB and why `--brand` must never be reached for by anything else. */
+@font-face {
+  font-family: "Martian Mono";
+  src: url("/fonts/martian-mono.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Mono";
+  src: url("/fonts/atkinson-hyperlegible-mono.woff2") format("woff2-variations");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
+}
 
 * { box-sizing: border-box; }
 
@@ -15,46 +60,33 @@ html, body, #root {
   color: var(--fg);
   font-family: var(--sans);
   font-size: var(--text-base);
-  line-height: 1.5;
+  line-height: 1.55;
   min-height: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* AMBIENT BACKDROP
-   Two fixed, inert layers in the accent hue only — mixing hues at this
-   opacity turns to mud behind the opaque cards.
-   1. body::before  a wide wash under the header, a cool floor tint.
-   2. body::after   fine lattice, masked away behind content. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(1200px 520px at 50% -12%, rgba(var(--accent-rgb), 0.13), transparent 62%),
-    radial-gradient(800px 600px at 100% 0%, rgba(var(--accent-rgb), 0.06), transparent 60%),
-    linear-gradient(180deg, transparent 45%, rgba(var(--accent-rgb), 0.05) 100%);
+/* No ambient backdrop. There was a wash of accent under the header; the design
+   draws every screen on the flat ground, and on a page of charts a tint behind
+   the figures is one more thing a colour has to be read against. */
+
+/* Keyboard focus, for everything at once. `:where()` keeps it at zero
+   specificity, so a component that draws focus its own way — the scope picker's
+   glow, a segment on an accent fill — overrides it without `!important`. An
+   outline rather than a box-shadow: it is not clipped by an ancestor's overflow.
+   `tabindex="-1"` is excluded: `main` takes programmatic focus from the skip
+   link, and ringing the whole page is not a focus indicator. */
+:where(a, button, select, input, [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: var(--ring);
+  outline-offset: 2px;
 }
 
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image:
-    linear-gradient(to right, rgba(var(--accent-rgb), 0.055) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(var(--accent-rgb), 0.055) 1px, transparent 1px);
-  background-size: 96px 96px, 96px 96px;
-  -webkit-mask-image: radial-gradient(90% 70% at 50% 0%, #000 0%, transparent 72%);
-  mask-image: radial-gradient(90% 70% at 50% 0%, #000 0%, transparent 72%);
-}
-
-::selection { background: rgba(var(--accent-rgb), 0.3); color: var(--bg); }
+/* `--fg` rather than `--bg` for the text: the selection is a 30% accent film
+   over whichever ground is under it, so it is a mid tone in both themes and the
+   body colour is the one that stays legible on it. */
+::selection { background: rgba(var(--accent-rgb), 0.3); color: var(--fg); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 5px; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: var(--radius-sm); }
 ::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }

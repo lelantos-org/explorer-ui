@@ -1,0 +1,78 @@
+/* Escrowed balance per chain: one row per chain, the dollar total as the
+   headline, and a chip per asset carrying the exact token amount. The row is a
+   button that scopes the page to that chain, like a chain card. */
+
+.locked { display: flex; flex-direction: column; gap: var(--sp-8); }
+
+.locked__row {
+  display: grid;
+  /* Chain and total stay put; the chips take what is left and wrap. */
+  grid-template-columns: minmax(88px, auto) minmax(96px, auto) 1fr;
+  align-items: center;
+  gap: var(--sp-14);
+  padding: var(--sp-10) var(--sp-12);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  color: var(--fg);
+  font-family: var(--sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--t-med), background var(--t-med);
+}
+.locked__row:hover { border-color: var(--accent-dim); background: var(--bg-2); }
+.locked__row--on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+
+.locked__chain { display: flex; flex-direction: column; gap: 1px; }
+.locked__short { font-weight: 700; letter-spacing: 0.04em; color: var(--accent); }
+.locked__name {
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.locked__total { font-size: 16px; font-weight: 700; }
+.locked__partial { font-size: var(--text-xs); }
+
+.locked__assets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--sp-6);
+}
+.locked__chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-6);
+  padding: var(--sp-2) var(--sp-8);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-2);
+  white-space: nowrap;
+}
+.locked__chip__sym { font-size: var(--text-xs); letter-spacing: 0.08em; color: var(--fg-dim); }
+.locked__chip__amt { font-size: var(--text-xs); }
+/* An asset whose balance was measured at its venue rather than netted from
+   flows. Marked, because a measured holding and a computed difference are not
+   the same kind of number. */
+.locked__chip--earning { border-color: var(--accent-dim); }
+.locked__chip__basis {
+  margin-left: 5px;
+  padding: 0 var(--sp-4);
+  border-radius: var(--radius-sm);
+  background: var(--accent-dim);
+  /* Body colour, not the accent: `--accent-dim` is a shadowed ember in the dark
+     theme and a pale one in the light, so it is the only foreground that clears
+     4.5:1 on both. */
+  color: var(--fg);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+/* A negative balance is evidence of missed deposits, not a rounding artefact. */
+.locked__chip--owed { border-color: var(--err); }
+.locked__chip--owed .locked__chip__amt { color: var(--err); }
+
+@media (pointer: coarse) {
+  .locked__row { min-height: 44px; }
+}

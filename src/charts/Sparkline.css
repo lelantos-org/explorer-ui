@@ -1,0 +1,13 @@
+/* The flow series without axes, card-sized, with a thinner stroke for the
+   smaller box. Same hues and dash as the full chart. */
+.spark { width: 100%; height: 56px; }
+.spark__svg { display: block; max-width: 100%; }
+.spark__line {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  shape-rendering: geometricPrecision;
+}
+.spark__line--in { stroke: var(--kind-deposit); }
+.spark__line--out { stroke: var(--kind-withdraw); stroke-dasharray: 3 2; }

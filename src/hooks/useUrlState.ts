@@ -40,8 +40,38 @@ export function useSetUrlParams(): (mutate: (params: URLSearchParams) => void) =
   }, []);
 }
 
-/** Set a param, or drop it entirely when the value is empty — no `?chain=` noise. */
-export function setOrDelete(params: URLSearchParams, key: string, value: string) {
-  if (value) params.set(key, value);
-  else params.delete(key);
+/**
+ * A param holding one of a known set of values.
+ *
+ * Two things it refuses to do, both for the same reason — the query string is
+ * hand-editable and shared, so it is untrusted input with a reader on the other
+ * end:
+ *
+ * - An unrecognised value falls back rather than rendering nothing. A typo
+ *   should cost the view that was asked for, not the page.
+ * - The default is written as an absent param rather than `?tab=activity`, so
+ *   the default view and a link to it are the same URL. Otherwise two links to
+ *   the same thing differ by whether someone happened to touch the control.
+ */
+export function useUrlChoice<T extends string>(
+  key: string,
+  options: readonly T[],
+  fallback: T,
+): [T, (value: T) => void] {
+  const params = useUrlParams();
+  const setParams = useSetUrlParams();
+
+  const raw = params.get(key) ?? "";
+  const value = (options as readonly string[]).includes(raw) ? (raw as T) : fallback;
+
+  const set = useCallback(
+    (next: T) =>
+      setParams((p) => {
+        if (next === fallback) p.delete(key);
+        else p.set(key, next);
+      }),
+    [setParams, key, fallback],
+  );
+
+  return [value, set];
 }

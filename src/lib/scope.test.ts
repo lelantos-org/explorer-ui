@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { AssetOut, ChainFlow } from "../api";
-import { decodeScope, EMPTY_SCOPE, encodeScope, groupAssetsByChain, groupsInScope } from "./scope";
+import type { AssetOut, ChainFlow } from "@/api/types";
+import {
+  decodeScope,
+  EMPTY_SCOPE,
+  encodeScope,
+  groupAssetsByChain,
+  groupsInScope,
+  toggleChain,
+} from "./scope";
 
 const asset = (chainId: number, assetIdU64: number): AssetOut => ({
   chainId,
@@ -108,5 +115,16 @@ describe("groupsInScope", () => {
   it("drops the other chains", () => {
     const out = groupsInScope(groups, { chainId: 1, assetIdU64: 10 });
     expect(out.map((g) => g.chainId)).toEqual([1]);
+  });
+});
+
+describe("toggleChain", () => {
+  it("pins a chain that is not selected", () => {
+    expect(toggleChain(null, 8453)).toBe(8453);
+    expect(toggleChain(1, 8453)).toBe(8453);
+  });
+
+  it("clears the chain when it is the one already pinned", () => {
+    expect(toggleChain(8453, 8453)).toBeNull();
   });
 });

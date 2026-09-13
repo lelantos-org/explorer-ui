@@ -1,4 +1,4 @@
-import type { YieldAsset } from "../api";
+import type { YieldAsset } from "@/api/types";
 
 /**
  * The scale `indexRay` is expressed in, matching the pool's own RAY.

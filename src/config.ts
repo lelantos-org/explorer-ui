@@ -21,3 +21,13 @@ export const config: Config = {
   apiBase: import.meta.env.VITE_API_BASE ?? "",
   useMock: isEnabled(import.meta.env.VITE_USE_MOCK),
 };
+
+/**
+ * How often the page re-reads the backend, in ms.
+ *
+ * Every series refreshes on the same interval, so no two cards can drift into
+ * describing different moments — a chart and the tiles above it disagreeing is
+ * worse than both being a little stale. Here rather than beside the queries
+ * because the UI names it too: the filter bar's refresh stamp.
+ */
+export const REFRESH_MS = 30_000;

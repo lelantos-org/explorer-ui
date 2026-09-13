@@ -13,6 +13,7 @@ import {
   fmtUsdSigned,
   joinMeta,
   plural,
+  splitMagnitude,
 } from "./format";
 
 describe("fmtNum", () => {
@@ -168,5 +169,18 @@ describe("fmtDigits", () => {
     expect(fmtDigits("500")).toBe("500");
     expect(fmtDigits("0")).toBe("0");
     expect(fmtDigits("0x1f")).toBe("0x1f");
+  });
+});
+
+describe("splitMagnitude", () => {
+  it("sets the magnitude letter apart from the digits", () => {
+    expect(splitMagnitude("+$1.84M")).toEqual(["+$1.84", "M"]);
+    expect(splitMagnitude("−12.5k")).toEqual(["−12.5", "k"]);
+  });
+
+  it("leaves a figure with no letter whole", () => {
+    expect(splitMagnitude("+$412.00")).toEqual(["+$412.00", ""]);
+    expect(splitMagnitude("—")).toEqual(["—", ""]);
+    expect(splitMagnitude("+3.1e15")).toEqual(["+3.1e15", ""]);
   });
 });

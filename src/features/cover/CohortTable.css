@@ -1,0 +1,51 @@
+/* One row per denomination. The tone scale is the page's cover scale: ok is
+   covered, warn is thin, error is no cover at all. */
+
+/* Fixed layout, so the bar column takes exactly what the other three leave and
+   every bar starts and ends at the same x. The name column holds a u256
+   denomination, which breaks rather than widening the column. */
+.asets { table-layout: fixed; min-width: 620px; }
+.asets__c-name { width: 200px; }
+.asets__c-cover { width: 176px; }
+.asets__c-recent { width: 180px; }
+.asets td { padding-top: 15px; padding-bottom: 15px; white-space: normal; }
+/* Read across, not hovered: nothing in the row is a control. */
+.asets tbody tr:hover { background: none; }
+
+.aset__name { display: flex; flex-direction: column; gap: 1px; }
+/* The denomination leads: it is the cohort's identity, and the column of
+   integers is what a reader scans down. */
+.aset__denom {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.aset__asset { font-size: var(--text-md); color: var(--fg-mute); }
+
+.aset__cover { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+.aset__k { font-size: var(--text-base); font-weight: 600; }
+.aset--counted .aset__k { color: var(--ok); }
+.aset--thin .aset__k { color: var(--warn); }
+.aset--unique .aset__k { color: var(--err); }
+
+.aset__track { height: 8px; background: var(--bg-3); }
+.aset__bar { height: 100%; transition: width var(--t-med); }
+.aset--counted .aset__bar { background: var(--ok); }
+.aset--thin .aset__bar { background: var(--warn); }
+.aset--unique .aset__bar { background: var(--err); }
+
+.aset__recent { font-size: var(--text-md); white-space: nowrap; }
+/* No activity in the window. Warn, not error — its k is real and an anonymity
+   set is all-history; what is missing is recent cover, a caution rather than
+   the absence of cover that `unique` reports. */
+.aset__dormant { color: var(--warn); }
+
+.aset__foot {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-16);
+  padding-top: var(--sp-14);
+  font-size: var(--text-ui);
+  color: var(--fg-mute);
+}

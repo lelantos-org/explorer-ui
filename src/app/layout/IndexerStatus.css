@@ -1,0 +1,9 @@
+.status { cursor: default; }
+/* Deposit-blue for live, as the design sets it — the status colours are
+   reserved for cover, and "live" is not a verdict. */
+.status__sq { width: 8px; height: 8px; flex: none; background: var(--kind-deposit); }
+.status--connecting .status__sq { background: var(--fg-mute); animation: blink 1.4s infinite; }
+.status--stale { color: var(--warn); }
+.status--stale .status__sq { background: var(--warn); }
+.status--down { color: var(--err); border-color: var(--err); }
+.status--down .status__sq { background: var(--err); }

@@ -2,8 +2,6 @@
 
 A browser-based explorer for public MASP (Multi-Asset Shielded Pool) chain data. It charts deposit and withdraw flows, transaction counts and kinds, per-chain activity, and a live transaction feed, filtered by chain, asset, and time range.
 
-Only public data is served: the explorer reads the [`explorer-webserver`](../backend/crates/explorer-webserver) API, which is barred from depending on `fmd-crypto` by a CI gate.
-
 ## Tech Stack
 
 - [React 18](https://react.dev/) with TypeScript, bundled by [Vite](https://vite.dev/)
@@ -33,7 +31,7 @@ The dev server listens on port `5175` (webapp-ui uses `5174`).
 | `VITE_API_BASE` | No | `""` | API base prefix used by the browser; empty means same-origin via the proxy |
 | `VITE_USE_MOCK` | No | `0` | `1` or `true` serves a generated dataset instead of the API |
 
-`VITE_USE_MOCK` selects the API implementation at startup in [`src/api/context.tsx`](src/api/context.tsx). The mock generates a seeded 90-day dataset, so the UI can be developed and demoed with no backend running.
+`VITE_USE_MOCK` selects the API implementation at startup in [`src/api/ApiProvider.tsx`](src/api/ApiProvider.tsx). The mock generates a seeded 90-day dataset, so the UI can be developed and demoed with no backend running.
 
 ## Scripts
 
@@ -50,6 +48,37 @@ The dev server listens on port `5175` (webapp-ui uses `5174`).
 
 ## Development
 
+### Project layout
+
+```
+src/
+  main.tsx        entry: global styles, providers, <App />
+  config.ts       build configuration and the shared poll interval
+  app/            the shell — App, Header, Footer, ErrorBoundary
+  pages/home/     the one page: composition, its data hook, masthead, tab strip
+  features/       one folder per page section, each with its components,
+                  stylesheets, caption builders (meta.ts), pure helpers and tests
+    filters/  flows/  cover/  activity/  assets/  chains/  pool/
+  ui/             shared primitives — Card, Stat, Segmented, ScrollTable, Skeleton, …
+  charts/         SVG charts, their geometry (chartLib, kindBars) and skeleton
+  data/           the polling engine, useAsync, the query hooks, indexer state
+  api/            the ExplorerApi port: types/, http/ (client + wire decoders), mock/
+  lib/            pure domain logic — formatting, denominations, scope, cover, tx privacy
+  hooks/          generic React hooks — URL state, theme, clock
+  styles/         global CSS only: tokens, reset, motion, utilities
+  test/           shared fixtures
+```
+
+Conventions:
+
+- **Layers.** Imports point downwards: `app` → `pages` → `features` → `ui`/`charts` → `data` → `api` → `lib`. Features never import each other; anything two features share moves down a layer. `lib/` is framework-free and imports wire types from `@/api/types` directly, so a formatting function never pulls in the HTTP client or the mock.
+- **Imports.** Siblings are relative (`./meta`); anything in another folder goes through the `@/` alias (`@/ui/Card`). Outside `api/`, import the API via `@/api`.
+- **Styles.** A component imports its own stylesheet, named after it (`Card.tsx` → `Card.css`). Class names are global and BEM-style. `styles/` holds only what every component builds on; nothing depends on the order two components happen to be imported in.
+- **Components vs. logic.** `.tsx` modules export components only; hooks, constants and pure helpers live in `.ts` modules beside them (`visibleCohorts.ts`, `filterParams.ts`, `kindBars.ts`, `poller.ts`), so Fast Refresh boundaries stay clean and the logic is tested without rendering. The test environment is `node` — there is no DOM, by design.
+- **Captions.** Each card's lead / basis / gaps line is built by a pure function in its feature's `meta.ts` and rendered by `ui/Meta`.
+- **Loading.** A card's first load shows a skeleton at its final size (`ui/Skeleton`, `ui/SkeletonRows`, `charts/ChartSkeleton`); a later load for new filters dims the previous figures (`Card`'s `busy`, `Stat`'s `stale`) and labels them with the range and scope they were fetched for.
+- **Rendering.** `useAsync` merges every response into the previous one (`lib/replaceEqualDeep`), so an unchanged poll keeps object identity and the memoised tables and charts below skip their render. Anything time-relative inside a memoised component takes a clock (`hooks/useNow`) rather than reading `Date.now()` during render.
+
 ### Service proxy
 
 The dev server proxies API paths to the backend, so the default empty `VITE_API_BASE` works without CORS configuration:
@@ -61,7 +90,7 @@ The dev server proxies API paths to the backend, so the default empty `VITE_API_
 
 ### API surface
 
-The [`ExplorerApi`](src/api/types.ts) port is implemented twice — over HTTP and by the mock — so every screen has a backend-free path. It covers:
+The [`ExplorerApi`](src/api/types/client.ts) port is implemented twice — over HTTP and by the mock — so every screen has a backend-free path. It covers:
 
 | Endpoint | Purpose |
 | --- | --- |
@@ -77,7 +106,7 @@ Amounts cross the wire as decimal strings: token base units exceed the safe rang
 
 ### Filter state
 
-Chain, asset, and range live in the URL query (`?chain=&asset=&range=`), so a filtered view can be bookmarked and shared. Chain and asset are one selection rather than two controls — an `assetIdU64` is unique only within its chain, so it is never addressable without one. See [`src/lib/scope.ts`](src/lib/scope.ts) and [`src/hooks/useFilters.ts`](src/hooks/useFilters.ts).
+Chain, asset, and range live in the URL query (`?chain=&asset=&range=`), so a filtered view can be bookmarked and shared. Chain and asset are one selection rather than two controls — an `assetIdU64` is unique only within its chain, so it is never addressable without one. See [`src/lib/scope.ts`](src/lib/scope.ts) and [`src/features/filters/useFilters.ts`](src/features/filters/useFilters.ts).
 
 ## Testing
 

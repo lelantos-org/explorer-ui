@@ -1,0 +1,18 @@
+.chart-sk { position: relative; }
+/* Four dotted gridlines, as the real plot draws them, and a wave under them. */
+.chart-sk__plot {
+  position: absolute;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--line-strong) 0 1px,
+    transparent 1px 25%
+  );
+}
+.chart-sk__plot::after {
+  content: "";
+  position: absolute;
+  inset: 20% 0 0;
+  background: var(--bg-3);
+  clip-path: polygon(0 70%, 12% 52%, 25% 60%, 38% 34%, 52% 48%, 66% 22%, 80% 40%, 100% 18%, 100% 100%, 0 100%);
+  animation: shimmer 1.4s infinite;
+}

@@ -1,0 +1,61 @@
+.seg {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.seg__b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 9px 15px;
+  background: transparent;
+  color: var(--fg-mute);
+  border: none;
+  border-right: 1px solid var(--line-strong);
+  font-family: var(--sans);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--t-fast), background var(--t-fast);
+}
+.seg__b:last-child { border-right: none; }
+.seg__b:hover:not(:disabled) { color: var(--fg); background: var(--bg-3); }
+.seg__b--on { font-weight: 600; }
+.seg__b:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Kept at full strength while the page queries: the picker is disabled for
+   the round trip, and dimming the chosen segment made the current value
+   unreadable for exactly the moment it was changing. */
+.seg__b--on:disabled { opacity: 1; }
+
+.seg--accent .seg__b--on,
+.seg--accent .seg__b--on:hover:not(:disabled) { color: var(--on-accent); background: var(--accent); }
+/* The accent ring would vanish on an accent fill; the panel colour reads on it. */
+.seg--accent .seg__b--on:focus-visible { outline-color: var(--bg-1); outline-offset: -3px; }
+
+.seg--neutral .seg__b--on,
+.seg--neutral .seg__b--on:hover:not(:disabled) { color: var(--fg); background: var(--bg-3); }
+
+/* Capitalised because a card-level filter's labels are kind names, which the
+   badges below it capitalise too. */
+.seg--sm .seg__b {
+  min-height: 36px;
+  padding: 8px 13px;
+  font-size: var(--text-md);
+  text-transform: capitalize;
+}
+
+.seg--stretch { display: flex; width: 100%; }
+.seg--stretch .seg__b { flex: 1 1 0; min-height: 46px; }
+/* Too many segments for a phone's width. Wrapping would break the joined shape
+   that says they are one exclusive choice, so the row scrolls instead. */
+@media (max-width: 560px) {
+  .seg--stretch { overflow-x: auto; }
+  .seg--stretch .seg__b { flex: 0 0 auto; }
+}
+
+@media (pointer: coarse) {
+  .seg__b { min-height: 44px; }
+}

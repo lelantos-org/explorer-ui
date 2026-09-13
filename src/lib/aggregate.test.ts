@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ChainFlow, ChainLocked, CountPoint, FlowPoint, LockedBasis } from "../api";
-import { at } from "../test/at";
+import type { ChainFlow, ChainLocked, CountPoint, FlowPoint, LockedBasis } from "@/api/types";
+import { at } from "@/test/at";
 import { chainShares, sumCounts, sumFlows, summarizeChains, summarizeLocked } from "./aggregate";
 
 const flow = (p: Partial<FlowPoint> & { ts: number }): FlowPoint => ({

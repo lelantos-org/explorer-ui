@@ -1,0 +1,11 @@
+/* The asset a row moved: the symbol, then the circuit id that qualifies it. */
+.asset { display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.asset__sym { color: var(--fg-dim); }
+
+/* The amount is the figure a reader came to the row for. */
+.feed__amount { font-size: var(--text-base); }
+
+/* A hash is an identifier rather than the row's subject: muted until pointed
+   at. `user-select: all` so the whole hash copies in one gesture. */
+.tx-hash { color: var(--fg-mute); font-weight: 400; user-select: all; }
+.tx-hash--link:hover { color: var(--accent); }

@@ -1,36 +1,65 @@
 /* Design tokens. The only file that holds raw colours, durations and sizes —
-   everything else refers to them by name. */
+   everything else refers to them by name.
+
+   Two palettes live here. Dark is the default and sits on bare `:root`; light
+   is a deliberate second set rather than an automatic inversion — each step was
+   checked against its own grounds instead of flipped. An explicit choice wins
+   in both directions via `[data-theme]`, and a reader who has never touched the
+   toggle follows their system through the `prefers-color-scheme` block at the
+   bottom, with no JavaScript involved. Both light blocks carry the same values;
+   they are repeated rather than shared because a selector list would make the
+   `:not()` match the explicit-choice case too.
+
+   Every text colour clears 4.5:1 on all four grounds in both themes.
+
+   Warm throughout. The old palette was a cool-biased neutral with an indigo
+   accent; the ground is now warm and the accent is an ember, which is what
+   stops the app reading as every other app in its category. webapp-ui carries
+   the same values — they are authored once and pasted into both, and there is
+   no package enforcing that yet. */
 
 :root {
-  /* Palette shared with webapp-ui: soft-neutral light, biased a few degrees
-     cool so the indigo accent and the ambient wash read as one set. */
-  --bg: #f2f3f7;
-  --bg-1: #ffffff;
-  --bg-2: #f9fafc;
-  --bg-3: #edeef4;
-  /* Translucent white for surfaces that blur what scrolls under them. */
-  --bg-glass: rgba(255, 255, 255, 0.62);
-  --fg: #191922;
-  --fg-dim: #43434f;
-  --fg-mute: #76768a;
-  --line: #e5e6ee;
-  --line-strong: #d2d4e0;
-  --accent: #4f46e5;
-  --accent-rgb: 79, 70, 229;
-  --accent-2: #6366f1;
-  --accent-dim: #c7d2fe;
-  --warn: #d97706;
-  --warn-rgb: 217, 119, 6;
-  --warn-dim: #fde68a;
-  --err: #dc2626;
-  --err-rgb: 220, 38, 38;
+  /* GROUNDS, darkest first. `--bg` is the page, `--bg-1` the raised panel every
+     card sits on, `--bg-2` a recessed strip inside one (table headers, chips),
+     `--bg-3` the hover state and the track behind a bar. */
+  --bg: #14110E;
+  --bg-1: #1C1815;
+  --bg-2: #241F1A;
+  --bg-3: #2E2822;
+  --fg: #F5F1E8;
+  --fg-dim: #BEB5A6;
+  --fg-mute: #9E9486;
+  --line: #2A241E;
+  --line-strong: #3A332B;
+  --accent: #E0794A;
+  --accent-rgb: 224, 121, 74;
+  --accent-2: #EA8C60;
+  --accent-dim: #7A4526;
+  /* Text on an accent fill — the selected segment. The page ground in each
+     theme, as the design sets it, rather than one colour for both: near-black
+     on the light theme's rust would fail contrast. */
+  --on-accent: #14110E;
+  /* "Covered" in the cover scale, and a rise in the registry. Never a series. */
+  --ok: #4FA96E;
+  --warn: #E0A93F;
+  --warn-rgb: 224, 169, 63;
+  --err: #E67A6E;
+  --err-rgb: 230, 122, 110;
 
-  --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --mono: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  /* TYPEFACES. All three are self-hosted variable fonts, declared in base.css.
+     The stacks behind them are what renders for the ~100ms of `font-display:
+     swap`, so they are metric neighbours rather than a generic keyword.
+     `--display` is the one that is not used everywhere: it is for the page
+     masthead, where a serif reads as a title rather than as more interface. */
+  --sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "Atkinson Hyperlegible Mono", ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --display: "Newsreader", Georgia, "Times New Roman", serif;
 
-  --shadow-glow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06);
-  --radius: 8px;
-  --radius-sm: 6px;
+  /* Tighter than the 8/6 they replace. The mark in the header is built from
+     circles and straight edges, and a soft-cornered card beside it read as a
+     different family; 4px still says "panel" without rounding into a pill. */
+  --radius: 4px;
+  --radius-sm: 2px;
 
   /* --ease decelerates into rest (entrances); --ease-soft is symmetric for
      hover and state swaps. */
@@ -42,50 +71,53 @@
   --t-fast: 120ms var(--ease-soft);
   --t-med: 150ms var(--ease-soft);
 
-  /* Height of the sticky header, which the sticky filter bar parks below. */
-  --hdr-h: 53px;
+  /* Height of the sticky header, which the sticky filter bar parks below: its
+     36px controls, 13px of padding either side, and the 1px rule. The controls
+     are a fixed height for exactly this reason — sized from their text, this
+     number would move with the font. */
+  --hdr-h: 63px;
+
+  /* The wordmark's face. Only LELANTOS is set in it, so the file is subset to
+     those glyphs; nothing else may use it. */
+  --brand: "Martian Mono", ui-monospace, Menlo, monospace;
 
   /* Transaction kinds. One hue per kind, reused by the bars, the legend and the
      row badges so a colour means the same thing everywhere.
-     Pending gets its own hue rather than a tint of the accent: as `accent-dim`
-     it sat at 1.5:1 against the card — under the 3:1 floor for graphical
-     objects — and only 15deg of hue from deposit. Fuchsia is 6.3:1 and 51deg
-     clear of every other kind. "Unsettled" is carried by the dashed badge
-     border instead, which does not cost contrast. */
-  --kind-deposit: var(--accent);
-  --kind-deposit-dim: var(--accent-dim);
-  --kind-deposit-rgb: var(--accent-rgb);
-  --kind-pending: #a21caf;
-  --kind-pending-dim: #f5d0fe;
-  --kind-pending-rgb: 162, 28, 175;
-  --kind-transfer: #0891b2;
-  --kind-transfer-dim: #a5f3fc;
-  --kind-transfer-rgb: 8, 145, 178;
-  --kind-withdraw: var(--warn);
-  --kind-withdraw-dim: var(--warn-dim);
-  --kind-withdraw-rgb: var(--warn-rgb);
 
-  /* TYPE. Body is 14px, and before these existed 34 of the 51 font-size rules
-     in this stylesheet sat at 11px or below — 18 at 10px and 4 at 9px — for
-     labels, table headers, chip symbols and row ages. Small, wide-tracked
-     uppercase is the house voice, but 9-10px is past the point where it is
-     still readable at arm's length, and it was being used for content, not
-     just ornament.
+     These are the validated categorical series rather than four colours picked
+     off the palette: each pair is at least 40deg of hue from its neighbours and
+     clears 3:1 against every ground it is drawn on, which is the floor for a
+     graphical object. They no longer alias `--accent` and `--warn` — deposit
+     and withdraw did, which meant two of the four kinds moved whenever the
+     brand colour did, and put deposit and the inflow line in the same hue.
+     "Unsettled" is still carried by the dashed badge border on pending, which
+     does not cost contrast. */
+  --kind-deposit: #0083a0;
+  --kind-pending: #c2538a;
+  --kind-transfer: #7b5fc9;
+  --kind-withdraw: #d66e31;
 
-     11px is the floor. The one exception is named rather than smuggled in:
-     chart tick labels stay at 10px, because they are the one place where a
-     larger step starts colliding with its neighbours instead of just reading
-     bigger. */
   /* Keyboard focus ring, matching the one rule that already existed (`.hex`).
      An outline rather than a box-shadow: it is not clipped by an ancestor's
      overflow, and it does not have to be restated per component background. */
   --ring: 2px solid var(--accent);
 
-  --text-axis: 10px;
+  /* TYPE, as design/screens sets it. Body is 15px and 11px is the floor —
+     chart ticks, the wordmark's sub-label, and the small print of the reference
+     cards. The steps are named by role where one exists:
+
+     - `--text-sm`   12px — the uppercase label voice (`.lbl`).
+     - `--text-md`   13px — a card's caption, a tile's unit.
+     - `--text-ui`   14px — table cells, legends, controls.
+     - `--text-base` 15px — body, the scope picker, a row's amount.
+     - `--text-lede` 16px — the paragraph under a section heading. */
+  --text-axis: 11px;
   --text-xs: 11px;
   --text-sm: 12px;
   --text-md: 13px;
-  --text-base: 14px;
+  --text-ui: 14px;
+  --text-base: 15px;
+  --text-lede: 16px;
 
   /* SPACING. The measured ramp, not a grid picked in advance: this file's
      common steps are 8/10/12/14 with 18 and 24 for card padding, which the
@@ -103,4 +135,64 @@
   --sp-20: 20px;
   --sp-22: 22px;
   --sp-24: 24px;
+}
+
+/* An explicit choice wins over the system preference in both directions. */
+:root[data-theme="light"] {
+  --bg: #F7F4ED;
+  --bg-1: #FFFDF8;
+  --bg-2: #F1EDE4;
+  --bg-3: #E8E3D8;
+  --fg: #14110E;
+  --fg-dim: #514B42;
+  --fg-mute: #6B6459;
+  --line: #E2DCD0;
+  --line-strong: #CFC7B8;
+  --accent: #A8481B;
+  --accent-rgb: 168, 72, 27;
+  --accent-2: #8E3C14;
+  --accent-dim: #E8C9B4;
+  --on-accent: #FFFDF8;
+  --ok: #1B6E3E;
+  --warn: #8A6210;
+  --warn-rgb: 138, 98, 16;
+  --err: #A63A2E;
+  --err-rgb: 166, 58, 46;
+
+  --kind-deposit: #007aa8;
+  --kind-pending: #b3346b;
+  --kind-transfer: #7444b4;
+  --kind-withdraw: #b84c00;
+}
+
+/* No choice recorded: follow the system. Same specificity as the block above,
+   so this has to come after it — and it is written to lose to an explicit
+   `data-theme="dark"` rather than to override it. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #F7F4ED;
+    --bg-1: #FFFDF8;
+    --bg-2: #F1EDE4;
+    --bg-3: #E8E3D8;
+    --fg: #14110E;
+    --fg-dim: #514B42;
+    --fg-mute: #6B6459;
+    --line: #E2DCD0;
+    --line-strong: #CFC7B8;
+    --accent: #A8481B;
+    --accent-rgb: 168, 72, 27;
+    --accent-2: #8E3C14;
+    --accent-dim: #E8C9B4;
+    --on-accent: #FFFDF8;
+    --ok: #1B6E3E;
+    --warn: #8A6210;
+    --warn-rgb: 138, 98, 16;
+    --err: #A63A2E;
+    --err-rgb: 166, 58, 46;
+
+    --kind-deposit: #007aa8;
+    --kind-pending: #b3346b;
+    --kind-transfer: #7444b4;
+    --kind-withdraw: #b84c00;
+  }
 }

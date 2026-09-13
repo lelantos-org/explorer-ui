@@ -1,4 +1,4 @@
-import type { AssetOut } from "../api";
+import type { AssetOut } from "@/api/types";
 import { fmtBps } from "./format";
 
 /**

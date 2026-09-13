@@ -1,0 +1,70 @@
+/* Not a panel — the heading sits on the page ground, and only the figure is
+   boxed, so the one number on it reads as the thing to look at. */
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 32px;
+}
+.hero__l { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.hero__t {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+}
+.hero__lede {
+  margin: 0;
+  max-width: 64ch;
+  font-size: var(--text-lede);
+  color: var(--fg-dim);
+}
+
+.hero__net {
+  min-width: 230px;
+  padding: 18px 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg-1);
+  text-align: right;
+}
+.hero__net .lbl { margin-bottom: 5px; }
+/* The display serif for the digits too: this is the masthead's figure, and set
+   in the mono it read as one more table cell. `.num` still supplies tabular
+   figures, so it does not jitter between polls. */
+.hero__val {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 1em;
+  font-family: var(--display);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1;
+}
+.hero__mag { font-size: 22px; color: var(--fg-mute); }
+.hero__unit {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 1.55em;
+  margin-top: 4px;
+  font-size: var(--text-md);
+  color: var(--fg-mute);
+}
+.hero__fig { transition: opacity var(--t-med); }
+.hero__fig--stale { opacity: 0.45; transition-delay: 150ms; }
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: 1fr; gap: var(--sp-18); }
+  .hero__net { justify-self: start; text-align: left; }
+  .hero__val,
+  .hero__unit { justify-content: flex-start; }
+}
+
+@media (max-width: 720px) {
+  .hero__t { font-size: 30px; }
+}

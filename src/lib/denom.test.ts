@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { FlowPoint } from "../api";
+import type { FlowPoint } from "@/api/types";
 import { amounts, denomLabel, hasAmounts, pickDenom, unitShort } from "./denom";
 
 const flow = (p: Partial<FlowPoint> & { ts: number }): FlowPoint => ({

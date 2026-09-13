@@ -1,0 +1,22 @@
+/* The mark wears the accent and the name the text colour: one ember object in
+   the bar, not two. */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--fg);
+  /* A link: without this the browser underlines the name. The focus ring comes
+     from the global `:focus-visible` rule in base.css. */
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+/* `block` so the svg brings no inline leading of its own, and inflexible so the
+   mark keeps its size whatever the row has to fit. */
+.brand__mark { display: block; flex: 0 0 auto; color: var(--accent); }
+.brand__name {
+  font-family: var(--brand);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}

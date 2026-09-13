@@ -1,0 +1,55 @@
+.ftr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-8);
+  padding: var(--sp-18) var(--sp-24);
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+  font-size: var(--text-md);
+}
+.ftr__brand { color: var(--accent); font-weight: 600; letter-spacing: 0.02em; }
+.ftr__sep { width: 1px; height: 12px; background: var(--line-strong); }
+.ftr__link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg-mute);
+  text-decoration: none;
+  transition: color var(--t-fast);
+}
+.ftr__link:hover { color: var(--accent); }
+/* Present but recessive: wanted when reporting a bug, noise the rest of the
+   time. */
+.ftr__ver { font-size: var(--text-sm); opacity: 0.7; }
+
+@media (pointer: coarse) {
+  .ftr__link { min-height: 44px; }
+}
+
+/* Padding keeps the safe-area term, or the links sit under the iOS home
+   indicator. */
+@media (max-width: 720px) {
+  .ftr {
+    padding: var(--sp-12) var(--sp-14) calc(var(--sp-12) + env(safe-area-inset-bottom, 0px));
+    font-size: var(--text-sm);
+  }
+  .ftr__note { font-size: var(--text-xs); }
+}
+
+/* Below this the row cannot hold the privacy note and the links on one line.
+   Left to wrap on its own it broke mid-note and stranded the rules at the start
+   of a line, where they read as stray marks. So: note onto its own line via
+   `order`, rules and build dropped, gap doing the separating. */
+@media (max-width: 560px) {
+  .ftr { gap: var(--sp-6) var(--sp-12); }
+  .ftr__sep,
+  .ftr__ver { display: none; }
+  .ftr__note {
+    order: 2;
+    flex: 1 1 100%;
+    text-align: center;
+    text-wrap: balance;
+    line-height: 1.6;
+  }
+}

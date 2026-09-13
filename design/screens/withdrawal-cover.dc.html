@@ -1,0 +1,213 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..700&family=Newsreader:opsz,wght@6..72,300..700&family=Public+Sans:wght@400;500;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --bg:#14110E;--bg-1:#1C1815;--bg-2:#241F1A;--bg-3:#2E2822;
+      --fg:#F5F1E8;--fg-dim:#BEB5A6;--fg-mute:#9E9486;
+      --line:#2A241E;--line-strong:#3A332B;
+      --accent:#E0794A;--accent-2:#EA8C60;--warn:#E0A93F;--err:#E67A6E;
+      /* chart series - validated, both modes. see the foundations artboard */
+      --s-deposit:#0083a0;--s-transfer:#7b5fc9;--s-withdraw:#d66e31;--s-pending:#c2538a;--s-good:#4FA96E;
+      --display:"Newsreader",Georgia,serif;
+      --sans:"Public Sans",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+      --mono:"Atkinson Hyperlegible Mono",ui-monospace,Menlo,monospace;
+    }
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);}a:hover{color:var(--accent-2);}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"zero" 1;}
+    .lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);}
+    .card{border:1px solid var(--line);background:var(--bg-1);}
+    .card__h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);}
+    .card__t{font-family:var(--display);font-size:19px;font-weight:600;}
+    .tick{font-family:var(--mono);font-size:11px;fill:var(--fg-mute);}
+    .swatch{width:10px;height:10px;flex:none;}
+  </style>
+</helmet>
+
+<div style="min-height:1440px;padding:0 0 44px;">
+  <div style="display:flex;align-items:center;gap:16px;padding:13px 32px;border-bottom:1px solid var(--line);background:var(--bg-1);">
+    <div style="display:flex;align-items:baseline;gap:9px;">
+      <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true" style="display:block;flex:none;"><circle cx="16" cy="6.5" r="4" fill="var(--accent)"/><circle cx="6.5" cy="25.5" r="4" fill="var(--accent)"/><circle cx="25.5" cy="25.5" r="4" fill="var(--accent)"/><path d="M9 21 L12.4 14.2 M23 21 L19.6 14.2" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg><span style="font-family:"Martian Mono", ui-monospace, Menlo, monospace;font-size:15px;font-weight:600;letter-spacing:.02em;line-height:1;">LELANTOS</span>
+      <span class="lbl" style="font-size:11px;">explorer</span>
+    </div>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:30px 32px 0;display:flex;flex-direction:column;gap:22px;">
+
+    <div style="display:flex;flex-direction:column;gap:7px;">
+      <span class="lbl">Withdrawal anonymity</span>
+      <span style="font-family:var(--display);font-size:38px;font-weight:600;line-height:1.08;letter-spacing:-.015em;">How much cover each amount actually has</span>
+      <span style="font-size:16px;color:var(--fg-dim);max-width:74ch;">A withdrawal publishes its amount. Everyone who published the same amount is indistinguishable from everyone else who did — so the size of that crowd is the privacy. This is the one number here worth reading closely.</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
+      <div class="card" style="padding:18px 20px;border-color:var(--err);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="num" style="font-size:11px;font-weight:700;color:var(--err);border:1px solid var(--err);width:16px;height:16px;display:inline-grid;place-items:center;">!</span>
+          <span class="lbl" style="color:var(--err);">Unique · k = 1</span>
+        </div>
+        <div class="num" style="font-size:27px;font-weight:600;">1</div>
+        <div style="font-size:13px;color:var(--fg-dim);">No other withdrawal published this amount. It is linkable to the deposit that funded it.</div>
+      </div>
+      <div class="card" style="padding:18px 20px;border-color:var(--warn);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="num" style="font-size:11px;font-weight:700;color:var(--warn);border:1px solid var(--warn);width:16px;height:16px;display:inline-grid;place-items:center;">~</span>
+          <span class="lbl" style="color:var(--warn);">Thin · k &lt; 10</span>
+        </div>
+        <div class="num" style="font-size:27px;font-weight:600;">2</div>
+        <div style="font-size:13px;color:var(--fg-dim);">At most a handful of people — fewer, if any of them withdrew more than once.</div>
+      </div>
+      <div class="card" style="padding:18px 20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span class="num" style="font-size:11px;font-weight:700;color:var(--s-good);border:1px solid var(--s-good);width:16px;height:16px;display:inline-grid;place-items:center;">=</span>
+          <span class="lbl" style="color:var(--s-good);">Covered · k ≥ 10</span>
+        </div>
+        <div class="num" style="font-size:27px;font-weight:600;">39</div>
+        <div style="font-size:13px;color:var(--fg-dim);">Denominations with a real crowd behind them. These are the amounts to prefer.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__h">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="card__t">Denominations, thinnest cover first</span>
+          <span style="font-size:13px;color:var(--fg-mute);">42 denominations · all history</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;">
+          <span style="display:flex;align-items:center;gap:7px;font-size:14px;color:var(--fg-dim);"><span class="swatch" style="background:var(--err);"></span>Unique</span>
+          <span style="display:flex;align-items:center;gap:7px;font-size:14px;color:var(--fg-dim);"><span class="swatch" style="background:var(--warn);"></span>Thin</span>
+          <span style="display:flex;align-items:center;gap:7px;font-size:14px;color:var(--fg-dim);"><span class="swatch" style="background:var(--s-good);"></span>Covered</span>
+        </div>
+      </div>
+      <div style="padding:4px 20px 18px;">
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;padding:11px 0 9px;border-bottom:1px solid var(--line-strong);">
+          <span class="lbl">Denomination</span><span class="lbl">Cover</span><span class="lbl">Relative crowd</span><span class="lbl" style="text-align:right;">Recency</span>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">500.00</span>
+            <span style="font-size:13px;color:var(--fg-mute);">USDC</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--err);border:1px solid var(--err);width:17px;height:17px;display:inline-grid;place-items:center;">!</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--err);">k=1</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:2.0%;background:var(--err);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--warn);">dormant · none in 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">1,250.00</span>
+            <span style="font-size:13px;color:var(--fg-mute);">USDC</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--warn);border:1px solid var(--warn);width:17px;height:17px;display:inline-grid;place-items:center;">~</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--warn);">k=3</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:2.0%;background:var(--warn);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">1 in the last 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">0.7500</span>
+            <span style="font-size:13px;color:var(--fg-mute);">ETH</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--warn);border:1px solid var(--warn);width:17px;height:17px;display:inline-grid;place-items:center;">~</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--warn);">k=8</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:2.0%;background:var(--warn);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--warn);">dormant · none in 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">100.00</span>
+            <span style="font-size:13px;color:var(--fg-mute);">USDC</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--s-good);border:1px solid var(--s-good);width:17px;height:17px;display:inline-grid;place-items:center;">=</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--s-good);">k=412</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:100.0%;background:var(--s-good);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">96 in the last 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">1,000.00</span>
+            <span style="font-size:13px;color:var(--fg-mute);">USDC</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--s-good);border:1px solid var(--s-good);width:17px;height:17px;display:inline-grid;place-items:center;">=</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--s-good);">k=388</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:94.2%;background:var(--s-good);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">74 in the last 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">0.5000</span>
+            <span style="font-size:13px;color:var(--fg-mute);">ETH</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--s-good);border:1px solid var(--s-good);width:17px;height:17px;display:inline-grid;place-items:center;">=</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--s-good);">k=241</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:58.5%;background:var(--s-good);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">55 in the last 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">5,000.00</span>
+            <span style="font-size:13px;color:var(--fg-mute);">USDC</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--s-good);border:1px solid var(--s-good);width:17px;height:17px;display:inline-grid;place-items:center;">=</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--s-good);">k=176</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:42.7%;background:var(--s-good);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">31 in the last 30d</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:190px 92px 1fr 150px;gap:18px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line);">
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span class="num" style="font-size:18px;font-weight:600;">1.0000</span>
+            <span style="font-size:13px;color:var(--fg-mute);">ETH</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span class="num" style="font-size:12px;font-weight:700;color:var(--s-good);border:1px solid var(--s-good);width:17px;height:17px;display:inline-grid;place-items:center;">=</span>
+            <span class="num" style="font-size:15px;font-weight:600;color:var(--s-good);">k=164</span>
+          </div>
+          <div style="height:8px;background:var(--bg-3);"><span style="display:block;height:100%;width:39.8%;background:var(--s-good);"></span></div>
+          <div style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">40 in the last 30d</span></div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:14px;">
+          <span style="font-size:14px;color:var(--fg-mute);">34 denominations with more cover not shown</span>
+          <span style="font-size:14px;color:var(--fg-mute);">Linear scale, not log</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- the honesty band: this figure is a ceiling, not a measurement -->
+    <div style="display:flex;flex-direction:column;gap:9px;padding:20px 22px;border:1px solid var(--line-strong);background:var(--bg-2);">
+      <span class="lbl">What k does not tell you</span>
+      <span style="font-size:16px;color:var(--fg-dim);max-width:88ch;line-height:1.65;">
+        k counts <em>withdrawals</em>, not people. One person withdrawing the same amount ten times counts ten times — so k is an upper bound on the size of your crowd, never a measurement of it. Read it as <strong style="font-weight:600;color:var(--fg);">at most this many, and possibly far fewer</strong>.
+      </span>
+      <span style="font-size:16px;color:var(--fg-dim);max-width:88ch;line-height:1.65;">
+        It is also per <span class="num" style="font-size:14px;">publicAssetId</span>. One token registered under several ids does not pool its cover — withdrawals under different ids share no anonymity set.
+      </span>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

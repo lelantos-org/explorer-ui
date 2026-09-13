@@ -7,7 +7,41 @@
  * case it was written for.
  */
 
-import type { YieldAsset } from "../api";
+import type { AnonymitySet, AssetOut, YieldAsset } from "@/api";
+import type { CardMeta } from "@/ui/cardMeta";
+
+/**
+ * A registered asset with nothing resolved beyond its identity: no price and
+ * no fees indexed yet. Override into the resolved states a test needs.
+ */
+export const assetRow = (over: Partial<AssetOut> = {}): AssetOut => ({
+  chainId: 1,
+  assetIdU64: 1000,
+  tokenHex: "a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  scale: "1000000",
+  decimals: 6,
+  symbol: "USDC",
+  priceUsd: null,
+  priceAt: null,
+  depositBps: null,
+  withdrawBps: null,
+  ...over,
+});
+
+/**
+ * A withdrawal cohort. Fully recent by default, so a test that cares about
+ * dormancy has to say so.
+ */
+export const cohortRow = (over: Partial<AnonymitySet> = {}): AnonymitySet => ({
+  chainId: 1,
+  assetIdU64: 1000,
+  publicOut: "500",
+  count: 42,
+  recentCount: over.count ?? 42,
+  firstTs: 1,
+  lastTs: 2,
+  ...over,
+});
 
 /**
  * A polled, healthy yield binding: up 3.42%, holding its 5% buffer exactly.
@@ -35,3 +69,11 @@ export const yieldRow = (over: Partial<YieldAsset> = {}): YieldAsset => ({
   updatedAt: 1_700_000_000,
   ...over,
 });
+
+/** A whole caption as one string, for assertions that only ask whether a
+ *  phrase is present at all. Tier-specific claims read the field directly. */
+export const captionText = (m: CardMeta): string =>
+  [m.lead, m.basis, ...(m.gaps ?? [])].filter(Boolean).join(" · ");
+
+/** What every caption reads while its data is still in flight. */
+export const LOADING_TEXT = "loading…";

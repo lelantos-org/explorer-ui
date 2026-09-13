@@ -1,0 +1,50 @@
+/* The page frame: a column the header, the content and the footer stack in. */
+
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  /* Progressive: an engine that does not know dvh keeps the line above. dvh
+     rather than svh — svh sizes to the smallest viewport and leaves a
+     permanent gap once mobile Safari's toolbar retracts. */
+  min-height: 100dvh;
+}
+
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 1304px;
+  margin: 0 auto;
+  padding: 30px 32px 56px;
+}
+
+/* Skip link. Hidden until focused, then a real control at the top-left. */
+.skip {
+  position: absolute;
+  left: var(--sp-8);
+  top: var(--sp-8);
+  z-index: 100;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  padding: 0;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--bg-1);
+  color: var(--accent);
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip:focus {
+  width: auto;
+  height: auto;
+  clip-path: none;
+  padding: var(--sp-8) var(--sp-12);
+}
+
+@media (max-width: 720px) {
+  .main { padding: var(--sp-20) var(--sp-14) 40px; }
+}

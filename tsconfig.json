@@ -11,6 +11,10 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    /* One root for cross-folder imports, so a file's imports say which layer
+       they reach into (`@/ui/Card`) rather than how deep it happens to sit.
+       Siblings stay relative. Mirrored in vite.config.ts. */
+    "paths": { "@/*": ["./src/*"] },
     /* Correctness. `noUncheckedIndexedAccess` is the load-bearing one: an
        array lookup is `T | undefined`, so a missing bucket, tick or option has
        to be handled where it is read rather than surfacing as `undefined` in

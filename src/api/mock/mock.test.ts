@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { at, first } from "../../test/at";
-import { createMockApi } from "./index";
+import { at, first } from "@/test/at";
+import { createMockApi } from ".";
 
 // nowSec is pinned, not just the seed. createMockApi captures the wall clock
 // for every generated timestamp (priceAt, bucket boundaries), so two instances

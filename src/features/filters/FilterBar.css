@@ -1,0 +1,95 @@
+/* The query bar — labelled fields and the buttons that act on them. */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-12) var(--sp-20);
+  padding: 13px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+}
+/* Follows the page down, parked directly under the sticky header. */
+.filters--sticky {
+  position: sticky;
+  top: var(--hdr-h);
+  z-index: 5;
+}
+
+/* Caption beside its control, not over it: the bar is one row of 44px
+   controls, and a label stacked on each doubled its height. */
+.fld { display: flex; align-items: center; gap: 9px; }
+/* Grows, but only so far: the longest option label sets the useful width, and
+   past it the picker is empty box pushing the range picker off the row. */
+.fld--grow { flex: 0 1 380px; min-width: 0; }
+.fld__inp {
+  min-width: 160px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-1);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: var(--text-base);
+  outline: none;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.fld__inp:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15);
+}
+.fld__inp--scope { width: 100%; }
+
+/* Chevron drawn from two gradients, so the select needs no image asset. Muted:
+   the accent is spent on the selected range. */
+select.fld__inp {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 220px;
+  padding-right: 36px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--fg-mute) 50%),
+    linear-gradient(135deg, var(--fg-mute) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.filters__clear { min-height: 44px; }
+
+/* The trailing edge: the in-flight marker, then how old the figures are. */
+.filters__end {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-12);
+  margin-left: auto;
+}
+.filters__stamp {
+  font-size: var(--text-ui);
+  color: var(--fg-mute);
+  white-space: nowrap;
+}
+/* The in-flight marker. A live region, always mounted; see FilterBar. */
+.live {
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: blink 1.4s infinite;
+}
+/* Empty between queries: nothing to pulse, and an infinite animation on an
+   empty span still costs a style pass every frame. */
+.live:empty { animation: none; }
+
+/* iOS Safari zooms the page when a focused input is under 16px, so tapping the
+   scope picker moved the whole layout. 16px is the threshold, not a taste. */
+@media (pointer: coarse) {
+  .fld__inp { font-size: 16px; }
+}
+
+@media (max-width: 720px) {
+  /* Two sticky bars would eat half a phone screen; the header keeps the slot. */
+  .filters--sticky { position: static; }
+  .filters__end { margin-left: 0; }
+}

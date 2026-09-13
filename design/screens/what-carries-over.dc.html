@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300..700&family=Public+Sans:wght@400;500;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --bg:#14110E;--bg-1:#1C1815;--bg-2:#241F1A;--bg-3:#2E2822;
+      --fg:#F5F1E8;--fg-dim:#BEB5A6;--fg-mute:#9E9486;
+      --line:#2A241E;--line-strong:#3A332B;
+      --accent:#E0794A;--accent-2:#EA8C60;--warn:#E0A93F;--err:#E67A6E;
+      /* chart series - validated, both modes. see the foundations artboard */
+      --s-deposit:#0083a0;--s-transfer:#7b5fc9;--s-withdraw:#d66e31;--s-pending:#c2538a;--s-good:#4FA96E;
+      --display:"Newsreader",Georgia,serif;
+      --sans:"Public Sans",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+      --mono:"Atkinson Hyperlegible Mono",ui-monospace,Menlo,monospace;
+    }
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);}a:hover{color:var(--accent-2);}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"zero" 1;}
+    .lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);}
+    .card{border:1px solid var(--line);background:var(--bg-1);}
+    .card__h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);}
+    .card__t{font-family:var(--display);font-size:19px;font-weight:600;}
+    .tick{font-family:var(--mono);font-size:11px;fill:var(--fg-mute);}
+    .swatch{width:10px;height:10px;flex:none;}
+  </style>
+</helmet>
+
+<div style="min-height:2000px;padding:0 0 46px;">
+  <div style="background:var(--fg);color:var(--bg);padding:20px 40px;display:flex;align-items:baseline;justify-content:space-between;gap:20px;">
+    <span style="font-family:var(--display);font-size:28px;font-weight:600;">Explorer — what carries over</span>
+    <span class="num" style="font-size:13px;opacity:.72;">AND WHAT COMES BACK</span>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:30px 40px 0;display:flex;flex-direction:column;gap:24px;">
+
+    <p style="margin:0;font-size:17px;color:var(--fg-dim);line-height:1.7;max-width:102ch;">
+      Seven checks. Four of the wallet's improvements apply here, one does not, and — worth saying plainly — <strong style="color:var(--fg);font-weight:600;">two go the other way</strong>: the explorer already solves problems the wallet still has, and solves them better.
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:stretch;">
+      <div style="border:1px solid var(--err);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">01</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">Two different percentages, one word</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--accent);border:1px solid var(--accent);padding:2px 8px;">→ APPLY TO EXPLORER</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;">The explorer's <strong style='font-weight:600;color:var(--fg);'>Return</strong> column is <span class='num'>indexGrowth(indexRay)</span> — total growth since the venue was bound, not annualised. The wallet's <strong style='font-weight:600;color:var(--fg);'>Pool pays</strong> is <span class='num'>apy</span> — annualised over a measured window. Both render as a percentage, about the same venue, in two products a user moves between. Nothing marks them as incomparable.</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> Rename and qualify in place. <span class='num'>Return</span> becomes “Since bound”; <span class='num'>Pool pays</span> keeps “/ yr · 30d”. Neither ever appears as a bare percentage.</span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--warn);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">02</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">Nine cards, all shouting equally</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--accent);border:1px solid var(--accent);padding:2px 8px;">→ APPLY TO EXPLORER</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;">Supported assets, chain flows, escrow, inflow/outflow, transactions by kind, withdrawal anonymity, latest transactions, pool notes — stacked at one weight on a single page. This is exactly the bloat the wallet's Home had before it was cut back to five things.</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> Lead with the two things only this explorer has — flows and withdrawal anonymity. Registry, escrow and pool notes become reference, further down or behind a tab.</span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--warn);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">03</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">Protocol words on a public page</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--accent);border:1px solid var(--accent);padding:2px 8px;">→ APPLY TO EXPLORER</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;">“Pool notes”, “leaves”, “relayer notes”, “escrowed by chain”, “commitments”. The wallet moved from <span class='num'>deposit/withdraw</span> to Shield/Unshield for exactly this reason. The explorer's audience is more technical, but not uniformly so — the anonymity card in particular is the thing a non-expert most needs to read.</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> Keep the protocol term as the subtitle, lead with the plain one: “Notes in the tree”, “Held in the pool”, “Withdrawal cover”.</span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--warn);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">04</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">Everything inline, nothing on tap</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--accent);border:1px solid var(--accent);padding:2px 8px;">→ APPLY TO EXPLORER</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;">Each card carries its full caption — lead, basis and gaps — permanently, in small grey type. The wallet moved the same class of qualification into a row detail so the surface could breathe.</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> Keep the one-line lead visible. Move basis and gaps behind the row or card, where there is room to say them in full sentences.</span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--s-good);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">05</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">The three-state data shape</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--s-good);border:1px solid var(--s-good);padding:2px 8px;">← ADOPT FROM EXPLORER</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;"><span class='num'>useAsync.ts</span> returns <span class='num'>{data, loading, error}</span> so that, in its own words, no caller has to guess “whether an empty result means still loading, nothing there, or the backend is down — the three used to be indistinguishable wherever a failure was swallowed into <span class='num'>[]</span>.”</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> The wallet still does the swallow: its forms read <span class='num'>data?.balances ?? []</span>, which is wallet finding #5. Port this shape across — the explorer already proved it.</span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--s-good);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">06</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">Per-card honest captions</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--s-good);border:1px solid var(--s-good);padding:2px 8px;">← ADOPT FROM EXPLORER</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;"><span class='num'>meta.ts</span> gives every card a lead, a basis and a gaps line — “USD at spot · partial”, “deposits − withdrawals”, “3 unpriced assets excluded”. The discipline of naming what a figure rests on, per card, is stronger than anything in the wallet.</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> Adopt the pattern in the wallet's portfolio and fee panels rather than inventing new phrasing there.</span>
+        </div>
+      </div>
+      <div style="border:1px solid var(--line-strong);background:var(--bg-1);display:flex;flex-direction:column;">
+        <div style="padding:14px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;">
+          <span class="num" style="font-size:14px;font-weight:700;color:var(--accent);">07</span>
+          <span style="font-family:var(--display);font-size:18px;font-weight:600;flex:1;">Review steps, fee assets, the link vault</span>
+          <span class="num" style="font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--fg-mute);border:1px solid var(--fg-mute);padding:2px 8px;">NOT APPLICABLE</span>
+        </div>
+        <div style="padding:17px 20px;display:flex;flex-direction:column;gap:11px;flex:1;">
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;">The wallet's three highest-severity findings were all about irreversible actions and stored secrets. The explorer is read-only, holds no keys and signs nothing.</span>
+          <span style="font-size:14px;color:var(--fg);line-height:1.6;padding-top:10px;border-top:1px solid var(--line);"><strong style="font-weight:600;color:var(--accent);">Do:</strong> Nothing to carry over. Noted so the audit is complete rather than selective.</span>
+        </div>
+      </div></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1.05fr;gap:26px;align-items:start;">
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <span class="lbl">02 applied — the dashboard, cut back</span>
+        
+<div style="border:1px solid var(--line-strong);background:var(--bg);">
+  <div style="display:flex;align-items:center;gap:14px;padding:13px 22px;border-bottom:1px solid var(--line);background:var(--bg-1);">
+    <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true" style="display:block;flex:none;">
+      <circle cx="16" cy="6.5" r="4" fill="var(--accent)"/><circle cx="6.5" cy="25.5" r="4" fill="var(--accent)"/>
+      <circle cx="25.5" cy="25.5" r="4" fill="var(--accent)"/>
+      <path d="M9 21 L12.4 14.2 M23 21 L19.6 14.2" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg>
+    <span style="font-family:"Martian Mono", ui-monospace, Menlo, monospace;font-size:15px;font-weight:600;letter-spacing:.02em;">LELANTOS</span>
+    <span class="lbl" style="font-size:11px;">EXPLORER</span>
+    <div style="margin-left:auto;display:flex;gap:8px;">
+      <span style="padding:7px 13px;border:1px solid var(--line-strong);font-size:13px;color:var(--fg-dim);">Base · USDC</span>
+      <span style="padding:7px 13px;border:1px solid var(--line-strong);font-size:13px;color:var(--fg-dim);">30d</span>
+    </div>
+  </div>
+
+  <div style="padding:26px 22px;display:flex;flex-direction:column;gap:22px;">
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <span class="lbl">Everything the pool makes public</span>
+      <span class="num" style="font-family:var(--display);font-size:40px;font-weight:600;line-height:1;">+$1.84M</span>
+      <span style="font-size:15px;color:var(--fg-mute);">Net flow over 30 days · USD at spot, partial</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;">
+      <div style="border:1px solid var(--line);background:var(--bg-1);padding:16px 18px;"><div class="lbl" style="margin-bottom:6px;">In</div><div class="num" style="font-size:25px;font-weight:600;color:var(--fg);">$4.21M</div><div style="font-size:13px;color:var(--fg-mute);">across 3 chains</div></div>
+      <div style="border:1px solid var(--line);background:var(--bg-1);padding:16px 18px;"><div class="lbl" style="margin-bottom:6px;">Out</div><div class="num" style="font-size:25px;font-weight:600;color:var(--fg);">$2.37M</div><div style="font-size:13px;color:var(--fg-mute);">across 3 chains</div></div>
+      <div style="border:1px solid var(--line);background:var(--bg-1);padding:16px 18px;"><div class="lbl" style="margin-bottom:6px;">Withdrawals with cover</div><div class="num" style="font-size:25px;font-weight:600;color:var(--s-good);">94%</div><div style="font-size:13px;color:var(--fg-mute);">k ≥ 10</div></div>
+    </div>
+
+    <div style="border:1px solid var(--line);background:var(--bg-1);padding:18px 20px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:14px;">
+        <span style="font-family:var(--display);font-size:18px;font-weight:600;">Flows</span>
+        <span style="font-size:13px;color:var(--fg-mute);">bucket 1d</span>
+      </div>
+      <div style="height:112px;display:flex;align-items:flex-end;gap:4px;">
+        <span style="flex:1;height:42%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:58%;background:#d66e31;opacity:.85;"></span><span style="flex:1;height:35%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:71%;background:#d66e31;opacity:.85;"></span><span style="flex:1;height:49%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:63%;background:#d66e31;opacity:.85;"></span><span style="flex:1;height:38%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:80%;background:#d66e31;opacity:.85;"></span><span style="flex:1;height:55%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:66%;background:#d66e31;opacity:.85;"></span><span style="flex:1;height:44%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:74%;background:#d66e31;opacity:.85;"></span><span style="flex:1;height:52%;background:#0083a0;opacity:.85;"></span><span style="flex:1;height:61%;background:#d66e31;opacity:.85;"></span>
+      </div>
+    </div>
+
+    <div style="border:1px solid var(--line);background:var(--bg-1);padding:18px 20px;">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:6px;">
+        <span style="font-family:var(--display);font-size:18px;font-weight:600;">Withdrawal cover</span>
+        <span style="font-size:13px;color:var(--fg-mute);">42 denominations</span>
+      </div>
+      <span style="font-size:14px;color:var(--fg-dim);line-height:1.6;display:block;margin-bottom:13px;">How many withdrawals share each published amount. The only figure here that is about privacy rather than volume.</span>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;align-items:center;gap:12px;"><span class="num" style="font-size:14px;width:90px;">500.00</span><div style="flex:1;height:7px;background:var(--bg-3);"><span style="display:block;height:100%;width:3%;background:var(--err);"></span></div><span class="num" style="font-size:13px;color:var(--err);width:56px;text-align:right;">k=1</span></div>
+        <div style="display:flex;align-items:center;gap:12px;"><span class="num" style="font-size:14px;width:90px;">1,250.00</span><div style="flex:1;height:7px;background:var(--bg-3);"><span style="display:block;height:100%;width:9%;background:var(--warn);"></span></div><span class="num" style="font-size:13px;color:var(--warn);width:56px;text-align:right;">k=3</span></div>
+        <div style="display:flex;align-items:center;gap:12px;"><span class="num" style="font-size:14px;width:90px;">100.00</span><div style="flex:1;height:7px;background:var(--bg-3);"><span style="display:block;height:100%;width:100%;background:var(--s-good);"></span></div><span class="num" style="font-size:13px;color:var(--s-good);width:56px;text-align:right;">k=412</span></div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:0;border:1px solid var(--line-strong);">
+      <span style="flex:1;text-align:center;padding:13px;font-size:14px;font-weight:600;background:var(--bg-3);">Activity</span>
+      <span style="flex:1;text-align:center;padding:13px;font-size:14px;color:var(--fg-mute);border-left:1px solid var(--line-strong);">Assets</span>
+      <span style="flex:1;text-align:center;padding:13px;font-size:14px;color:var(--fg-mute);border-left:1px solid var(--line-strong);">Chains</span>
+      <span style="flex:1;text-align:center;padding:13px;font-size:14px;color:var(--fg-mute);border-left:1px solid var(--line-strong);">In the pool</span>
+    </div>
+    <span style="font-size:14px;color:var(--fg-mute);line-height:1.6;">The other five cards live under these tabs. Reference data, reachable in one click, not stacked on top of the thing you came for.</span>
+  </div>
+</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div style="border:1px solid var(--err);background:rgba(224,104,92,0.06);padding:22px 24px;">
+          <span class="lbl" style="color:var(--err);display:block;margin-bottom:10px;">01 applied — the two percentages</span>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 15px;border:1px solid var(--line);background:var(--bg-1);">
+              <div><div style="font-size:14px;font-weight:600;">Explorer · Since bound</div><span style="font-size:13px;color:var(--fg-mute);">total, not annualised</span></div>
+              <span class="num" style="font-size:17px;font-weight:600;">+3.42%</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 15px;border:1px solid var(--line);background:var(--bg-1);">
+              <div><div style="font-size:14px;font-weight:600;">Wallet · Pool pays</div><span style="font-size:13px;color:var(--fg-mute);">annualised, 30d window</span></div>
+              <span class="num" style="font-size:17px;font-weight:600;">4.18% / yr</span>
+            </div>
+          </div>
+          <span style="font-size:14px;color:var(--fg-dim);line-height:1.6;display:block;margin-top:13px;">Same venue, same day, two honest figures that mean different things. Neither may ever appear as a bare percentage in either product.</span>
+        </div>
+
+        <div style="border:1px solid var(--s-good);background:rgba(79,169,110,0.06);padding:22px 24px;">
+          <span class="lbl" style="color:var(--s-good);display:block;margin-bottom:10px;">05 — the flow reverses</span>
+          <span style="font-size:15px;color:var(--fg-dim);line-height:1.65;">
+            The wallet's fifth-worst finding was that a syncing wallet is indistinguishable from an empty one. The explorer fixed that class of bug at the data layer and wrote down why. The wallet should take <span class="num">Async&lt;T&gt;</span> rather than invent its own — the audit only found it because both codebases were read against each other.
+          </span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

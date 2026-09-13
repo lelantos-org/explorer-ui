@@ -1,0 +1,18 @@
+.caveats {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 20px 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+}
+.caveats p {
+  margin: 0;
+  max-width: 88ch;
+  font-size: var(--text-lede);
+  line-height: 1.65;
+  color: var(--fg-dim);
+}
+.caveats strong { font-weight: 600; color: var(--fg); }
+.caveats__term { font-size: var(--text-ui); }

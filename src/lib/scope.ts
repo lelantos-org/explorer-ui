@@ -1,4 +1,4 @@
-import type { AssetOut, ChainFlow } from "../api";
+import type { AssetOut, ChainFlow } from "@/api/types";
 
 /**
  * The chain+asset selection carried as one value.
@@ -21,6 +21,13 @@ export const EMPTY_SCOPE: Scope = { chainId: null, assetIdU64: null };
 
 /** A whole chain, with no asset pinned inside it. */
 export const chainScope = (chainId: number): Scope => ({ chainId, assetIdU64: null });
+
+/**
+ * The chain a click on a chain's row or card selects: that chain, or none when
+ * it is already the one pinned — every chain control on the page toggles.
+ */
+export const toggleChain = (selected: number | null, chainId: number): number | null =>
+  selected === chainId ? null : chainId;
 
 /** Whether anything at all is pinned. An asset cannot be pinned without its
  *  chain, so the chain alone answers this. */

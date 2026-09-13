@@ -1,4 +1,4 @@
-import type { FlowPoint } from "../api";
+import type { FlowPoint } from "@/api/types";
 import {
   fmtNum,
   fmtSigned,

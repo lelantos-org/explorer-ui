@@ -1,0 +1,219 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300..700&family=Newsreader:opsz,wght@6..72,300..700&family=Public+Sans:wght@400;500;600;700&family=Atkinson+Hyperlegible+Mono:wght@400;500;700&display=swap">
+  <style>
+    :root{
+      --bg:#14110E;--bg-1:#1C1815;--bg-2:#241F1A;--bg-3:#2E2822;
+      --fg:#F5F1E8;--fg-dim:#BEB5A6;--fg-mute:#9E9486;
+      --line:#2A241E;--line-strong:#3A332B;
+      --accent:#E0794A;--accent-2:#EA8C60;--warn:#E0A93F;--err:#E67A6E;
+      /* chart series - validated, both modes. see the foundations artboard */
+      --s-deposit:#0083a0;--s-transfer:#7b5fc9;--s-withdraw:#d66e31;--s-pending:#c2538a;--s-good:#4FA96E;
+      --display:"Newsreader",Georgia,serif;
+      --sans:"Public Sans",-apple-system,BlinkMacSystemFont,Arial,sans-serif;
+      --mono:"Atkinson Hyperlegible Mono",ui-monospace,Menlo,monospace;
+    }
+    body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);}a:hover{color:var(--accent-2);}
+    .num{font-family:var(--mono);font-variant-numeric:tabular-nums slashed-zero;font-feature-settings:"zero" 1;}
+    .lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--fg-mute);}
+    .card{border:1px solid var(--line);background:var(--bg-1);}
+    .card__h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding:16px 20px;border-bottom:1px solid var(--line);}
+    .card__t{font-family:var(--display);font-size:19px;font-weight:600;}
+    .tick{font-family:var(--mono);font-size:11px;fill:var(--fg-mute);}
+    .swatch{width:10px;height:10px;flex:none;}
+  </style>
+</helmet>
+
+<div style="min-height:1360px;padding:0 0 44px;">
+  <div style="display:flex;align-items:center;gap:16px;padding:13px 32px;border-bottom:1px solid var(--line);background:var(--bg-1);">
+    <div style="display:flex;align-items:baseline;gap:9px;">
+      <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true" style="display:block;flex:none;"><circle cx="16" cy="6.5" r="4" fill="var(--accent)"/><circle cx="6.5" cy="25.5" r="4" fill="var(--accent)"/><circle cx="25.5" cy="25.5" r="4" fill="var(--accent)"/><path d="M9 21 L12.4 14.2 M23 21 L19.6 14.2" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" fill="none"/></svg><span style="font-family:"Martian Mono", ui-monospace, Menlo, monospace;font-size:15px;font-weight:600;letter-spacing:.02em;line-height:1;">LELANTOS</span>
+      <span class="lbl" style="font-size:11px;">explorer</span>
+    </div>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:30px 32px 0;display:flex;flex-direction:column;gap:22px;">
+
+    <div class="card">
+      <div class="card__h">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="card__t">Latest transactions</span>
+          <span style="font-size:13px;color:var(--fg-mute);">20 most recent · every chain</span>
+        </div>
+        <div style="display:flex;border:1px solid var(--line-strong);">
+          <span style="padding:8px 13px;font-size:13px;font-weight:600;background:var(--accent);color:#14110E;border-right:1px solid var(--line-strong);">All</span>
+          <span style="padding:8px 13px;font-size:13px;color:var(--fg-mute);border-right:1px solid var(--line-strong);">Deposit</span>
+          <span style="padding:8px 13px;font-size:13px;color:var(--fg-mute);border-right:1px solid var(--line-strong);">Pending</span>
+          <span style="padding:8px 13px;font-size:13px;color:var(--fg-mute);border-right:1px solid var(--line-strong);">Transfer</span>
+          <span style="padding:8px 13px;font-size:13px;color:var(--fg-mute);">Withdraw</span>
+        </div>
+      </div>
+      <div style="padding:4px 20px 18px;">
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;padding:11px 0 9px;border-bottom:1px solid var(--line-strong);">
+          <span class="lbl">Age</span><span class="lbl">Kind</span><span class="lbl">Chain</span><span class="lbl">Asset</span>
+          <span class="lbl">Block</span><span class="lbl" style="text-align:right;">Amount</span>
+          <span class="lbl" style="text-align:right;">Privacy</span><span class="lbl" style="text-align:right;">Tx</span>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">12s</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-deposit);color:var(--s-deposit);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-deposit);width:8px;height:8px;"></span>Deposit
+          </span>
+          <span class="num" style="font-size:14px;">BASE</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">USDC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">24,881,204</span>
+          <span class="num" style="font-size:15px;text-align:right;">2,500.00</span>
+          <span style="text-align:right;"><span style="font-size:14px;color:var(--fg-mute);">—</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">48s</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-withdraw);color:var(--s-withdraw);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-withdraw);width:8px;height:8px;"></span>Withdraw
+          </span>
+          <span class="num" style="font-size:14px;">BASE</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">USDC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">24,881,199</span>
+          <span class="num" style="font-size:15px;text-align:right;">1,000.00</span>
+          <span style="text-align:right;"><span class="num" style="font-size:14px;font-weight:600;color:var(--s-good);">k=388</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">1m</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-transfer);color:var(--s-transfer);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-transfer);width:8px;height:8px;"></span>Transfer
+          </span>
+          <span class="num" style="font-size:14px;">ETH</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">—</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">21,004,882</span>
+          <span class="num" style="font-size:15px;text-align:right;">—</span>
+          <span style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">not counted</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">2m</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-pending);border-style:dashed;color:var(--s-pending);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-pending);width:8px;height:8px;"></span>Pending
+          </span>
+          <span class="num" style="font-size:14px;">BASE</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">WBTC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">24,881,180</span>
+          <span class="num" style="font-size:15px;text-align:right;">0.0450</span>
+          <span style="text-align:right;"><span style="font-size:14px;color:var(--fg-mute);">—</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">4m</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-withdraw);color:var(--s-withdraw);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-withdraw);width:8px;height:8px;"></span>Withdraw
+          </span>
+          <span class="num" style="font-size:14px;">OP</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">ETH</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">139,220,401</span>
+          <span class="num" style="font-size:15px;text-align:right;">0.5000</span>
+          <span style="text-align:right;"><span class="num" style="font-size:14px;font-weight:600;color:var(--s-good);">k=241</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">6m</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-withdraw);color:var(--s-withdraw);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-withdraw);width:8px;height:8px;"></span>Withdraw
+          </span>
+          <span class="num" style="font-size:14px;">BASE</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">USDC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">24,881,102</span>
+          <span class="num" style="font-size:15px;text-align:right;">500.00</span>
+          <span style="text-align:right;"><span class="num" style="font-size:14px;font-weight:600;color:var(--err);">k=1</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">9m</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-deposit);color:var(--s-deposit);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-deposit);width:8px;height:8px;"></span>Deposit
+          </span>
+          <span class="num" style="font-size:14px;">ARB</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">USDC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">281,004,774</span>
+          <span class="num" style="font-size:15px;text-align:right;">10,000.00</span>
+          <span style="text-align:right;"><span style="font-size:14px;color:var(--fg-mute);">—</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <div style="display:grid;grid-template-columns:64px 118px 78px 92px 148px 1fr 118px 132px;gap:14px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">11m</span>
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:3px 9px;border:1px solid var(--s-transfer);color:var(--s-transfer);font-size:13px;font-weight:600;justify-self:start;">
+            <span class="swatch" style="background:var(--s-transfer);width:8px;height:8px;"></span>Transfer
+          </span>
+          <span class="num" style="font-size:14px;">BASE</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);">—</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);">24,880,902</span>
+          <span class="num" style="font-size:15px;text-align:right;">—</span>
+          <span style="text-align:right;"><span style="font-size:13px;color:var(--fg-mute);">not counted</span></span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">0x4c8e…91af</span>
+        </div>
+        <p style="margin:14px 0 0;font-size:14px;color:var(--fg-mute);max-width:92ch;">Only withdrawals publish a denomination, so only they carry a cover figure. A transfer moves no public value — there is nothing to count.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card__h">
+        <div style="display:flex;flex-direction:column;gap:2px;">
+          <span class="card__t">Supported assets</span>
+          <span style="font-size:13px;color:var(--fg-mute);">4 assets · 1 chain · 3 earning</span>
+        </div>
+        <span style="font-size:13px;color:var(--warn);">1 awaiting a first poll</span>
+      </div>
+      <div style="padding:4px 20px 18px;">
+        <div style="display:grid;grid-template-columns:1.3fr .9fr .7fr .7fr 1fr;gap:16px;padding:11px 0 9px;border-bottom:1px solid var(--line-strong);">
+          <span class="lbl">Asset</span>
+          <span class="lbl" style="text-align:right;">Price</span>
+          <span class="lbl" style="text-align:right;">Fee in</span>
+          <span class="lbl" style="text-align:right;">Fee out</span>
+          <span class="lbl" style="text-align:right;">Since bound</span>
+        </div>
+        
+        <div style="display:grid;grid-template-columns:1.3fr .9fr .7fr .7fr 1fr;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:15px;font-weight:600;">USDC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">$1.00</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.10%</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.25%</span>
+          <span class="num" style="font-size:14px;color:var(--s-good);text-align:right;">+4.18%</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1.3fr .9fr .7fr .7fr 1fr;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:15px;font-weight:600;">ETH</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">$2,649.20</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.10%</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.25%</span>
+          <span class="num" style="font-size:14px;color:var(--fg-mute);text-align:right;">—</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1.3fr .9fr .7fr .7fr 1fr;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:15px;font-weight:600;">WBTC</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">$70,148.00</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.15%</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.30%</span>
+          <span class="num" style="font-size:14px;color:var(--s-good);text-align:right;">+1.02% <span style="padding:1px 7px;border:1px solid var(--warn);color:var(--warn);font-size:12px;">halted</span></span>
+        </div>
+        <div style="display:grid;grid-template-columns:1.3fr .9fr .7fr .7fr 1fr;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:15px;font-weight:600;">DAI</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">$1.00</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">free</span>
+          <span class="num" style="font-size:14px;color:var(--fg-dim);text-align:right;">0.25%</span>
+          <span class="num" style="font-size:14px;color:var(--s-good);text-align:right;">+3.91%</span>
+        </div>
+        <p style="margin:14px 0 0;font-size:14px;color:var(--fg-mute);max-width:92ch;"><strong style="font-weight:600;color:var(--fg-dim);">Since bound</strong> is total growth since each venue was attached — not an annual rate, and not comparable with the wallet&rsquo;s “pool pays”, which is annualised. A dash is unknown, never zero.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

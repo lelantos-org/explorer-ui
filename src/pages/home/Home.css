@@ -1,0 +1,12 @@
+/* One gap between every block on the page, rather than a margin on each. */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* Only the panels that mount on a tab switch fade in. The masthead and the
+   findings paint at once: an entrance animation on the largest text on the
+   page holds back its paint — and the page's largest-contentful-paint — by the
+   whole duration, for no information. */
+.ref-tabs ~ * { animation: fadein 240ms var(--ease); }

@@ -1,4 +1,4 @@
-import { TX_KINDS, type TxKind } from "../api";
+import { TX_KINDS, type TxKind } from "@/api/types";
 
 /**
  * What each kind means, in one place: the feed's badges and the filter above
@@ -37,3 +37,18 @@ export const KIND_FILTER_OPTIONS: { value: KindFilter; label: string; title: str
 export function isTxKind(value: string | null): value is TxKind {
   return TX_KINDS.some((kind) => kind === value);
 }
+
+/**
+ * The kinds this chart plots.
+ *
+ * `pending` is left out: it is a transient state, not an outcome. Every pending
+ * escrow becomes a `deposit` once the relayer flushes it, so plotting both puts
+ * the same escrow on the chart twice — once where it was seen and again where
+ * it settled — and the pending bars in older buckets keep shrinking as history
+ * catches up. The feed still carries it, and the latest-transactions table
+ * still badges it, where it reads as live state rather than as a measurement.
+ *
+ * Derived from `TX_KINDS` so a kind added to the wire type reaches the chart and its legend
+ * without a second edit here.
+ */
+export const PLOTTED_KINDS: readonly TxKind[] = TX_KINDS.filter((k) => k !== "pending");

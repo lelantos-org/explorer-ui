@@ -1,0 +1,28 @@
+/* Opens with a heading of its own rather than a card title: this is a finding
+   with a page's worth of explanation, not one more lookup. */
+
+.cover {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-top: var(--sp-14);
+}
+.cover__head { display: flex; flex-direction: column; gap: 7px; }
+.cover__t {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+}
+.cover__lede {
+  margin: 0;
+  max-width: 74ch;
+  font-size: var(--text-lede);
+  color: var(--fg-dim);
+}
+
+@media (max-width: 720px) {
+  .cover__t { font-size: 28px; }
+}

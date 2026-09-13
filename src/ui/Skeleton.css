@@ -1,0 +1,20 @@
+/* Loading placeholders. Shaped like the content they stand in for, so a card
+   holds its height and the page below does not jump when the rows land. */
+
+.sk { display: flex; flex-direction: column; gap: var(--sp-10); }
+.sk__row { display: flex; align-items: center; gap: var(--sp-12); }
+.sk__bar {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: var(--radius-sm);
+  background: var(--bg-3);
+  animation: shimmer 1.4s infinite;
+}
+/* The last bar in a row takes the slack, so a row ends flush rather than
+   leaving a ragged gutter against the card edge. */
+.sk__row > .sk__bar:last-child { flex: 1 1 auto; }
+
+/* A placeholder line inside a real table cell. */
+.sk-line { display: flex; align-items: center; }
+.sk-line--end { justify-content: flex-end; }
+.tbl tbody tr.sk-tr:hover { background: none; }

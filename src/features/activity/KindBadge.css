@@ -1,0 +1,19 @@
+.kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 9px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: capitalize;
+  cursor: help;
+}
+.kind__sq { width: 8px; height: 8px; flex: none; background: currentColor; }
+.kind--deposit { color: var(--kind-deposit); }
+.kind--transfer { color: var(--kind-transfer); }
+.kind--withdraw { color: var(--kind-withdraw); }
+/* Dashed: pending is the one kind that can still change. */
+.kind--pending { color: var(--kind-pending); border-style: dashed; }

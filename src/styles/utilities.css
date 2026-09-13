@@ -1,97 +1,53 @@
 /* Single-purpose classes any component may reach for. Nothing here owns layout
-   — a utility describes one property of the thing it is put on. */
+   — a utility describes one property of the thing it is put on. Anything with
+   structure of its own is a component, with a stylesheet beside it. */
 
 .muted { color: var(--fg-mute); }
 .accent { color: var(--accent); }
 .warn { color: var(--warn); }
-.mono { font-family: var(--mono); }
 
-/* Placeholder for a panel whose query came back with nothing to draw. */
-.empty {
-  text-align: center;
-  color: var(--fg-mute);
-  padding: var(--sp-22);
+/* A figure or a hash. Tabular so a column of them lines up on its last digit,
+   and slashed-zero so 0 and O are never one glyph in an address. */
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "zero" 1;
 }
 
-.err {
-  color: var(--err);
-  border: 1px solid rgba(var(--err-rgb), 0.35);
-  background: rgba(var(--err-rgb), 0.06);
-  padding: 9px var(--sp-14);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--sp-12);
-}
-
-/* A render that threw, rather than a request that failed: the boundary replaces
-   the whole page with this, so it is given room and a stacked layout. */
-.err--fatal {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--sp-10);
-  margin: 40px auto;
-  max-width: 640px;
-  padding: var(--sp-20) var(--sp-24);
-}
-
-/* The filter bar's in-flight marker — the only live-region text left now that
-   the header carries no connection widget. */
-.live {
-  font-size: var(--text-xs);
-  letter-spacing: 0.1em;
+/* The label voice: small, tracked, uppercase. Names a figure, never is one. */
+.lbl {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  animation: blink 1.4s infinite;
+  color: var(--fg-mute);
 }
 
-/* Loading placeholders. Shaped like the content they stand in for, so a card
-   holds its height and the page below does not jump when the rows land.
-   `shimmer` is shared with `.chain-card--ghost`, which is the same idea at
-   card scale — and, like it, is switched off under reduced motion. */
-.sk {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-10);
+/* A series swatch; see `ui/Swatch`. Coloured by the caller. */
+.swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
 }
-.sk__row {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-12);
-}
-.sk__bar {
-  display: block;
-  flex: 0 0 auto;
-  border-radius: 3px;
-  background: var(--bg-3);
-  animation: shimmer 1.4s infinite;
-}
-/* The last bar in a row takes the slack, so a row ends flush rather than
-   leaving a ragged gutter against the card edge. */
-.sk__row > .sk__bar:last-child { flex: 1 1 auto; }
 
-/* Skip link. Hidden until focused, then a real control at the top-left.
-   `main` carries tabIndex={-1} so the jump moves focus rather than only
-   scrolling. */
-.skip {
+/* Error text in a box: a card whose request failed, a page that failed to
+   render. */
+.err {
+  margin-bottom: var(--sp-12);
+  padding: 9px var(--sp-14);
+  border: 1px solid rgba(var(--err-rgb), 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(var(--err-rgb), 0.06);
+  color: var(--err);
+}
+
+/* Read to assistive tech, not drawn: the word behind a placeholder. */
+.sr-only {
   position: absolute;
-  left: var(--sp-8);
-  top: var(--sp-8);
-  z-index: 100;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
-  padding: 0;
-  background: var(--bg-1);
-  color: var(--accent);
-  border: 1px solid var(--accent);
-  border-radius: 6px;
-  font-size: var(--text-md);
-  font-weight: 600;
-  text-decoration: none;
-}
-.skip:focus {
-  width: auto;
-  height: auto;
-  clip-path: none;
-  padding: var(--sp-8) var(--sp-12);
+  white-space: nowrap;
 }

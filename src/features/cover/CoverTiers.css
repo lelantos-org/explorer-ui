@@ -1,0 +1,6 @@
+.tier--flag.tier--unique { border-color: var(--err); }
+.tier--flag.tier--thin { border-color: var(--warn); }
+.tier__lbl--unique { color: var(--err); }
+.tier__lbl--thin { color: var(--warn); }
+.tier__lbl--counted { color: var(--ok); }
+.tier__gloss { color: var(--fg-dim); }
