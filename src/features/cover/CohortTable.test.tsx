@@ -1,18 +1,15 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { AnonymitySet, AssetOut } from "@/api";
-import { THIN_SET } from "@/lib/cover";
+import { THIN_SET } from "@/domain/cover";
 import { assetRow, cohortRow } from "@/test/fixtures";
+import { renderHtml } from "@/test/render";
 import CohortTable from "./CohortTable";
 
 const set = cohortRow;
 const asset = assetRow({ depositBps: 0, withdrawBps: 20, priceUsd: 1, priceAt: 1 });
 
 const render = (data: AnonymitySet[] | null, loading = false) =>
-  renderToString(<CohortTable data={data} assets={[asset]} loading={loading} />).replaceAll(
-    "<!-- -->",
-    "",
-  );
+  renderHtml(<CohortTable data={data} assets={[asset]} loading={loading} />);
 
 describe("CohortTable", () => {
   it("gives each cohort size its own tone", () => {
@@ -69,7 +66,7 @@ describe("CohortTable", () => {
     // Labelled by symbol alone the two rows would be indistinguishable, and a
     // reader would add a k of 1 to a k of 3 and get cover that does not exist.
     const twin: AssetOut = { ...asset, assetIdU64: 2000 };
-    const html = renderToString(
+    const html = renderHtml(
       <CohortTable
         data={[
           set({ assetIdU64: 1000, publicOut: "100000000", count: 3 }),
@@ -78,7 +75,7 @@ describe("CohortTable", () => {
         assets={[asset, twin]}
         loading={false}
       />,
-    ).replaceAll("<!-- -->", "");
+    );
     expect(html).toContain("#1000");
     expect(html).toContain("#2000");
   });

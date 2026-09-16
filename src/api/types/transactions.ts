@@ -7,9 +7,14 @@ export const TX_KINDS: TxKind[] = ["deposit", "pending", "transfer", "withdraw"]
 
 export interface TxOut {
   chainId: number;
+  /** Not unique across rows: one bundled transaction can hold several
+   *  operations, possibly of one kind. `(chainId, txHashHex, kind, logIndex)` is. */
   txHashHex: string;
   blockNumber: number;
   blockTs: number;
+  /** The log identifying this operation within its transaction. null only for a
+   *  deposit flushed before the indexer recorded where. */
+  logIndex: number | null;
   kind: TxKind;
   /** null for transfers, which move no public value. */
   assetIdU64: number | null;

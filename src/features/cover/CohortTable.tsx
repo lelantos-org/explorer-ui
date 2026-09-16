@@ -1,10 +1,10 @@
 import { memo, useMemo } from "react";
 import type { AnonymitySet, AssetOut } from "@/api";
-import { indexAssets } from "@/lib/assets";
+import { indexAssets } from "@/domain/assets";
 import Empty from "@/ui/Empty";
 import ScrollTable from "@/ui/ScrollTable";
-import Skeleton from "@/ui/Skeleton";
-import { SkeletonRows } from "@/ui/SkeletonRows";
+import Skeleton, { SkeletonRows } from "@/ui/Skeleton";
+
 import CohortRow from "./CohortRow";
 import { COHORT_SKELETON_CELLS, CohortFoot, CohortHead } from "./CohortTableParts";
 import { VISIBLE_ROWS, visibleCohorts } from "./visibleCohorts";

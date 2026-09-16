@@ -1,15 +1,15 @@
 import { useMemo } from "react";
 import type { AssetOut } from "@/api";
-import ChartSkeleton from "@/charts/ChartSkeleton";
 import FlowChart, { FLOW_CHART_HEIGHT } from "@/charts/FlowChart";
-import { assetsInScope } from "@/lib/assets";
-import { hasAmounts } from "@/lib/denom";
+import ChartSkeleton from "@/charts/primitives/ChartSkeleton";
+import { SERIES_COLOR } from "@/charts/series";
+import { assetsInScope } from "@/domain/assets";
+import { hasAmounts } from "@/domain/denom";
 import Card from "@/ui/Card";
 import { LOADING } from "@/ui/cardMeta";
 import Empty from "@/ui/Empty";
 import Legend, { type LegendItem } from "@/ui/Legend";
 import Meta from "@/ui/Meta";
-import { SERIES_COLOR } from "@/ui/series";
 import { flowMeta } from "./meta";
 import type { Flows } from "./useFlows";
 
@@ -62,10 +62,10 @@ export default function FlowCard({ flows, assets }: Props) {
 function FlowPlot({ flows, settled }: { flows: Flows; settled: boolean }) {
   const { flows: points, denom, domain } = flows;
   if (points === null) return <ChartSkeleton height={FLOW_CHART_HEIGHT} />;
-  if (settled && points?.length === 0) {
+  if (settled && points.length === 0) {
     return <Empty>no flow data for this range</Empty>;
   }
-  if (points !== null && points.length > 0 && !hasAmounts(denom)) {
+  if (points.length > 0 && !hasAmounts(denom)) {
     return (
       <Empty>
         no comparable unit across these assets — pick a single asset above, or wait for price data

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { resolveRange } from "@/lib/ranges";
-import { EMPTY_SCOPE, type Scope } from "@/lib/scope";
+import { resolveRange } from "@/domain/ranges";
+import { EMPTY_SCOPE, type Scope } from "@/domain/scope";
 import { assetRow, captionText } from "@/test/fixtures";
 import { countScope, countsMeta, flowMeta } from "./meta";
 

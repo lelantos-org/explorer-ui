@@ -1,9 +1,9 @@
 import { memo } from "react";
-import { amountFmt, type Denom, unitShort } from "@/lib/denom";
-import { joinMeta } from "@/lib/format";
+import { SERIES_COLOR } from "@/charts/series";
+import { amountFmt, type Denom, unitShort } from "@/domain/denom";
+import { joinMeta } from "@/lib/text";
 import Stat, { StatGrid } from "@/ui/Stat";
 import Swatch from "@/ui/Swatch";
-import { SERIES_COLOR } from "@/ui/series";
 
 interface Props {
   inflow: number | null;

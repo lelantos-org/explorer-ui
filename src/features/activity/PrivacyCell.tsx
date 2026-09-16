@@ -1,5 +1,5 @@
 import type { TxOut } from "@/api";
-import { type Cohorts, txPrivacy } from "@/lib/txPrivacy";
+import { type Cohorts, txPrivacy } from "@/domain/txPrivacy";
 import "./PrivacyCell.css";
 
 /**

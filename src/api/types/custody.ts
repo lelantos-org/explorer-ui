@@ -118,7 +118,7 @@ export interface YieldAsset {
    *  the same quantity converted. */
   accruedFeeNormalized: string | null;
   /** The conversion rate scaled by RAY (1e27), as a decimal string. For display
-   *  only; see `lib/yield`. */
+   *  only; see `domain/yield`. */
   indexRay: string | null;
   /** Block the polled values were read at. */
   blockNumber: number | null;

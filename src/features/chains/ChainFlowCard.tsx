@@ -1,6 +1,6 @@
 import type { ChainFlow } from "@/api";
 import Sparkline from "@/charts/Sparkline";
-import { getChainMeta } from "@/lib/chains";
+import { getChainMeta } from "@/domain/chains";
 import { cx } from "@/lib/cx";
 import { fmtCompact, fmtSigned } from "@/lib/format";
 import "./ChainFlowCard.css";

@@ -1,4 +1,4 @@
-import type { CoverTone } from "@/lib/cover";
+import type { CoverTone } from "@/domain/cover";
 import "./CoverGlyph.css";
 
 /**

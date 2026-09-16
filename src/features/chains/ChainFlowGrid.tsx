@@ -1,10 +1,10 @@
 import { memo } from "react";
 import type { ChainFlow } from "@/api";
-import { chainShares } from "@/lib/aggregate";
-import { toggleChain } from "@/lib/scope";
+import { toggleChain } from "@/domain/scope";
 import Empty from "@/ui/Empty";
 import Skeleton from "@/ui/Skeleton";
 import ChainFlowCard from "./ChainFlowCard";
+import { chainShares } from "./summary";
 import "./ChainFlowGrid.css";
 
 interface Props {

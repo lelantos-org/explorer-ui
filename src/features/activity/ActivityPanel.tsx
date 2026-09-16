@@ -1,11 +1,11 @@
 import type { AnonymitySet, AssetOut, TxOut } from "@/api";
 import type { Async } from "@/data/useAsync";
-import { KIND_FILTER_OPTIONS, type KindFilter } from "@/lib/kinds";
+import { KIND_FILTER_OPTIONS, type KindFilter } from "@/domain/kinds";
 import Card from "@/ui/Card";
-import { LOADING } from "@/ui/cardMeta";
 import Meta from "@/ui/Meta";
 import Segmented from "@/ui/Segmented";
 import LatestTxList from "./LatestTxList";
+import { activityMeta } from "./meta";
 
 interface Props {
   recentTx: Async<TxOut[]>;
@@ -35,13 +35,7 @@ export default function ActivityPanel({ recentTx, assets, cohorts, kind, onKindC
           onChange={onKindChange}
         />
       }
-      meta={
-        <Meta
-          {...(recentTx.data
-            ? { lead: `${recentTx.data.length} most recent · every chain` }
-            : LOADING)}
-        />
-      }
+      meta={<Meta {...activityMeta(recentTx.data)} />}
     >
       <LatestTxList
         data={recentTx.data}

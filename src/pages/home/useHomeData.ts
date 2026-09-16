@@ -9,10 +9,10 @@ import {
   useTxKinds,
   useYield,
 } from "@/data/queries";
+import { groupAssetsByChain } from "@/domain/scope";
 import { FEED_LIMIT } from "@/features/activity/feed";
 import type { Filters } from "@/features/filters/useFilters";
 import { useFlows } from "@/features/flows/useFlows";
-import { groupAssetsByChain } from "@/lib/scope";
 
 /**
  * Every request the home page makes, in one place.

@@ -1,21 +1,11 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { PoolNotes as PoolNotesRow } from "@/api";
+import { poolNotesRow as row } from "@/test/fixtures";
+import { renderHtml } from "@/test/render";
 import PoolNotes from "./PoolNotes";
 
-const row = (over: Partial<PoolNotesRow> = {}): PoolNotesRow => ({
-  chainId: 1,
-  leaves: 1_000,
-  feeNotes: 200,
-  lastTs: 1_700_000_000,
-  ...over,
-});
-
 const render = (data: PoolNotesRow[] | null, loading = false, selected: number | null = null) =>
-  renderToString(<PoolNotes data={data} loading={loading} selected={selected} />).replaceAll(
-    "<!-- -->",
-    "",
-  );
+  renderHtml(<PoolNotes data={data} loading={loading} selected={selected} />);
 
 describe("PoolNotes", () => {
   /**

@@ -116,6 +116,7 @@ describe("mock transaction feed", () => {
       "blockTs",
       "chainId",
       "kind",
+      "logIndex",
       "publicOut",
       "txHashHex",
     ]);

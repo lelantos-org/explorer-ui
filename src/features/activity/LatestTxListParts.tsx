@@ -1,4 +1,4 @@
-import type { SkeletonCell } from "@/ui/SkeletonRows";
+import type { SkeletonCell } from "@/ui/Skeleton";
 
 /** The column headings, shared by the table and its placeholder. */
 export function FeedHead() {

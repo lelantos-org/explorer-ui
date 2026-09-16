@@ -1,10 +1,11 @@
 import { memo } from "react";
 import type { ChainLocked, LockedAsset } from "@/api";
-import { assetLabel } from "@/lib/assets";
-import { getChainMeta } from "@/lib/chains";
+import { assetLabel } from "@/domain/assets";
+import { getChainMeta } from "@/domain/chains";
+import { toggleChain } from "@/domain/scope";
 import { cx } from "@/lib/cx";
-import { fmtTokens, fmtUsd, joinMeta } from "@/lib/format";
-import { toggleChain } from "@/lib/scope";
+import { fmtTokens, fmtUsd } from "@/lib/format";
+import { joinMeta } from "@/lib/text";
 import AssetIdTag from "@/ui/AssetIdTag";
 import Empty from "@/ui/Empty";
 import Skeleton, { BarRows } from "@/ui/Skeleton";

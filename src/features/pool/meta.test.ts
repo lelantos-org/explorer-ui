@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { PoolNotes } from "@/api";
-import type { LockedSummary } from "@/lib/aggregate";
-import { captionText, LOADING_TEXT } from "@/test/fixtures";
+import { captionText, LOADING_TEXT, poolNotesRow as notes } from "@/test/fixtures";
 import { lockedMeta, poolNotesMeta } from "./meta";
+import type { LockedSummary } from "./summary";
 
 /** A locked summary. `venueHeldAssets` defaults to none, which is the shape of
  *  a pool holding only plain custody. */
@@ -64,14 +63,6 @@ describe("lockedMeta", () => {
     expect(m.lead).not.toContain("deposits");
     expect(m.basis).toContain("deposits − withdrawals");
   });
-});
-
-const notes = (over: Partial<PoolNotes> = {}): PoolNotes => ({
-  chainId: 1,
-  leaves: 1_000,
-  feeNotes: 200,
-  lastTs: 1,
-  ...over,
 });
 
 describe("poolNotesMeta", () => {

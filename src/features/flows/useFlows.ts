@@ -1,9 +1,9 @@
 import { type FlowAndTx, useFlowAndTx } from "@/data/queries";
 import type { Async } from "@/data/useAsync";
-import { type FlowTotals, sumCounts, sumFlows } from "@/lib/aggregate";
-import { type Denom, pickDenom } from "@/lib/denom";
-import type { Range } from "@/lib/ranges";
-import type { Scope } from "@/lib/scope";
+import { type Denom, pickDenom } from "@/domain/denom";
+import type { Range } from "@/domain/ranges";
+import type { Scope } from "@/domain/scope";
+import { type FlowTotals, sumCounts, sumFlows } from "./totals";
 
 export interface Flows {
   /** The request itself: its loading and error state, and when it last landed. */

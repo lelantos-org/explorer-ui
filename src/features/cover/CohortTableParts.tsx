@@ -1,5 +1,5 @@
-import { plural } from "@/lib/format";
-import type { SkeletonCell } from "@/ui/SkeletonRows";
+import { plural } from "@/lib/text";
+import type { SkeletonCell } from "@/ui/Skeleton";
 
 /** The column structure, shared by the table and its placeholder so both lay
  *  out identically. */

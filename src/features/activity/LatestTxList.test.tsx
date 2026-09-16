@@ -1,29 +1,21 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { AnonymitySet, AssetOut, TxKind, TxOut } from "@/api";
-import { ALL_KINDS } from "@/lib/kinds";
-import { assetRow, cohortRow } from "@/test/fixtures";
+import { ALL_KINDS } from "@/domain/kinds";
+import { assetRow, cohortRow, txRow } from "@/test/fixtures";
+import { renderHtml } from "@/test/render";
 import LatestTxList from "./LatestTxList";
 
-const tx = (kind: TxKind, over: Partial<TxOut> = {}): TxOut => ({
-  chainId: 1,
-  txHashHex: `${kind.padEnd(8, "0")}`.repeat(8).slice(0, 64),
-  blockNumber: 100,
-  blockTs: Math.floor(Date.now() / 1000),
-  kind,
-  assetIdU64: kind === "transfer" ? null : 1000,
-  amount: kind === "transfer" ? null : "10",
-  publicOut: kind === "withdraw" ? "500" : null,
-  ...over,
-});
+/** Mined just now, so the age column renders as it would on a live feed. */
+const tx = (kind: TxKind, over: Partial<TxOut> = {}): TxOut =>
+  txRow(kind, { blockTs: Math.floor(Date.now() / 1000), ...over });
 
 const cohort = (count: number, publicOut = "500", recentCount = count): AnonymitySet =>
   cohortRow({ count, publicOut, recentCount });
 
 const render = (data: TxOut[], cohorts: AnonymitySet[] | null = [cohort(42)]) =>
-  renderToString(
+  renderHtml(
     <LatestTxList data={data} assets={null} cohorts={cohorts} loading={false} kind={ALL_KINDS} />,
-  ).replaceAll("<!-- -->", "");
+  );
 
 const registered = (assetIdU64: number): AssetOut =>
   assetRow({
@@ -40,7 +32,7 @@ describe("LatestTxList asset cell", () => {
     // anonymity sets, so the same denomination of the "same" asset can carry
     // two different k's. Without the id the feed shows that difference with no
     // visible cause, and the rows read as a contradiction.
-    const html = renderToString(
+    const html = renderHtml(
       <LatestTxList
         data={[tx("withdraw", { assetIdU64: 4 })]}
         assets={[registered(1), registered(4)]}
@@ -48,7 +40,7 @@ describe("LatestTxList asset cell", () => {
         loading={false}
         kind={ALL_KINDS}
       />,
-    ).replaceAll("<!-- -->", "");
+    );
     expect(html).toContain("#4");
   });
 });
@@ -74,7 +66,7 @@ describe("LatestTxList privacy column", () => {
   });
 
   /**
-   * The regression worth guarding at the render layer as well as in `lib`: a
+   * The regression worth guarding at the render layer as well as in `domain`: a
    * withdrawal indexed before the contract emitted `publicOut` has an unknown
    * denomination, and the cell must not print a cohort of zero or claim the
    * withdrawal was unique.

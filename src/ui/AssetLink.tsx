@@ -1,6 +1,6 @@
 import type { AssetOut } from "@/api";
-import { assetLabel } from "@/lib/assets";
-import { getTokenUrl } from "@/lib/chains";
+import { assetLabel } from "@/domain/assets";
+import { getTokenUrl } from "@/domain/chains";
 import { withHexPrefix } from "@/lib/hex";
 import ExternalLink from "./ExternalLink";
 

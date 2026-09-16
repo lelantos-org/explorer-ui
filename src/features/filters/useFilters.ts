@@ -1,8 +1,8 @@
 import { useCallback, useMemo } from "react";
+import type { KindFilter } from "@/domain/kinds";
+import type { RangeLabel } from "@/domain/ranges";
+import { chainScope, EMPTY_SCOPE, isScoped, type Scope } from "@/domain/scope";
 import { useSetUrlParams, useUrlParams } from "@/hooks/useUrlState";
-import type { KindFilter } from "@/lib/kinds";
-import type { RangeLabel } from "@/lib/ranges";
-import { chainScope, EMPTY_SCOPE, isScoped, type Scope } from "@/lib/scope";
 import { PARAM, readFilters, setOrDelete, type UrlFilters, writeScope } from "./filterParams";
 
 export interface Filters extends UrlFilters {

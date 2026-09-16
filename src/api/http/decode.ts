@@ -83,7 +83,7 @@ export const decodeLocked = (rows: ChainLockedWire[]): ChainLocked[] =>
  * Only the whole-token amounts are parsed. The normalized pair and `indexRay`
  * stay strings: they are 78-digit integers that JSON numbers cannot hold, and
  * nothing downstream does arithmetic on them — the index is converted for
- * display in `lib/yield`, from the string.
+ * display in `domain/yield`, from the string.
  */
 export type YieldAssetWire = Omit<YieldAsset, "gross" | "idle" | "accruedFee"> & {
   gross: string | null;

@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { type Denom, signedFmt, unitShort } from "@/lib/denom";
+import { type Denom, signedFmt, unitShort } from "@/domain/denom";
 import { splitMagnitude } from "@/lib/format";
 import { Bar } from "@/ui/Skeleton";
 import "./Hero.css";

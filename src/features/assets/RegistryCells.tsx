@@ -1,8 +1,8 @@
 import type { AssetOut, YieldAsset } from "@/api";
-import { assetKey } from "@/lib/assets";
-import { feeDisplay } from "@/lib/fees";
+import { assetKey } from "@/domain/assets";
+import { feeDisplay } from "@/domain/fees";
+import { indexGrowth, isPolled } from "@/domain/yield";
 import { fmtGrowth, fmtUsd } from "@/lib/format";
-import { indexGrowth, isPolled } from "@/lib/yield";
 
 /** Yield rows by `chainId:assetIdU64`, so a row resolves its own binding
  *  without the registry having to be joined upstream. */

@@ -1,11 +1,11 @@
 import type { ChainLocked, PoolNotes as PoolNotesRow } from "@/api";
 import type { Async } from "@/data/useAsync";
-import { summarizeLocked } from "@/lib/aggregate";
 import Card from "@/ui/Card";
 import Meta from "@/ui/Meta";
 import LockedByChain from "./LockedByChain";
 import { lockedMeta, poolNotesMeta } from "./meta";
 import PoolNotes from "./PoolNotes";
+import { summarizeLocked } from "./summary";
 
 interface Props {
   locked: Async<ChainLocked[]>;

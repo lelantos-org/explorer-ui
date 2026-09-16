@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { ALL_KINDS } from "@/lib/kinds";
-import { DEFAULT_RANGE } from "@/lib/ranges";
-import { EMPTY_SCOPE } from "@/lib/scope";
+import { ALL_KINDS } from "@/domain/kinds";
+import { DEFAULT_RANGE } from "@/domain/ranges";
+import { EMPTY_SCOPE } from "@/domain/scope";
 import { readFilters, writeScope } from "./filterParams";
 
 const read = (qs: string) => readFilters(new URLSearchParams(qs));

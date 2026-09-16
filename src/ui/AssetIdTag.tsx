@@ -1,4 +1,4 @@
-import { assetIdTag } from "@/lib/assets";
+import { assetIdTag } from "@/domain/assets";
 import "./AssetIdTag.css";
 
 /**

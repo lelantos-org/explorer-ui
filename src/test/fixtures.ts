@@ -7,8 +7,35 @@
  * case it was written for.
  */
 
-import type { AnonymitySet, AssetOut, YieldAsset } from "@/api";
+import type {
+  AnonymitySet,
+  AssetOut,
+  ChainFlow,
+  FlowPoint,
+  PoolNotes,
+  TxKind,
+  TxOut,
+  YieldAsset,
+} from "@/api";
 import type { CardMeta } from "@/ui/cardMeta";
+
+/**
+ * A feed row of `kind`, carrying only the fields that kind publishes: no asset
+ * or amount for a transfer, a denomination only for a withdrawal — one that
+ * joins `cohortRow`'s default.
+ */
+export const txRow = (kind: TxKind, over: Partial<TxOut> = {}): TxOut => ({
+  chainId: 1,
+  txHashHex: "ab".repeat(32),
+  blockNumber: 100,
+  blockTs: 1_700_000_000,
+  logIndex: 0,
+  kind,
+  assetIdU64: kind === "transfer" ? null : 1000,
+  amount: kind === "transfer" ? null : "10",
+  publicOut: kind === "withdraw" ? "500" : null,
+  ...over,
+});
 
 /**
  * A registered asset with nothing resolved beyond its identity: no price and
@@ -67,6 +94,37 @@ export const yieldRow = (over: Partial<YieldAsset> = {}): YieldAsset => ({
   indexRay: "1034200000000000000000000000",
   blockNumber: 99,
   updatedAt: 1_700_000_000,
+  ...over,
+});
+
+/** A flow bucket with nothing measured: no token amounts, no dollars. */
+export const flowPoint = (over: Partial<FlowPoint> & { ts: number }): FlowPoint => ({
+  in: null,
+  out: null,
+  inUsd: null,
+  outUsd: null,
+  unpricedAssets: 0,
+  ...over,
+});
+
+/** A chain's 24h row as the backend sends it today: counts only, with the
+ *  reserved value fields at zero. Quiet unless a test gives it traffic. */
+export const chainFlowRow = (over: Partial<ChainFlow> = {}): ChainFlow => ({
+  chainId: 1,
+  inflow: 0,
+  outflow: 0,
+  hourlyIn: [],
+  hourlyOut: [],
+  txCount: 0,
+  ...over,
+});
+
+/** One chain's tree, 200 of whose 1,000 leaves are relayer fee notes. */
+export const poolNotesRow = (over: Partial<PoolNotes> = {}): PoolNotes => ({
+  chainId: 1,
+  leaves: 1_000,
+  feeNotes: 200,
+  lastTs: 1_700_000_000,
   ...over,
 });
 

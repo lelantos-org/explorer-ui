@@ -1,5 +1,5 @@
 import { useNow } from "@/hooks/useNow";
-import { fmtAge } from "@/lib/format";
+import { fmtAge } from "@/lib/time";
 
 interface Props {
   /** When the figures on screen arrived, in epoch ms; `null` before they have. */

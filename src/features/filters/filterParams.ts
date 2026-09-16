@@ -1,6 +1,6 @@
-import { ALL_KINDS, isTxKind, type KindFilter } from "@/lib/kinds";
-import { type Range, resolveRange } from "@/lib/ranges";
-import { EMPTY_SCOPE, parseId, type Scope } from "@/lib/scope";
+import { ALL_KINDS, isTxKind, type KindFilter } from "@/domain/kinds";
+import { type Range, resolveRange } from "@/domain/ranges";
+import { EMPTY_SCOPE, parseId, type Scope } from "@/domain/scope";
 
 /**
  * The page's filters as they are spelled in the URL, and the only code that

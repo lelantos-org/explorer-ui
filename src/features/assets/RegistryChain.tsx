@@ -1,7 +1,7 @@
-import { getChainMeta } from "@/lib/chains";
+import { getChainMeta } from "@/domain/chains";
+import type { ScopeGroup } from "@/domain/scope";
 import { cx } from "@/lib/cx";
-import { plural } from "@/lib/format";
-import type { ScopeGroup } from "@/lib/scope";
+import { plural } from "@/lib/text";
 import AssetLink from "@/ui/AssetLink";
 import Empty from "@/ui/Empty";
 import ScrollTable from "@/ui/ScrollTable";

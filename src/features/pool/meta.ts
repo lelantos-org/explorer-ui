@@ -1,8 +1,9 @@
 import type { PoolNotes } from "@/api";
-import type { LockedSummary } from "@/lib/aggregate";
-import { USD_AT_SPOT } from "@/lib/denom";
-import { fmtUsd, joinMeta, plural } from "@/lib/format";
+import { USD_AT_SPOT } from "@/domain/denom";
+import { fmtUsd } from "@/lib/format";
+import { joinMeta, plural } from "@/lib/text";
 import { type CardMeta, gapList, LOADING } from "@/ui/cardMeta";
+import type { LockedSummary } from "./summary";
 
 /**
  * What the note counts are, and what they are not.

@@ -1,5 +1,5 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { renderHtml } from "@/test/render";
 import Segmented from "./Segmented";
 
 const OPTIONS = [
@@ -8,7 +8,7 @@ const OPTIONS = [
 ];
 
 const render = (value: string) =>
-  renderToString(<Segmented label="range" options={OPTIONS} value={value} onChange={() => {}} />);
+  renderHtml(<Segmented label="range" options={OPTIONS} value={value} onChange={() => {}} />);
 
 describe("Segmented", () => {
   /// Which segment is chosen used to be carried by a class and its colour and

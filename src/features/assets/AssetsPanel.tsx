@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import type { AssetOut, YieldAsset } from "@/api";
 import type { Async } from "@/data/useAsync";
-import { indexAssets } from "@/lib/assets";
-import { groupsInScope, type Scope, type ScopeGroup } from "@/lib/scope";
+import { indexAssets } from "@/domain/assets";
+import { groupsInScope, type Scope, type ScopeGroup } from "@/domain/scope";
 import Card from "@/ui/Card";
 import { LOADING } from "@/ui/cardMeta";
 import Meta from "@/ui/Meta";

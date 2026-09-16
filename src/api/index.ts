@@ -3,9 +3,9 @@
  * reaching into `./http` or `./mock` — the deep paths exist for the layer's own
  * wiring, not for consumers.
  *
- * One exception: `lib/` imports `@/api/types` directly. It is the pure domain
+ * One exception: `domain/` imports `@/api/types` directly. It is the pure domain
  * layer, and going through this barrel would put the provider, the HTTP client
- * and the mock generator in the import graph of every formatting function.
+ * and the mock generator in the import graph of every domain rule.
  */
 
 export { type ApiProviderProps, default as ApiProvider } from "./ApiProvider";

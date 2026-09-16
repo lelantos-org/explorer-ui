@@ -1,10 +1,10 @@
 import { memo } from "react";
 import type { PoolNotes as PoolNotesRow } from "@/api";
+import { getChainMeta } from "@/domain/chains";
+import { toggleChain } from "@/domain/scope";
 import { useNow } from "@/hooks/useNow";
-import { getChainMeta } from "@/lib/chains";
 import { cx } from "@/lib/cx";
-import { fmtAge } from "@/lib/format";
-import { toggleChain } from "@/lib/scope";
+import { fmtAge } from "@/lib/time";
 import Empty from "@/ui/Empty";
 import Skeleton, { BarRows } from "@/ui/Skeleton";
 import "./PoolNotes.css";
@@ -16,6 +16,10 @@ interface Props {
   onSelect?: (chainId: number | null) => void;
 }
 
+/** Ages here are minutes and hours; a minute's clock keeps them true while the
+ *  memoised list itself has not changed. */
+const AGE_TICK_MS = 60_000;
+
 /**
  * Commitment-tree occupancy, one row per chain.
  *
@@ -26,10 +30,6 @@ interface Props {
  * on the withdrawal cover card — which leads the page, while this one sits
  * behind a tab, so the pointer names it rather than its position.
  */
-/** Ages here are minutes and hours; a minute's clock keeps them true while the
- *  memoised list itself has not changed. */
-const AGE_TICK_MS = 60_000;
-
 function PoolNotes({ data, loading, selected, onSelect }: Props) {
   const nowSec = Math.floor(useNow(AGE_TICK_MS) / 1000);
   if (loading && !data) {

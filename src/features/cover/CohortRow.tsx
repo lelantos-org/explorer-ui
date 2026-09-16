@@ -1,9 +1,11 @@
 import { memo } from "react";
 import type { AnonymitySet, AssetOut } from "@/api";
-import { assetKey, assetLabel } from "@/lib/assets";
-import { getChainMeta } from "@/lib/chains";
-import { coverTone, isDormant, kLabel, RECENT_WINDOW_SEC } from "@/lib/cover";
-import { fmtBucket, fmtDigits, plural } from "@/lib/format";
+import { assetKey, assetLabel } from "@/domain/assets";
+import { getChainMeta } from "@/domain/chains";
+import { coverTone, isDormant, kLabel, RECENT_WINDOW_SEC } from "@/domain/cover";
+import { fmtDigits } from "@/lib/format";
+import { plural } from "@/lib/text";
+import { fmtBucket } from "@/lib/time";
 import AssetIdTag from "@/ui/AssetIdTag";
 import CoverGlyph from "./CoverGlyph";
 import { fill } from "./visibleCohorts";

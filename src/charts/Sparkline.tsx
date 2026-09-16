@@ -1,16 +1,9 @@
 import { useId } from "react";
+import { fillUrl, pathArea, pathLine } from "@/charts/geometry/path";
+import { baselineY, type ChartPad, indexScale, yScale } from "@/charts/geometry/scale";
+import { useChartGeometry } from "@/charts/hooks/useChartGeometry";
 import "./Sparkline.css";
-import ChartGradients from "./ChartGradients";
-import {
-  baselineY,
-  type ChartPad,
-  fillUrl,
-  indexScale,
-  pathArea,
-  pathLine,
-  yScale,
-} from "./chartLib";
-import { useChartGeometry } from "./useChartGeometry";
+import ChartGradients from "@/charts/primitives/ChartGradients";
 
 interface Props {
   in: number[];

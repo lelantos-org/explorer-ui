@@ -1,5 +1,5 @@
 import type { AnonymitySet } from "@/api";
-import { type CoverTone, coverTone, THIN_SET } from "@/lib/cover";
+import { type CoverTone, coverTone, THIN_SET } from "@/domain/cover";
 
 export interface Tier {
   tone: CoverTone;

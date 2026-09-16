@@ -1,9 +1,10 @@
 import type { AssetOut, FlowPoint } from "@/api";
-import { assetIdTag, assetLabel } from "@/lib/assets";
-import { type Denom, denomLabel } from "@/lib/denom";
-import { fmtBucket, joinMeta } from "@/lib/format";
-import type { Range } from "@/lib/ranges";
-import type { Scope } from "@/lib/scope";
+import { assetIdTag, assetLabel } from "@/domain/assets";
+import { type Denom, denomLabel } from "@/domain/denom";
+import type { Range } from "@/domain/ranges";
+import type { Scope } from "@/domain/scope";
+import { joinMeta } from "@/lib/text";
+import { fmtBucket } from "@/lib/time";
 import type { CardMeta } from "@/ui/cardMeta";
 
 /**

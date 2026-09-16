@@ -1,5 +1,5 @@
 import type { TxKind } from "@/api";
-import { KIND_TITLE } from "@/lib/kinds";
+import { KIND_TITLE } from "@/domain/kinds";
 import "./KindBadge.css";
 
 /** A transaction's kind in its series colour — the hue of its bar in the kinds

@@ -1,5 +1,5 @@
 import type { AnonymitySet } from "@/api";
-import { thinnestFirst } from "@/lib/cover";
+import { thinnestFirst } from "@/domain/cover";
 
 /**
  * How many rows the card shows.

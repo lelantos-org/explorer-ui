@@ -1,8 +1,8 @@
 import { REFRESH_MS } from "@/config";
-import { assetOptionLabel } from "@/lib/assets";
-import { getChainMeta } from "@/lib/chains";
-import { RANGES, type RangeLabel } from "@/lib/ranges";
-import { decodeScope, encodeScope, type Scope, type ScopeGroup } from "@/lib/scope";
+import { assetOptionLabel } from "@/domain/assets";
+import { getChainMeta } from "@/domain/chains";
+import { RANGES, type RangeLabel } from "@/domain/ranges";
+import { chainScope, decodeScope, encodeScope, type Scope, type ScopeGroup } from "@/domain/scope";
 import Button from "@/ui/Button";
 import Segmented from "@/ui/Segmented";
 import RefreshStamp from "./RefreshStamp";
@@ -52,9 +52,7 @@ export default function FilterBar({
           <option value="">all chains</option>
           {groups.map((g) => (
             <optgroup key={g.chainId} label={`${getChainMeta(g.chainId).name} · id ${g.chainId}`}>
-              <option value={encodeScope({ chainId: g.chainId, assetIdU64: null })}>
-                all assets
-              </option>
+              <option value={encodeScope(chainScope(g.chainId))}>all assets</option>
               {g.assets.map((a) => (
                 <option
                   key={a.assetIdU64}

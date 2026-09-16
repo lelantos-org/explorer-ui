@@ -61,7 +61,7 @@ export const fmtUsdSigned = signed(fmtUsd);
 export const fmtTokensSigned = signed(fmtTokens);
 
 /** Basis-points denominator, matching `FeeConfig.BPS_DENOMINATOR` on chain. */
-export const BPS_DENOMINATOR = 10_000;
+const BPS_DENOMINATOR = 10_000;
 
 /**
  * Percent form of a bps rate.
@@ -83,47 +83,6 @@ export function fmtPercent(fraction: number): string {
 /** A fraction as a return: "+3.42%" reads as a direction where "3.42%" reads as
  *  a rate. Signed by the same wrapper as every other directional figure. */
 export const fmtGrowth = signed(fmtPercent);
-
-export function fmtTs(ts: number, spanSec: number): string {
-  const d = new Date(ts * 1000);
-  if (spanSec <= 86400 * 2) return d.toISOString().slice(11, 16);
-  return d.toISOString().slice(5, 10);
-}
-
-export function fmtAge(ts: number, now = Math.floor(Date.now() / 1000)): string {
-  const d = Math.max(0, now - ts);
-  if (d < 60) return `${d}s`;
-  if (d < 3600) return `${Math.floor(d / 60)}m`;
-  if (d < 86400) return `${Math.floor(d / 3600)}h`;
-  return `${Math.floor(d / 86400)}d`;
-}
-
-export function fmtBucket(sec: number): string {
-  if (sec >= 86400) return `${sec / 86400}d`;
-  return `${sec / 3600}h`;
-}
-
-/**
- * `"1 asset"` / `"3 assets"` — the count and its noun, agreeing.
- *
- * Every caller was spelling out the same ternary, and each one is a place the
- * two can disagree. English `-s` only: every noun the UI counts takes it, and a
- * table of irregulars would be more machinery than the problem.
- */
-export function plural(count: number, noun: string): string {
-  // Grouped, not abbreviated: `fmtNum` would render 1234 as "1.2k", and a
-  // count of things is read for its exact value where a magnitude is not.
-  return `${count.toLocaleString()} ${noun}${count === 1 ? "" : "s"}`;
-}
-
-/**
- * The one separator for card metadata, tile units and any other line that names
- * several facts about a figure. Absent parts drop out rather than leaving a
- * dangling separator, so callers can pass a conditional straight in.
- */
-export function joinMeta(parts: (string | null | undefined | false)[]): string {
-  return parts.filter(Boolean).join(" · ");
-}
 
 /**
  * A decimal integer string, digit-grouped and otherwise untouched.

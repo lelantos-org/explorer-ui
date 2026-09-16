@@ -1,14 +1,14 @@
 import { memo, useMemo } from "react";
 import type { AnonymitySet, AssetOut, TxOut } from "@/api";
+import { indexAssets } from "@/domain/assets";
+import type { KindFilter } from "@/domain/kinds";
+import { indexCohorts } from "@/domain/txPrivacy";
 import { useNow } from "@/hooks/useNow";
-import { indexAssets } from "@/lib/assets";
-import type { KindFilter } from "@/lib/kinds";
-import { indexCohorts } from "@/lib/txPrivacy";
 import Empty from "@/ui/Empty";
 import ScrollTable from "@/ui/ScrollTable";
-import Skeleton from "@/ui/Skeleton";
-import { SkeletonRows } from "@/ui/SkeletonRows";
-import { FEED_LIMIT } from "./feed";
+import Skeleton, { SkeletonRows } from "@/ui/Skeleton";
+
+import { FEED_LIMIT, txRowKey } from "./feed";
 import { FEED_SKELETON_CELLS, FeedHead, FeedNote } from "./LatestTxListParts";
 import TxRow from "./TxRow";
 import "./LatestTxList.css";
@@ -64,13 +64,7 @@ function LatestTxList({ data, assets, cohorts, loading, kind }: Props) {
         <FeedHead />
         <tbody>
           {data.map((tx) => (
-            <TxRow
-              key={`${tx.chainId}-${tx.txHashHex}-${tx.kind}`}
-              tx={tx}
-              byAsset={byAsset}
-              cohorts={byDenom}
-              now={now}
-            />
+            <TxRow key={txRowKey(tx)} tx={tx} byAsset={byAsset} cohorts={byDenom} now={now} />
           ))}
         </tbody>
       </ScrollTable>

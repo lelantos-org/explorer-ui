@@ -1,8 +1,8 @@
 import type { YieldAsset } from "@/api";
-import { hasUnknownFee } from "@/lib/fees";
-import { joinMeta, plural } from "@/lib/format";
-import type { ScopeGroup } from "@/lib/scope";
-import { isPolled } from "@/lib/yield";
+import { hasUnknownFee } from "@/domain/fees";
+import type { ScopeGroup } from "@/domain/scope";
+import { isPolled } from "@/domain/yield";
+import { joinMeta, plural } from "@/lib/text";
 import { type CardMeta, gapList } from "@/ui/cardMeta";
 
 /**
@@ -15,7 +15,7 @@ import { type CardMeta, gapList } from "@/ui/cardMeta";
 export function registryMeta(groups: ScopeGroup[], yields: YieldAsset[] | null): CardMeta {
   const assets = groups.flatMap((g) => g.assets);
   // `hasUnknownFee` rather than a null check spelled out again here: what
-  // counts as an unindexed rate is decided once, in `lib/fees`.
+  // counts as an unindexed rate is decided once, in `domain/fees`.
   const unindexed = assets.filter(hasUnknownFee).length;
   // Scoped to the chains on show, so the caption counts the same rows the table
   // does rather than every yield asset the backend knows about.

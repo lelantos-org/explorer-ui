@@ -1,6 +1,7 @@
 import type { AnonymitySet } from "@/api";
-import { coverTone, isDormant, RECENT_WINDOW_SEC, THIN_SET } from "@/lib/cover";
-import { fmtBucket, plural } from "@/lib/format";
+import { coverTone, isDormant, RECENT_WINDOW_SEC, THIN_SET } from "@/domain/cover";
+import { plural } from "@/lib/text";
+import { fmtBucket } from "@/lib/time";
 import { type CardMeta, gapList, LOADING } from "@/ui/cardMeta";
 
 /**

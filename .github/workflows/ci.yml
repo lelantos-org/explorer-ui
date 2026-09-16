@@ -12,7 +12,7 @@ concurrency:
 permissions:
   contents: read
 
-# Only two VITE_* vars are inlined at build time (src/api/context.tsx):
+# Only two VITE_* vars are inlined at build time (src/config.ts):
 # VITE_API_BASE and VITE_USE_MOCK. VITE_API_TARGET is read by vite.config.ts
 # for the dev-server proxy only and has no effect on a production build.
 #

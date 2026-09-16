@@ -1,10 +1,10 @@
 import { memo } from "react";
 import type { AssetOut, TxOut } from "@/api";
-import { assetKey, assetLabel } from "@/lib/assets";
-import { getChainMeta, getTxUrl } from "@/lib/chains";
-import { fmtAge } from "@/lib/format";
+import { assetKey, assetLabel } from "@/domain/assets";
+import { getChainMeta, getTxUrl } from "@/domain/chains";
+import type { Cohorts } from "@/domain/txPrivacy";
 import { shortHex, withHexPrefix } from "@/lib/hex";
-import type { Cohorts } from "@/lib/txPrivacy";
+import { fmtAge } from "@/lib/time";
 import AssetIdTag from "@/ui/AssetIdTag";
 import ExternalLink from "@/ui/ExternalLink";
 import KindBadge from "./KindBadge";

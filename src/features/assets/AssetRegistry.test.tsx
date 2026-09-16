@@ -1,25 +1,24 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { AssetOut, YieldAsset } from "@/api";
-import { assetKey } from "@/lib/assets";
-import type { ScopeGroup } from "@/lib/scope";
-import { yieldRow } from "@/test/fixtures";
+import { assetKey } from "@/domain/assets";
+import type { ScopeGroup } from "@/domain/scope";
+import { assetRow, yieldRow } from "@/test/fixtures";
+import { renderHtml } from "@/test/render";
 import AssetRegistry from "./AssetRegistry";
 import type { YieldIndex } from "./RegistryCells";
 
-const asset = (over: Partial<AssetOut> = {}): AssetOut => ({
-  chainId: 8453,
-  assetIdU64: 2,
-  tokenHex: "833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-  scale: "1",
-  decimals: 6,
-  symbol: "USDC",
-  priceUsd: 1,
-  priceAt: 1,
-  depositBps: 0,
-  withdrawBps: 20,
-  ...over,
-});
+/** USDC on Base, priced, free to shield and 20 bps to unshield. */
+const asset = (over: Partial<AssetOut> = {}) =>
+  assetRow({
+    chainId: 8453,
+    assetIdU64: 2,
+    tokenHex: "833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    priceUsd: 1,
+    priceAt: 1,
+    depositBps: 0,
+    withdrawBps: 20,
+    ...over,
+  });
 
 const group = (assets: AssetOut[], chainId = 8453): ScopeGroup => ({ chainId, assets });
 
@@ -36,9 +35,7 @@ const render = (
   selected: number | null = null,
   yields: YieldIndex | null = null,
 ) =>
-  renderToString(
-    <AssetRegistry groups={groups} loading={false} yields={yields} selected={selected} />,
-  ).replaceAll("<!-- -->", "");
+  renderHtml(<AssetRegistry groups={groups} loading={false} yields={yields} selected={selected} />);
 
 describe("AssetRegistry", () => {
   it("shows both fee legs", () => {

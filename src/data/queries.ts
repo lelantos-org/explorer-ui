@@ -13,11 +13,12 @@ import {
   type YieldAsset,
 } from "@/api";
 import { REFRESH_MS } from "@/config";
-import { COHORT_LIMIT, RECENT_WINDOW_SEC } from "@/lib/cover";
-import { ALL_KINDS, type KindFilter } from "@/lib/kinds";
-import type { Range } from "@/lib/ranges";
-import type { Scope } from "@/lib/scope";
-import { rangeDomain, type TimeDomain } from "@/lib/time";
+import { COHORT_LIMIT, RECENT_WINDOW_SEC } from "@/domain/cover";
+import { ALL_KINDS, type KindFilter } from "@/domain/kinds";
+import type { Range } from "@/domain/ranges";
+import { rangeDomain } from "@/domain/ranges";
+import type { Scope } from "@/domain/scope";
+import type { TimeDomain } from "@/lib/time";
 import { type Async, useAsync } from "./useAsync";
 
 /** `null` is "unscoped" throughout the app; the wire spells that as an absent

@@ -1,6 +1,7 @@
-import type { ChainsSummary } from "@/lib/aggregate";
-import { fmtNum, joinMeta } from "@/lib/format";
+import { fmtNum } from "@/lib/format";
+import { joinMeta } from "@/lib/text";
 import { type CardMeta, LOADING } from "@/ui/cardMeta";
+import type { ChainsSummary } from "./summary";
 
 export function chainsMeta(summary: ChainsSummary | null): CardMeta {
   if (!summary) return LOADING;

@@ -1,22 +1,16 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import type { ChainFlow } from "@/api";
+import { chainFlowRow } from "@/test/fixtures";
+import { renderHtml } from "@/test/render";
 import ChainFlowGrid from "./ChainFlowGrid";
 
 /** A chain with traffic but no per-asset value, which is what the backend
  *  reports today: `inflow`/`outflow` are reserved and still zero. */
-const flow = (over: Partial<ChainFlow> = {}): ChainFlow => ({
-  chainId: 1,
-  inflow: 0,
-  outflow: 0,
-  hourlyIn: [1, 2, 3],
-  hourlyOut: [],
-  txCount: 100,
-  ...over,
-});
+const flow = (over: Partial<ChainFlow> = {}) =>
+  chainFlowRow({ hourlyIn: [1, 2, 3], txCount: 100, ...over });
 
 const render = (data: ChainFlow[] | null, selected: number | null = null) =>
-  renderToString(<ChainFlowGrid data={data} selected={selected} />).replaceAll("<!-- -->", "");
+  renderHtml(<ChainFlowGrid data={data} selected={selected} />);
 
 describe("ChainFlowGrid", () => {
   it("lists one card per indexed chain", () => {

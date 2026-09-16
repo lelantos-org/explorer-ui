@@ -1,14 +1,14 @@
 import { memo, useMemo } from "react";
 import type { KindCounts } from "@/api";
-import { fmtNum, fmtTs } from "@/lib/format";
-import { PLOTTED_KINDS } from "@/lib/kinds";
-import type { TimeDomain } from "@/lib/time";
+import { BAR_R, layoutKindBars } from "@/charts/geometry/kindBars";
+import { SERIES_PAD } from "@/charts/geometry/scale";
+import { useChartHover } from "@/charts/hooks/useChartHover";
+import { usePlotFrame } from "@/charts/hooks/usePlotFrame";
+import ChartFrame from "@/charts/primitives/ChartFrame";
+import { PLOTTED_KINDS } from "@/domain/kinds";
+import { fmtNum } from "@/lib/format";
+import { fmtTs, type TimeDomain } from "@/lib/time";
 import Empty from "@/ui/Empty";
-import ChartFrame from "./ChartFrame";
-import { SERIES_PAD } from "./chartLib";
-import { BAR_R, layoutKindBars } from "./kindBars";
-import { useChartHover } from "./useChartHover";
-import { usePlotFrame } from "./usePlotFrame";
 
 /** The plot's height in pixels; its skeleton is drawn at the same size. */
 export const KINDS_CHART_HEIGHT = 240;

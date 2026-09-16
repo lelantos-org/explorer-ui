@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { type ScopeGroup, toggleChain } from "@/lib/scope";
+import { type ScopeGroup, toggleChain } from "@/domain/scope";
 import Empty from "@/ui/Empty";
 import Skeleton, { BarRow, BarRows } from "@/ui/Skeleton";
 import type { YieldIndex } from "./RegistryCells";

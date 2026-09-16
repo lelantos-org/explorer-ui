@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { THIN_SET } from "@/lib/cover";
+import { THIN_SET } from "@/domain/cover";
 import { cohortRow } from "@/test/fixtures";
 import { TIERS, tally } from "./tiers";
 

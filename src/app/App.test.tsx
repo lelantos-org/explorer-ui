@@ -1,6 +1,6 @@
-import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ApiProvider, createMockApi } from "@/api";
+import { renderHtml } from "@/test/render";
 import App from "./App";
 
 /**
@@ -11,14 +11,11 @@ import App from "./App";
  * where a broken import or a null-handling slip would surface.
  */
 const render = () =>
-  renderToString(
+  renderHtml(
     <ApiProvider api={createMockApi({ latencyMs: 0 })}>
       <App />
     </ApiProvider>,
-  )
-    // React separates adjacent text nodes with an empty comment, which would
-    // otherwise split every interpolated phrase in the assertions below.
-    .replaceAll("<!-- -->", "");
+  );
 
 describe("App", () => {
   it("renders the shell", () => {

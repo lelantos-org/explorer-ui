@@ -54,29 +54,35 @@ The dev server listens on port `5175` (webapp-ui uses `5174`).
 src/
   main.tsx        entry: global styles, providers, <App />
   config.ts       build configuration and the shared poll interval
-  app/            the shell — App, Header, Footer, ErrorBoundary
+  app/            the shell — App, ErrorBoundary, layout/ (Header, Footer, …)
   pages/home/     the one page: composition, its data hook, masthead, tab strip
   features/       one folder per page section, each with its components,
                   stylesheets, caption builders (meta.ts), pure helpers and tests
     filters/  flows/  cover/  activity/  assets/  chains/  pool/
   ui/             shared primitives — Card, Stat, Segmented, ScrollTable, Skeleton, …
-  charts/         SVG charts, their geometry (chartLib, kindBars) and skeleton
+  charts/         the SVG charts (FlowChart, TxKindsChart, Sparkline) and their palette
+    primitives/   frame, cursor, dots, gradients, skeleton
+    geometry/     pure layout: scales, axes, paths, plot frame, bar layout
+    hooks/        measuring, framing and hover
   data/           the polling engine, useAsync, the query hooks, indexer state
   api/            the ExplorerApi port: types/, http/ (client + wire decoders), mock/
-  lib/            pure domain logic — formatting, denominations, scope, cover, tx privacy
+    mock/generate/   seeded synthetic history (rng, assets, flows, tree advances)
+    mock/endpoints/  per-endpoint queries over that history
+  domain/         pure protocol logic — denominations, scope, cover, tx privacy, fees, yield
+  lib/            generic helpers — number/time/text formatting, hex, cx, structural sharing
   hooks/          generic React hooks — URL state, theme, clock
   styles/         global CSS only: tokens, reset, motion, utilities
-  test/           shared fixtures
+  test/           shared fixtures, indexing and render helpers
 ```
 
 Conventions:
 
-- **Layers.** Imports point downwards: `app` → `pages` → `features` → `ui`/`charts` → `data` → `api` → `lib`. Features never import each other; anything two features share moves down a layer. `lib/` is framework-free and imports wire types from `@/api/types` directly, so a formatting function never pulls in the HTTP client or the mock.
+- **Layers.** Imports point downwards: `app` → `pages` → `features` → `ui`/`charts` → `data` → `api` → `domain` → `lib`. Features never import each other; anything two features share moves down a layer, and logic only one feature uses lives in that feature (`flows/totals.ts`, `pool/summary.ts`). `domain/` is framework-free and imports wire types from `@/api/types` directly, so a protocol rule never pulls in the HTTP client or the mock. `lib/` knows nothing about the protocol.
 - **Imports.** Siblings are relative (`./meta`); anything in another folder goes through the `@/` alias (`@/ui/Card`). Outside `api/`, import the API via `@/api`.
 - **Styles.** A component imports its own stylesheet, named after it (`Card.tsx` → `Card.css`). Class names are global and BEM-style. `styles/` holds only what every component builds on; nothing depends on the order two components happen to be imported in.
-- **Components vs. logic.** `.tsx` modules export components only; hooks, constants and pure helpers live in `.ts` modules beside them (`visibleCohorts.ts`, `filterParams.ts`, `kindBars.ts`, `poller.ts`), so Fast Refresh boundaries stay clean and the logic is tested without rendering. The test environment is `node` — there is no DOM, by design.
+- **Components vs. logic.** `.tsx` modules export components only; hooks, constants and pure helpers live in `.ts` modules beside them (`visibleCohorts.ts`, `filterParams.ts`, `geometry/kindBars.ts`, `poller.ts`), so Fast Refresh boundaries stay clean and the logic is tested without rendering. The test environment is `node` — there is no DOM, by design.
 - **Captions.** Each card's lead / basis / gaps line is built by a pure function in its feature's `meta.ts` and rendered by `ui/Meta`.
-- **Loading.** A card's first load shows a skeleton at its final size (`ui/Skeleton`, `ui/SkeletonRows`, `charts/ChartSkeleton`); a later load for new filters dims the previous figures (`Card`'s `busy`, `Stat`'s `stale`) and labels them with the range and scope they were fetched for.
+- **Loading.** A card's first load shows a skeleton at its final size (`ui/Skeleton`, `charts/primitives/ChartSkeleton`); a later load for new filters dims the previous figures (`Card`'s `busy`, `Stat`'s `stale`) and labels them with the range and scope they were fetched for.
 - **Rendering.** `useAsync` merges every response into the previous one (`lib/replaceEqualDeep`), so an unchanged poll keeps object identity and the memoised tables and charts below skip their render. Anything time-relative inside a memoised component takes a clock (`hooks/useNow`) rather than reading `Date.now()` during render.
 
 ### Service proxy
@@ -106,7 +112,7 @@ Amounts cross the wire as decimal strings: token base units exceed the safe rang
 
 ### Filter state
 
-Chain, asset, and range live in the URL query (`?chain=&asset=&range=`), so a filtered view can be bookmarked and shared. Chain and asset are one selection rather than two controls — an `assetIdU64` is unique only within its chain, so it is never addressable without one. See [`src/lib/scope.ts`](src/lib/scope.ts) and [`src/features/filters/useFilters.ts`](src/features/filters/useFilters.ts).
+Chain, asset, and range live in the URL query (`?chain=&asset=&range=`), so a filtered view can be bookmarked and shared. Chain and asset are one selection rather than two controls — an `assetIdU64` is unique only within its chain, so it is never addressable without one. See [`src/domain/scope.ts`](src/domain/scope.ts) and [`src/features/filters/useFilters.ts`](src/features/filters/useFilters.ts).
 
 ## Testing
 

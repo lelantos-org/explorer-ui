@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # first would reinstall dependencies each time.
 #
 # Vite inlines VITE_* at build time, so every runtime setting must be a build
-# arg. Only these two are read by the app (src/api/context.tsx);
+# arg. Only these two are read by the app (src/config.ts);
 # VITE_API_TARGET is dev-server-only and deliberately absent.
 ARG VITE_API_BASE
 ARG VITE_USE_MOCK

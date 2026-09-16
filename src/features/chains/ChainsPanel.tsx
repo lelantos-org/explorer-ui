@@ -1,10 +1,10 @@
 import type { ChainFlow } from "@/api";
 import type { Async } from "@/data/useAsync";
-import { summarizeChains } from "@/lib/aggregate";
 import Card from "@/ui/Card";
 import Meta from "@/ui/Meta";
 import ChainFlowGrid from "./ChainFlowGrid";
 import { chainsMeta } from "./meta";
+import { summarizeChains } from "./summary";
 
 interface Props {
   chainFlows: Async<ChainFlow[]>;

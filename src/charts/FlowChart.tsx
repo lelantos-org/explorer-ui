@@ -1,17 +1,17 @@
 import { memo, useCallback, useMemo } from "react";
 import type { FlowPoint } from "@/api";
-import { amountFmt, amounts, type Denom, isUsd } from "@/lib/denom";
-import { fmtTs } from "@/lib/format";
-import type { TimeDomain } from "@/lib/time";
+import { LABEL_DX, labelBaselines } from "@/charts/geometry/directLabels";
+import { fillUrl, pathArea, pathLine } from "@/charts/geometry/path";
+import { SERIES_PAD } from "@/charts/geometry/scale";
+import { useChartHover } from "@/charts/hooks/useChartHover";
+import { usePlotFrame } from "@/charts/hooks/usePlotFrame";
+import ChartCursor from "@/charts/primitives/ChartCursor";
+import ChartDot from "@/charts/primitives/ChartDot";
+import ChartFrame from "@/charts/primitives/ChartFrame";
+import ChartGradients from "@/charts/primitives/ChartGradients";
+import { amountFmt, amounts, type Denom, isUsd } from "@/domain/denom";
+import { fmtTs, type TimeDomain } from "@/lib/time";
 import Empty from "@/ui/Empty";
-import ChartCursor from "./ChartCursor";
-import ChartDot from "./ChartDot";
-import ChartFrame from "./ChartFrame";
-import ChartGradients from "./ChartGradients";
-import { fillUrl, pathArea, pathLine, SERIES_PAD } from "./chartLib";
-import { LABEL_DX, labelBaselines } from "./directLabels";
-import { useChartHover } from "./useChartHover";
-import { usePlotFrame } from "./usePlotFrame";
 
 interface Props {
   data: FlowPoint[];
