@@ -62,8 +62,7 @@
 
 /* BARS. Edges are whole pixels from the geometry. Not `crispEdges`: the
    corners are rounded, and snapping would square them off unevenly. The hover
-   band sits behind the group, since four bars per bucket leave no room for a
-   cursor line that would not overlap one of them. */
+   band sits behind the bar, since a cursor line would land on top of it. */
 .bar__band { fill: var(--bg-3); opacity: 0.55; }
 .bar--deposit { fill: var(--kind-deposit); }
 .bar--pending { fill: var(--kind-pending); }

@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import type { KindCounts } from "@/api";
-import { BAR_R, layoutKindBars } from "@/charts/geometry/kindBars";
+import { BAR_R, layoutKindBars, plottedTotal } from "@/charts/geometry/kindBars";
 import { SERIES_PAD } from "@/charts/geometry/scale";
 import { useChartHover } from "@/charts/hooks/useChartHover";
 import { usePlotFrame } from "@/charts/hooks/usePlotFrame";
@@ -26,19 +26,18 @@ interface Props {
 }
 
 const tsOf = (d: KindCounts) => d.ts;
-// Grouped, not stacked: the axis fits the tallest single kind, so a short
-// series stays readable next to a dominant one.
-const valuesOf = (d: KindCounts) => PLOTTED_KINDS.map((k) => d[k]);
+// Stacked: the axis fits the tallest bucket total, not the tallest kind.
+const valuesOf = (d: KindCounts) => [plottedTotal(d)];
 
 function TxKindsChart({ data, bucketSec, domain, height = KINDS_CHART_HEIGHT }: Props) {
   const { ref, frame } = usePlotFrame(data, { height, domain, tsOf, valuesOf, pad: SERIES_PAD });
 
-  const { groups, barW, group } = useMemo(
+  const { stacks, barW, band } = useMemo(
     () => layoutKindBars(data, frame, bucketSec),
     [data, bucketSec, frame],
   );
 
-  const { point: hovered, handlers } = useChartHover(frame.geom, groups);
+  const { point: hovered, handlers } = useChartHover(frame.geom, stacks);
 
   if (data.length === 0) return <Empty />;
 
@@ -63,31 +62,31 @@ function TxKindsChart({ data, bucketSec, domain, height = KINDS_CHART_HEIGHT }: 
       readout={readout}
       {...handlers}
     >
-      {/* Band behind the hovered group rather than a cursor line: with four
-          bars per bucket a line would land on top of one of them. */}
+      {/* Band behind the hovered bar rather than a cursor line: a line would
+          land on top of it. */}
       {hovered && (
         <rect
-          x={hovered.x - group / 2}
+          x={hovered.x - band / 2}
           y={frame.geom.pad.t}
-          width={group}
+          width={band}
           height={frame.geom.ih}
           className="bar__band"
         />
       )}
 
-      {groups.map((g) => (
-        <g key={g.p.ts}>
-          {g.bars
+      {stacks.map((s) => (
+        <g key={s.p.ts}>
+          {s.segments
             .filter((b) => b.h > 0)
             .map((b) => (
               <rect
                 key={b.kind}
-                x={b.x}
-                y={frame.baseline - b.h}
+                x={s.left}
+                y={b.y}
                 width={barW}
                 height={b.h}
                 rx={Math.min(BAR_R, barW / 2, b.h / 2)}
-                className={cx("bar", `bar--${b.kind}`, isOpen(g.p) && "bar--open")}
+                className={cx("bar", `bar--${b.kind}`, isOpen(s.p) && "bar--open")}
               >
                 <title>{`${b.kind}: ${b.value}`}</title>
               </rect>

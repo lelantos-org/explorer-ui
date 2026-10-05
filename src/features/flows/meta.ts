@@ -29,14 +29,14 @@ export function countsMeta(range: Range, scope: Scope): string {
 }
 
 /**
- * Grouped, not stacked: bars are compared against each other, so the axis is
- * per-kind and not a bucket total. `pending` is a gap rather than a definition —
- * the plot is not every transaction, and a reader totalling the bars is reading
- * a number that is missing one of its four parts.
+ * Stacked: a bar's height is the bucket's total across the plotted kinds.
+ * `pending` is a gap rather than a definition — the plot is not every
+ * transaction, and a reader taking a bar for the bucket's count is reading a
+ * number that is missing one of its four parts.
  */
 export function kindsMeta(range: Range, scope: Scope): CardMeta {
   return {
-    lead: joinMeta(["grouped by kind", countsMeta(range, scope)]),
+    lead: joinMeta(["stacked by kind", countsMeta(range, scope)]),
     basis: OPEN_BUCKET,
     gaps: ["pending excluded"],
   };
