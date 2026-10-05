@@ -16,16 +16,19 @@ interface Props {
 
 /** The "in the pool" tab: what the pool holds, and the notes committed to it. */
 export default function PoolPanel({ locked, notes, selected, onSelectChain }: Props) {
+  // Once, so the caption's total and the chips' denominator are one figure.
+  const summary = summarizeLocked(locked.data);
   return (
     <>
       <Card
         title="Held in the pool"
         subtitle="escrowed by chain"
         error={locked.error}
-        meta={<Meta {...lockedMeta(summarizeLocked(locked.data))} />}
+        meta={<Meta {...lockedMeta(summary)} />}
       >
         <LockedByChain
           data={locked.data}
+          totalUsd={summary?.totalUsd ?? null}
           loading={locked.loading}
           selected={selected}
           onSelect={onSelectChain}

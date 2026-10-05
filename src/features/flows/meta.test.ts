@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { resolveRange } from "@/domain/ranges";
 import { EMPTY_SCOPE, type Scope } from "@/domain/scope";
 import { assetRow, captionText } from "@/test/fixtures";
-import { countScope, countsMeta, flowMeta } from "./meta";
+import { countScope, countsMeta, flowMeta, kindsMeta } from "./meta";
 
 const range = resolveRange("30d");
 const pinnedAsset: Scope = { chainId: 1, assetIdU64: 1000 };
@@ -47,5 +47,19 @@ describe("flowMeta", () => {
     const meta = flowMeta(EMPTY_SCOPE, range, "none", [], null);
     expect(captionText(meta)).toContain("all assets");
     expect(captionText(meta)).not.toContain("chain");
+  });
+
+  it("flags the open bucket only when a series is plotted", () => {
+    const open = "newest bucket still filling";
+    expect(flowMeta(EMPTY_SCOPE, range, "usd", [], null).basis).toContain(open);
+    expect(flowMeta(EMPTY_SCOPE, range, "none", [], null).basis).not.toContain(open);
+  });
+});
+
+describe("kindsMeta", () => {
+  it("says the newest bucket is partial, and that pending is left out", () => {
+    const meta = kindsMeta(range, EMPTY_SCOPE);
+    expect(meta.basis).toBe("newest bucket still filling");
+    expect(meta.gaps).toEqual(["pending excluded"]);
   });
 });

@@ -9,6 +9,17 @@ export function pathLine(points: Point[]): string {
     .join(" ");
 }
 
+/**
+ * A series split before its newest point, so the stretch into an open bucket
+ * can be drawn apart from the settled line. The tail starts on the last settled
+ * point so the two meet, and is empty when nothing is open or there is no
+ * settled point to start from.
+ */
+export function splitOpenTail(points: Point[], open: boolean): { settled: Point[]; tail: Point[] } {
+  if (!open || points.length < 2) return { settled: points, tail: [] };
+  return { settled: points.slice(0, -1), tail: points.slice(-2) };
+}
+
 /** `pathLine` closed down to a baseline, for the fill under a series. An empty
  *  series has no baseline to close against — emit nothing rather than a path
  *  that opens with a stray L. */

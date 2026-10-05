@@ -52,6 +52,7 @@
 }
 .locked__chip__sym { font-size: var(--text-xs); letter-spacing: 0.08em; color: var(--fg-dim); }
 .locked__chip__amt { font-size: var(--text-xs); }
+.locked__chip__share { font-size: var(--text-xs); }
 /* An asset whose balance was measured at its venue rather than netted from
    flows. Marked, because a measured holding and a computed difference are not
    the same kind of number. */
@@ -72,6 +73,14 @@
 /* A negative balance is evidence of missed deposits, not a rounding artefact. */
 .locked__chip--owed { border-color: var(--err); }
 .locked__chip--owed .locked__chip__amt { color: var(--err); }
+
+/* On a phone the chips take a row of their own: beside the total, one chip is
+   already wider than what is left, and a nowrap chip pushes the page sideways. */
+@media (max-width: 720px) {
+  .locked__row { grid-template-columns: 1fr auto; }
+  .locked__assets { grid-column: 1 / -1; justify-content: flex-start; min-width: 0; }
+  .locked__chip { flex-wrap: wrap; max-width: 100%; white-space: normal; }
+}
 
 @media (pointer: coarse) {
   .locked__row { min-height: 44px; }

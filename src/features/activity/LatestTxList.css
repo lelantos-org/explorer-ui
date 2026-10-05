@@ -9,3 +9,5 @@
    at. `user-select: all` so the whole hash copies in one gesture. */
 .tx-hash { color: var(--fg-mute); font-weight: 400; user-select: all; }
 .tx-hash--link:hover { color: var(--accent); }
+
+.feed__more { display: flex; justify-content: center; margin-top: var(--sp-16); }

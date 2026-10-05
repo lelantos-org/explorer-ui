@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pathArea, pathLine } from "./path";
+import { pathArea, pathLine, splitOpenTail } from "./path";
 
 describe("paths", () => {
   const pts = [
@@ -17,5 +17,23 @@ describe("paths", () => {
 
   it("emits nothing for an empty series rather than a stray L", () => {
     expect(pathArea([], 20)).toBe("");
+  });
+});
+
+describe("splitOpenTail", () => {
+  const a = { x: 0, y: 0 };
+  const b = { x: 10, y: 5 };
+  const c = { x: 20, y: 2 };
+
+  it("ends the settled line one point early and starts the tail on it", () => {
+    expect(splitOpenTail([a, b, c], true)).toEqual({ settled: [a, b], tail: [b, c] });
+  });
+
+  it("leaves a closed series whole", () => {
+    expect(splitOpenTail([a, b, c], false)).toEqual({ settled: [a, b, c], tail: [] });
+  });
+
+  it("has no tail without a settled point to start from", () => {
+    expect(splitOpenTail([a], true)).toEqual({ settled: [a], tail: [] });
   });
 });

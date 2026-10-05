@@ -3,7 +3,7 @@ import { USD_AT_SPOT } from "@/domain/denom";
 import { fmtUsd } from "@/lib/format";
 import { joinMeta, plural } from "@/lib/text";
 import { type CardMeta, gapList, LOADING } from "@/ui/cardMeta";
-import type { LockedSummary } from "./summary";
+import type { HeldReading, LockedSummary } from "./summary";
 
 /**
  * What the note counts are, and what they are not.
@@ -49,4 +49,13 @@ export function lockedMeta(summary: LockedSummary | null): CardMeta {
     ]),
     gaps: gapList(unpricedAssets > 0 && `${plural(unpricedAssets, "unpriced asset")} excluded`),
   };
+}
+
+/**
+ * The unit under the headline balance. "now" because the tiles beside it are
+ * totals over the range and this one is not.
+ */
+export function heldCaption(held: HeldReading | null): string {
+  if (held?.unit === "tokens") return joinMeta(["tokens", "now"]);
+  return joinMeta([USD_AT_SPOT, (held?.unpricedAssets ?? 0) > 0 && "partial", "now"]);
 }

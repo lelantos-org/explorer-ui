@@ -6,8 +6,9 @@ import { useChartHover } from "@/charts/hooks/useChartHover";
 import { usePlotFrame } from "@/charts/hooks/usePlotFrame";
 import ChartFrame from "@/charts/primitives/ChartFrame";
 import { PLOTTED_KINDS } from "@/domain/kinds";
+import { cx } from "@/lib/cx";
 import { fmtNum } from "@/lib/format";
-import { fmtTs, type TimeDomain } from "@/lib/time";
+import { fmtTs, isOpenBucket, type TimeDomain } from "@/lib/time";
 import Empty from "@/ui/Empty";
 
 /** The plot's height in pixels; its skeleton is drawn at the same size. */
@@ -41,12 +42,15 @@ function TxKindsChart({ data, bucketSec, domain, height = KINDS_CHART_HEIGHT }: 
 
   if (data.length === 0) return <Empty />;
 
+  const isOpen = (p: KindCounts) => isOpenBucket(p.ts, bucketSec, domain);
+
   const readout = hovered && (
     <span className="chart__tip">
       {fmtTs(hovered.p.ts, frame.span)} ·{" "}
       {PLOTTED_KINDS.filter((k) => hovered.p[k] > 0)
         .map((k) => `${k} ${fmtNum(hovered.p[k])}`)
         .join(" · ") || "no activity"}
+      {isOpen(hovered.p) && " · so far"}
     </span>
   );
 
@@ -83,7 +87,7 @@ function TxKindsChart({ data, bucketSec, domain, height = KINDS_CHART_HEIGHT }: 
                 width={barW}
                 height={b.h}
                 rx={Math.min(BAR_R, barW / 2, b.h / 2)}
-                className={`bar bar--${b.kind}`}
+                className={cx("bar", `bar--${b.kind}`, isOpen(g.p) && "bar--open")}
               >
                 <title>{`${b.kind}: ${b.value}`}</title>
               </rect>

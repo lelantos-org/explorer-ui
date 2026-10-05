@@ -1,11 +1,18 @@
 import type { AssetOut, FlowPoint } from "@/api";
 import { assetIdTag, assetLabel } from "@/domain/assets";
-import { type Denom, denomLabel } from "@/domain/denom";
+import { type Denom, denomLabel, hasAmounts } from "@/domain/denom";
 import type { Range } from "@/domain/ranges";
 import type { Scope } from "@/domain/scope";
 import { joinMeta } from "@/lib/text";
 import { fmtBucket } from "@/lib/time";
 import type { CardMeta } from "@/ui/cardMeta";
+
+/**
+ * The window ends now, so its last bucket covers less time than the others and
+ * both plots draw it faded. Said in the caption because a faded mark alone does
+ * not say why.
+ */
+const OPEN_BUCKET = "newest bucket still filling";
 
 /**
  * What the count-based figures cover, which is wider than the flows whenever an
@@ -30,6 +37,7 @@ export function countsMeta(range: Range, scope: Scope): string {
 export function kindsMeta(range: Range, scope: Scope): CardMeta {
   return {
     lead: joinMeta(["grouped by kind", countsMeta(range, scope)]),
+    basis: OPEN_BUCKET,
     gaps: ["pending excluded"],
   };
 }
@@ -62,6 +70,7 @@ export function flowMeta(
     ]),
     // `denomLabel` decides the unit and whether it is partial, so its own
     // exclusion note travels with it rather than being re-derived here.
-    basis: denomLabel(denom, flows),
+    // Without a common unit nothing is plotted, so there is no bucket to flag.
+    basis: joinMeta([denomLabel(denom, flows), hasAmounts(denom) && OPEN_BUCKET]),
   };
 }

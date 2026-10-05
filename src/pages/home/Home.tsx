@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { type IndexerState, indexerState } from "@/data/indexerState";
 import ActivityPanel from "@/features/activity/ActivityPanel";
+import { FEED_LIMIT } from "@/features/activity/feed";
 import AssetsPanel from "@/features/assets/AssetsPanel";
 import ChainsPanel from "@/features/chains/ChainsPanel";
 import WithdrawalCover from "@/features/cover/WithdrawalCover";
@@ -10,7 +11,9 @@ import FlowCard from "@/features/flows/FlowCard";
 import FlowStats from "@/features/flows/FlowStats";
 import KindsCard from "@/features/flows/KindsCard";
 import { countScope } from "@/features/flows/meta";
+import HeldStat from "@/features/pool/HeldStat";
 import PoolPanel from "@/features/pool/PoolPanel";
+import { StatGrid } from "@/ui/Stat";
 import Hero from "./Hero";
 import ReferenceTabs from "./ReferenceTabs";
 import { useReferenceTab } from "./referenceTab";
@@ -30,7 +33,8 @@ export default function Home({ onIndexerState }: Props) {
   const filters = useFilters();
   const { scope, range } = filters;
   const [tab, setTab] = useReferenceTab();
-  const data = useHomeData(filters);
+  const [feedLimit, setFeedLimit] = useState(FEED_LIMIT);
+  const data = useHomeData(filters, feedLimit);
   const { flows } = data;
 
   // The flow pair stands in for the backend as a whole: it is the heaviest
@@ -62,16 +66,19 @@ export default function Home({ onIndexerState }: Props) {
         onClear={filters.clear}
       />
 
-      <FlowStats
-        inflow={flows.totals?.inflow ?? null}
-        outflow={flows.totals?.outflow ?? null}
-        commitments={flows.commitments}
-        rangeLabel={flows.range.label}
-        denom={flows.denom}
-        countScope={countScope(flows.scope)}
-        loading={flows.query.loading}
-        stale={flows.stale}
-      />
+      <StatGrid columns={4}>
+        <HeldStat locked={data.locked} scope={flows.scope} />
+        <FlowStats
+          inflow={flows.totals?.inflow ?? null}
+          outflow={flows.totals?.outflow ?? null}
+          commitments={flows.commitments}
+          rangeLabel={flows.range.label}
+          denom={flows.denom}
+          countScope={countScope(flows.scope)}
+          loading={flows.query.loading}
+          stale={flows.stale}
+        />
+      </StatGrid>
       <FlowCard flows={flows} assets={data.assets.data} />
       <KindsCard kinds={data.txKinds} scope={scope} />
 
@@ -93,6 +100,8 @@ export default function Home({ onIndexerState }: Props) {
           cohorts={data.anonymity.data}
           kind={filters.txKind}
           onKindChange={filters.setTxKind}
+          limit={feedLimit}
+          onLimitChange={setFeedLimit}
         />
       )}
       {tab === "assets" && (

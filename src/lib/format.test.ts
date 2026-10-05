@@ -5,6 +5,7 @@ import {
   fmtGrowth,
   fmtNum,
   fmtPercent,
+  fmtShare,
   fmtTokens,
   fmtUsd,
   fmtUsdSigned,
@@ -123,5 +124,16 @@ describe("splitMagnitude", () => {
     expect(splitMagnitude("+$412.00")).toEqual(["+$412.00", ""]);
     expect(splitMagnitude("—")).toEqual(["—", ""]);
     expect(splitMagnitude("+3.1e15")).toEqual(["+3.1e15", ""]);
+  });
+});
+describe("fmtShare", () => {
+  it("prints two decimals at most", () => {
+    expect(fmtShare(0.4567)).toBe("45.67%");
+    expect(fmtShare(1)).toBe("100%");
+  });
+
+  it("does not round a real holding down to nothing", () => {
+    expect(fmtShare(0.00001)).toBe("<0.01%");
+    expect(fmtShare(0)).toBe("0%");
   });
 });

@@ -2,7 +2,7 @@ import { memo } from "react";
 import { SERIES_COLOR } from "@/charts/series";
 import { amountFmt, type Denom, unitShort } from "@/domain/denom";
 import { joinMeta } from "@/lib/text";
-import Stat, { StatGrid } from "@/ui/Stat";
+import Stat from "@/ui/Stat";
 import Swatch from "@/ui/Swatch";
 
 interface Props {
@@ -23,7 +23,7 @@ interface Props {
   stale: boolean;
 }
 
-/** The headline readings under the masthead. Each swatch is the hue its series
+/** The range's readings in the headline row. Each swatch is the hue its series
  *  wears in the chart below, so the row doubles as that chart's key. */
 function FlowStats({
   inflow,
@@ -41,7 +41,7 @@ function FlowStats({
   const unit = unitShort(denom);
 
   return (
-    <StatGrid>
+    <>
       <Stat
         label="inflow"
         marker={<Swatch color={SERIES_COLOR.inflow} />}
@@ -67,7 +67,7 @@ function FlowStats({
         caption={joinMeta([`commitments in ${rangeLabel}`, countScope])}
         {...state}
       />
-    </StatGrid>
+    </>
   );
 }
 

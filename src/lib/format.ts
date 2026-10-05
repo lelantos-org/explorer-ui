@@ -80,6 +80,14 @@ export function fmtPercent(fraction: number): string {
   return `${Number((fraction * 100).toFixed(2))}%`;
 }
 
+/** The smallest share two decimals can print; anything under it would read 0%. */
+const MIN_SHARE = 0.0001;
+
+/** A part of a whole as a percentage, never rounding a real part down to "0%". */
+export function fmtShare(share: number): string {
+  return share > 0 && share < MIN_SHARE ? `<${fmtPercent(MIN_SHARE)}` : fmtPercent(share);
+}
+
 /** A fraction as a return: "+3.42%" reads as a direction where "3.42%" reads as
  *  a rate. Signed by the same wrapper as every other directional figure. */
 export const fmtGrowth = signed(fmtPercent);

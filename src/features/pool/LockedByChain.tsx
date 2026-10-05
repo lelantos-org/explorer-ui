@@ -4,15 +4,18 @@ import { assetLabel } from "@/domain/assets";
 import { getChainMeta } from "@/domain/chains";
 import { toggleChain } from "@/domain/scope";
 import { cx } from "@/lib/cx";
-import { fmtTokens, fmtUsd } from "@/lib/format";
+import { fmtShare, fmtTokens, fmtUsd } from "@/lib/format";
 import { joinMeta } from "@/lib/text";
 import AssetIdTag from "@/ui/AssetIdTag";
 import Empty from "@/ui/Empty";
 import Skeleton, { BarRows } from "@/ui/Skeleton";
 import "./LockedByChain.css";
+import { assetShare } from "./summary";
 
 interface Props {
   data: ChainLocked[] | null;
+  /** The network's priced escrow, which every chip's share is a fraction of. */
+  totalUsd: number | null;
   loading: boolean;
   selected: number | null;
   onSelect?: (chainId: number | null) => void;
@@ -30,8 +33,11 @@ interface Props {
  * its venue instead, because growth fires no event and the flow difference
  * misses everything it has earned. Rendering both under one label would present
  * a measured holding and a computed difference as the same kind of number.
+ *
+ * Each priced chip ends with its share of the whole pool's dollars, across
+ * chains — the same total the card's caption reports.
  */
-function LockedByChain({ data, loading, selected, onSelect }: Props) {
+function LockedByChain({ data, totalUsd, loading, selected, onSelect }: Props) {
   if (loading && !data) {
     return (
       <Skeleton>
@@ -58,7 +64,11 @@ function LockedByChain({ data, loading, selected, onSelect }: Props) {
             <ChainTotal chain={chain} />
             <div className="locked__assets">
               {chain.assets.map((asset) => (
-                <AssetChip key={`${chain.chainId}-${asset.assetIdU64}`} asset={asset} />
+                <AssetChip
+                  key={`${chain.chainId}-${asset.assetIdU64}`}
+                  asset={asset}
+                  share={assetShare(asset, totalUsd)}
+                />
               ))}
             </div>
           </button>
@@ -100,7 +110,13 @@ function ChainTotal({ chain }: { chain: ChainLocked }) {
   );
 }
 
-function AssetChip({ asset }: { asset: LockedAsset }) {
+interface ChipProps {
+  asset: LockedAsset;
+  /** The asset's fraction of the network's priced escrow; null when it has none. */
+  share: number | null;
+}
+
+function AssetChip({ asset, share }: ChipProps) {
   // Negative is not a rendering bug: escrow cannot owe money, so it means the
   // indexer missed deposits. Marked, not hidden.
   const owed = asset.amount !== null && asset.amount < 0;
@@ -108,6 +124,7 @@ function AssetChip({ asset }: { asset: LockedAsset }) {
   const title = joinMeta([
     joinMeta([asset.symbol, `publicAssetId ${asset.assetIdU64}`]),
     asset.lockedUsd === null ? "no price" : fmtUsd(asset.lockedUsd),
+    share !== null && `${fmtShare(share)} of the priced pool, every chain`,
     earning
       ? "held by the venue — this asset earns, so its balance is read from chain rather than netted from flows"
       : "deposits − withdrawals",
@@ -139,6 +156,8 @@ function AssetChip({ asset }: { asset: LockedAsset }) {
             figure would be wrong by orders of magnitude. */}
         {asset.amount === null ? <span className="muted">—</span> : fmtTokens(asset.amount)}
       </span>
+      {/* Token amounts of different assets cannot be compared; the share can. */}
+      {share !== null && <span className="num muted locked__chip__share">{fmtShare(share)}</span>}
     </span>
   );
 }

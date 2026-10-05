@@ -50,6 +50,8 @@
 }
 .line--in { stroke: var(--kind-deposit); }
 .line--out { stroke: var(--kind-withdraw); stroke-dasharray: 5 3; }
+/* Into a bucket that is still filling: a partial figure, not a fall. */
+.line--open { stroke-opacity: 0.4; }
 
 /* HOVER: a line down the plot, plus a marker on each series it crosses. */
 .cursor { stroke: var(--fg-mute); stroke-width: 1; stroke-dasharray: 2 3; opacity: 0.5; }
@@ -67,3 +69,4 @@
 .bar--pending { fill: var(--kind-pending); }
 .bar--transfer { fill: var(--kind-transfer); }
 .bar--withdraw { fill: var(--kind-withdraw); }
+.bar--open { fill-opacity: 0.4; }

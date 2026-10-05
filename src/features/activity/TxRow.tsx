@@ -4,7 +4,7 @@ import { assetKey, assetLabel } from "@/domain/assets";
 import { getChainMeta, getTxUrl } from "@/domain/chains";
 import type { Cohorts } from "@/domain/txPrivacy";
 import { shortHex, withHexPrefix } from "@/lib/hex";
-import { fmtAge } from "@/lib/time";
+import { fmtAge, fmtUtc } from "@/lib/time";
 import AssetIdTag from "@/ui/AssetIdTag";
 import ExternalLink from "@/ui/ExternalLink";
 import KindBadge from "./KindBadge";
@@ -74,7 +74,9 @@ interface Props {
 function TxRow({ tx, byAsset, cohorts, now }: Props) {
   return (
     <tr>
-      <td className="num muted">{fmtAge(tx.blockTs, Math.floor(now / 1000))}</td>
+      <td className="num muted" title={fmtUtc(tx.blockTs)}>
+        {fmtAge(tx.blockTs, Math.floor(now / 1000))}
+      </td>
       <td>
         <KindBadge kind={tx.kind} />
       </td>

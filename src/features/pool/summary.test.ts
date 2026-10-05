@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ChainLocked, LockedBasis } from "@/api";
-import { summarizeLocked } from "./summary";
+import type { ChainLocked, LockedAsset, LockedBasis } from "@/api";
+import { assetShare, heldInScope, summarizeLocked } from "./summary";
 
 const locked = (
   chainId: number,
@@ -66,5 +66,68 @@ describe("summarizeLocked", () => {
       unpricedAssets: 0,
       venueHeldAssets: 0,
     });
+  });
+});
+
+describe("heldInScope", () => {
+  const network = [locked(1, 1000, 1, ["flowDifference"]), locked(10, 250)];
+
+  it("totals every chain's dollars when nothing is pinned", () => {
+    expect(heldInScope(network, { chainId: null, assetIdU64: null })).toEqual({
+      unit: "usd",
+      value: 1250,
+      unpricedAssets: 1,
+    });
+  });
+
+  it("narrows to the pinned chain", () => {
+    expect(heldInScope(network, { chainId: 10, assetIdU64: null })).toEqual({
+      unit: "usd",
+      value: 250,
+      unpricedAssets: 0,
+    });
+  });
+
+  it("reads a pinned asset in its own tokens", () => {
+    expect(heldInScope(network, { chainId: 1, assetIdU64: 0 })).toEqual({
+      unit: "tokens",
+      value: 1,
+      unpricedAssets: 0,
+    });
+  });
+
+  it("is unknown, not zero, for an asset the escrow has no row for", () => {
+    expect(heldInScope(network, { chainId: 1, assetIdU64: 99 })?.value).toBeNull();
+    expect(heldInScope(network, { chainId: 5, assetIdU64: null })?.value).toBeNull();
+  });
+
+  it("stays null while unloaded", () => {
+    expect(heldInScope(null, { chainId: null, assetIdU64: null })).toBeNull();
+  });
+});
+
+describe("assetShare", () => {
+  const asset = (lockedUsd: number | null): LockedAsset => ({
+    assetIdU64: 1,
+    tokenHex: "aa",
+    symbol: null,
+    amount: 1,
+    lockedUsd,
+    lastTs: 0,
+    basis: "flowDifference",
+  });
+
+  it("is the asset's fraction of the priced total", () => {
+    expect(assetShare(asset(250), 1000)).toBe(0.25);
+  });
+
+  it("has no share without a price on either side", () => {
+    expect(assetShare(asset(null), 1000)).toBeNull();
+    expect(assetShare(asset(250), null)).toBeNull();
+  });
+
+  it("has no share of a pool that nets to nothing, or for a negative balance", () => {
+    expect(assetShare(asset(250), 0)).toBeNull();
+    expect(assetShare(asset(-5), 1000)).toBeNull();
   });
 });

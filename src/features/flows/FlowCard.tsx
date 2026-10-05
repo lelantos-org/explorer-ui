@@ -60,7 +60,7 @@ export default function FlowCard({ flows, assets }: Props) {
  * unlike token amounts, so it says that instead of drawing one.
  */
 function FlowPlot({ flows, settled }: { flows: Flows; settled: boolean }) {
-  const { flows: points, denom, domain } = flows;
+  const { flows: points, denom, domain, range } = flows;
   if (points === null) return <ChartSkeleton height={FLOW_CHART_HEIGHT} />;
   if (settled && points.length === 0) {
     return <Empty>no flow data for this range</Empty>;
@@ -72,5 +72,5 @@ function FlowPlot({ flows, settled }: { flows: Flows; settled: boolean }) {
       </Empty>
     );
   }
-  return <FlowChart data={points} denom={denom} domain={domain} />;
+  return <FlowChart data={points} denom={denom} bucketSec={range.bucket} domain={domain} />;
 }

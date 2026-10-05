@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo } from "react";
 import type { FlowPoint } from "@/api";
 import { LABEL_DX, labelBaselines } from "@/charts/geometry/directLabels";
-import { fillUrl, pathArea, pathLine } from "@/charts/geometry/path";
+import { fillUrl, pathArea, pathLine, splitOpenTail } from "@/charts/geometry/path";
 import { SERIES_PAD } from "@/charts/geometry/scale";
 import { useChartHover } from "@/charts/hooks/useChartHover";
 import { usePlotFrame } from "@/charts/hooks/usePlotFrame";
@@ -10,13 +10,16 @@ import ChartDot from "@/charts/primitives/ChartDot";
 import ChartFrame from "@/charts/primitives/ChartFrame";
 import ChartGradients from "@/charts/primitives/ChartGradients";
 import { amountFmt, amounts, type Denom, isUsd } from "@/domain/denom";
-import { fmtTs, type TimeDomain } from "@/lib/time";
+import { fmtTs, isOpenBucket, type TimeDomain } from "@/lib/time";
 import Empty from "@/ui/Empty";
 
 interface Props {
   data: FlowPoint[];
   /** Unit the series is plotted in; also picks the tooltip formatter. */
   denom: Denom;
+  /** Bucket width in seconds, to tell whether the newest bucket is still
+   *  filling. */
+  bucketSec: number;
   domain?: TimeDomain | null;
   height?: number;
 }
@@ -28,7 +31,7 @@ export const FLOW_CHART_HEIGHT = 280;
 
 const tsOf = (p: FlowPoint) => p.ts;
 
-function FlowChart({ data, denom, domain, height = FLOW_CHART_HEIGHT }: Props) {
+function FlowChart({ data, denom, bucketSec, domain, height = FLOW_CHART_HEIGHT }: Props) {
   // The axis fits whichever series the denomination selects, so switching
   // between tokens and dollars rescales the plot with the numbers on it.
   const valuesOf = useCallback(
@@ -50,18 +53,27 @@ function FlowChart({ data, denom, domain, height = FLOW_CHART_HEIGHT }: Props) {
     [data, denom, frame],
   );
 
+  const newest = data[data.length - 1];
+  const open = !!newest && isOpenBucket(newest.ts, bucketSec, domain);
+
   // The path strings are the expensive part of a render, and a hover changes
   // nothing about them — so they are built once per series, not per mousemove.
   const paths = useMemo(() => {
     const lineIn = points.map((p) => ({ x: p.x, y: p.yIn }));
     const lineOut = points.map((p) => ({ x: p.x, y: p.yOut }));
+    // An open bucket's endpoint is a partial figure, and at full weight the
+    // line into it reads as a fall.
+    const splitIn = splitOpenTail(lineIn, open);
+    const splitOut = splitOpenTail(lineOut, open);
     return {
       areaIn: pathArea(lineIn, frame.baseline),
       areaOut: pathArea(lineOut, frame.baseline),
-      lineIn: pathLine(lineIn),
-      lineOut: pathLine(lineOut),
+      lineIn: pathLine(splitIn.settled),
+      lineOut: pathLine(splitOut.settled),
+      openIn: pathLine(splitIn.tail),
+      openOut: pathLine(splitOut.tail),
     };
-  }, [points, frame.baseline]);
+  }, [points, frame.baseline, open]);
 
   const { point: hovered, handlers } = useChartHover(frame.geom, points);
 
@@ -83,6 +95,7 @@ function FlowChart({ data, denom, domain, height = FLOW_CHART_HEIGHT }: Props) {
       {hovered.p.unpricedAssets > 0 && isUsd(denom) && (
         <span className="warn"> · {hovered.p.unpricedAssets} unpriced</span>
       )}
+      {open && hovered.p === newest && " · so far"}
     </span>
   );
 
@@ -99,6 +112,12 @@ function FlowChart({ data, denom, domain, height = FLOW_CHART_HEIGHT }: Props) {
       <path d={paths.areaOut} fill={fillUrl(GRADIENT_ID, "out")} />
       <path d={paths.lineOut} className="line line--out" />
       <path d={paths.lineIn} className="line line--in" />
+      {paths.openIn !== "" && (
+        <g>
+          <path d={paths.openOut} className="line line--out line--open" />
+          <path d={paths.openIn} className="line line--in line--open" />
+        </g>
+      )}
 
       {last && labels && (
         <g>

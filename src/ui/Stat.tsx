@@ -61,7 +61,9 @@ export default function Stat({
   );
 }
 
-/** A row of three `Stat`s, one column on a phone. */
-export function StatGrid({ children }: { children: ReactNode }) {
-  return <div className="stats">{children}</div>;
+/** A row of `Stat`s, three across unless `columns` says four; one column on a
+ *  phone. Four fold to two on a tablet, where a quarter-width tile is too
+ *  narrow for its caption. */
+export function StatGrid({ columns = 3, children }: { columns?: 3 | 4; children: ReactNode }) {
+  return <div className={cx("stats", columns === 4 && "stats--4")}>{children}</div>;
 }

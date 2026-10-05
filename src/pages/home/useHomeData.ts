@@ -10,7 +10,6 @@ import {
   useYield,
 } from "@/data/queries";
 import { groupAssetsByChain } from "@/domain/scope";
-import { FEED_LIMIT } from "@/features/activity/feed";
 import type { Filters } from "@/features/filters/useFilters";
 import { useFlows } from "@/features/flows/useFlows";
 
@@ -23,13 +22,13 @@ import { useFlows } from "@/features/flows/useFlows";
  * the page already had. It also means the registry and the cohorts, which
  * several cards read, are fetched once rather than once per reader.
  */
-export function useHomeData({ scope, range, txKind }: Filters) {
+export function useHomeData({ scope, range, txKind }: Filters, feedLimit: number) {
   const assets = useAssets();
   const chainFlows = useChainFlows24h();
   const anonymity = useAnonymitySets(scope);
   const flows = useFlows(scope, range);
   const txKinds = useTxKinds(scope.chainId, range);
-  const recentTx = useRecentTx(FEED_LIMIT, txKind);
+  const recentTx = useRecentTx(feedLimit, txKind);
   const locked = useLocked();
   const poolNotes = usePoolNotes(scope.chainId);
   const yields = useYield();

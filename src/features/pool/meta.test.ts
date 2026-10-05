@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { captionText, LOADING_TEXT, poolNotesRow as notes } from "@/test/fixtures";
-import { lockedMeta, poolNotesMeta } from "./meta";
+import { heldCaption, lockedMeta, poolNotesMeta } from "./meta";
 import type { LockedSummary } from "./summary";
 
 /** A locked summary. `venueHeldAssets` defaults to none, which is the shape of
@@ -81,5 +81,18 @@ describe("poolNotesMeta", () => {
   it("separates loading from an empty tree", () => {
     expect(poolNotesMeta(null).lead).toBe(LOADING_TEXT);
     expect(poolNotesMeta([]).lead).toBe("no notes committed");
+  });
+});
+
+describe("heldCaption", () => {
+  it("names dollars, and says when they are a partial total", () => {
+    expect(heldCaption({ unit: "usd", value: 10, unpricedAssets: 0 })).toBe("USD at spot · now");
+    expect(heldCaption({ unit: "usd", value: 10, unpricedAssets: 2 })).toBe(
+      "USD at spot · partial · now",
+    );
+  });
+
+  it("names tokens once one asset is pinned", () => {
+    expect(heldCaption({ unit: "tokens", value: 3, unpricedAssets: 0 })).toBe("tokens · now");
   });
 });
